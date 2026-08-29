@@ -119,3 +119,13 @@ export interface ToastMessage {
   message: string;
   type?: ToastType;
 }
+
+export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'unsaved' | 'offline' | 'error';
+
+export interface DriveSyncState {
+  status: SyncStatus;
+  lastSyncedAt: Date | null;
+  cloudWordCount: number | null;
+  errorMessage?: string | null;
+  isSyncing: boolean;
+}

@@ -10,6 +10,7 @@ import {
   updateWordTerm,
   getOrCreateWord,
 } from './utils/wordGraph';
+import { useGoogleDriveSync } from './hooks/useGoogleDriveSync';
 
 import { Header } from './components/Header';
 import { TabsNav } from './components/TabsNav';
@@ -28,7 +29,7 @@ import { ToastContainer } from './components/Toast';
 import { Plus, Settings as SettingsIcon, Link2 } from 'lucide-react';
 
 export default function App() {
-  // Master Words Database State (starts from 0 words)
+  // Temporary local cache initialization (falls back to 0 words or cached state)
   const [words, setWords] = useState<Word[]>(() => loadWords());
 
   // Active Tab: 'pairs' | 'words' | 'settings'
@@ -64,10 +65,17 @@ export default function App() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // Save words to localStorage on updates
+  // Save words to temporary local cache on updates
   useEffect(() => {
     saveWords(words);
   }, [words]);
+
+  // Google Drive Sync Engine & Master Database
+  const driveSync = useGoogleDriveSync({
+    words,
+    setWords,
+    addToast,
+  });
 
   // Fast Word Lookup Map
   const wordsMap = useMemo(() => {
@@ -256,8 +264,17 @@ export default function App() {
       id="app-root-container"
       className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200"
     >
-      {/* Minimal Header */}
-      <Header />
+      {/* Dynamic Header with Sync & Account State */}
+      <Header
+        user={driveSync.user}
+        syncStatus={driveSync.syncStatus}
+        isOperating={driveSync.isOperating}
+        isSigningIn={driveSync.isSigningIn}
+        lastSyncedAt={driveSync.lastSyncedAt}
+        onSignIn={driveSync.signIn}
+        onSync={driveSync.syncNow}
+        onGoToSettings={() => setActiveTab('settings')}
+      />
 
       {/* Main Content Area */}
       <main id="app-main-content" className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-5 space-y-4">
@@ -277,6 +294,19 @@ export default function App() {
             words={words}
             onUpdateWords={setWords}
             onToast={addToast}
+            user={driveSync.user}
+            syncStatus={driveSync.syncStatus}
+            lastSyncedAt={driveSync.lastSyncedAt}
+            cloudFileInfo={driveSync.cloudFileInfo}
+            cloudWordCount={driveSync.cloudWordCount}
+            isSigningIn={driveSync.isSigningIn}
+            isOperating={driveSync.isOperating}
+            onSignIn={driveSync.signIn}
+            onSignOut={driveSync.signOut}
+            onSyncNow={driveSync.syncNow}
+            onBackupToDrive={() => driveSync.saveToDriveNow(words)}
+            onRestoreFromDrive={driveSync.restoreFromDrive}
+            onRefreshStatus={driveSync.refreshStatus}
           />
         ) : (
           <>
@@ -300,7 +330,7 @@ export default function App() {
                 </div>
                 <h3 className="font-semibold text-slate-200 text-sm">Dictionary is empty (0 words)</h3>
                 <p className="text-xs text-slate-400">
-                  Get started by adding your first word pair, or restore your previous dictionary from Settings.
+                  Get started by adding your first word pair, or sync with your Google Drive database.
                 </p>
                 <div className="flex items-center justify-center gap-2 pt-2">
                   <button
@@ -317,7 +347,7 @@ export default function App() {
                     className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-[#334155] text-xs font-medium rounded-md transition-colors cursor-pointer"
                   >
                     <SettingsIcon className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Restore Backup</span>
+                    <span>Drive & Settings</span>
                   </button>
                 </div>
               </div>
@@ -481,9 +511,9 @@ export default function App() {
 
       {/* Minimal Footer */}
       <footer className="border-t border-[#334155]/40 py-4 text-center text-xs text-slate-500 flex items-center justify-center gap-3">
-        <span>Offline Dictionary</span>
+        <span>Google Drive Master Storage</span>
         <span>•</span>
-        <span>{words.length} words saved</span>
+        <span>{words.length} words in active session</span>
       </footer>
 
       {/* Add Word Modal */}

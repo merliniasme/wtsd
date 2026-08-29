@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Word, RELATION_TAGS, TAG_METADATA } from '../types';
+import { Word, RELATION_TAGS, TAG_METADATA, SyncStatus } from '../types';
 import {
   triggerDownloadBackup,
   exportWordsJson,
@@ -7,6 +7,9 @@ import {
   clearAllWords,
 } from '../utils/storage';
 import { calculateRelationsByTag, extractAllPairs } from '../utils/wordGraph';
+import { GoogleDriveSyncSection } from './GoogleDriveSyncSection';
+import { DriveFileInfo } from '../utils/googleDrive';
+import { User } from 'firebase/auth';
 import {
   Download,
   Upload,
@@ -18,18 +21,46 @@ import {
   Database,
   RefreshCw,
   Info,
+  HardDrive,
+  Cloud,
 } from 'lucide-react';
 
 interface SettingsViewProps {
   words: Word[];
   onUpdateWords: (newWords: Word[]) => void;
   onToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
+  user: User | null;
+  syncStatus: SyncStatus;
+  lastSyncedAt: Date | null;
+  cloudFileInfo: DriveFileInfo | null;
+  cloudWordCount: number | null;
+  isSigningIn: boolean;
+  isOperating: boolean;
+  onSignIn: () => void;
+  onSignOut: () => void;
+  onSyncNow: () => void;
+  onBackupToDrive: () => void;
+  onRestoreFromDrive: () => void;
+  onRefreshStatus: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   words,
   onUpdateWords,
   onToast,
+  user,
+  syncStatus,
+  lastSyncedAt,
+  cloudFileInfo,
+  cloudWordCount,
+  isSigningIn,
+  isOperating,
+  onSignIn,
+  onSignOut,
+  onSyncNow,
+  onBackupToDrive,
+  onRestoreFromDrive,
+  onRefreshStatus,
 }) => {
   // State for Copy JSON
   const [copied, setCopied] = useState(false);
@@ -79,7 +110,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     readFileContent(file);
-    // Reset file input value so user can re-select same file if needed
     e.target.value = '';
   };
 
@@ -145,30 +175,42 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     processImportString(importText, importMode);
   };
 
-  // Handle Delete All Confirmation
+  // Handle Delete All / Clear Cache
   const handleConfirmDeleteAll = () => {
     const cleared = clearAllWords();
     onUpdateWords(cleared);
     setIsDeleteModalOpen(false);
     setConfirmInput('');
-    onToast('All dictionary words and pairs have been deleted.', 'info');
+    onToast('Local temporary cache cleared.', 'info');
   };
 
   return (
     <div id="settings-view-container" className="space-y-6 animate-in fade-in duration-150">
       {/* Overview Stats Card */}
       <div className="bg-[#1E293B] border border-[#334155] rounded-xl p-4.5 space-y-3 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-sky-400" />
-            <h2 className="text-sm font-semibold text-slate-100">Database Status</h2>
+            <h2 className="text-sm font-semibold text-slate-100">Database & Storage Overview</h2>
           </div>
-          <span className="text-xs font-mono text-slate-400">Local Storage</span>
+          <div className="flex items-center gap-2 text-xs">
+            {user ? (
+              <span className="flex items-center gap-1 text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded">
+                <Cloud className="w-3 h-3" />
+                <span>Primary: Google Drive</span>
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-amber-400 font-mono bg-amber-950/60 border border-amber-800/80 px-2 py-0.5 rounded">
+                <HardDrive className="w-3 h-3" />
+                <span>Temporary Cache Only</span>
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
           <div className="bg-[#0F172A] border border-[#334155] rounded-lg p-3 text-center">
-            <span className="text-xs text-slate-400">Total Words</span>
+            <span className="text-xs text-slate-400">Local Cache Words</span>
             <p className="text-lg font-bold text-slate-100">{words.length}</p>
           </div>
           <div className="bg-[#0F172A] border border-[#334155] rounded-lg p-3 text-center">
@@ -193,7 +235,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* 1. Backup / Export Feature */}
+      {/* Google Drive Primary Store & Auto-Sync Section */}
+      <GoogleDriveSyncSection
+        words={words}
+        user={user}
+        syncStatus={syncStatus}
+        lastSyncedAt={lastSyncedAt}
+        cloudFileInfo={cloudFileInfo}
+        cloudWordCount={cloudWordCount}
+        isSigningIn={isSigningIn}
+        isOperating={isOperating}
+        onSignIn={onSignIn}
+        onSignOut={onSignOut}
+        onSyncNow={onSyncNow}
+        onBackupToDrive={onBackupToDrive}
+        onRestoreFromDrive={onRestoreFromDrive}
+        onRefreshStatus={onRefreshStatus}
+      />
+
+      {/* 1. Local Backup / Export Feature */}
       <section
         id="section-backup-feature"
         className="bg-[#1E293B] border border-[#334155] rounded-xl p-4.5 space-y-4 shadow-sm"
@@ -201,9 +261,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="flex items-center gap-2">
           <Download className="w-4 h-4 text-sky-400" />
           <div>
-            <h3 className="text-sm font-semibold text-slate-100">Backup Data</h3>
+            <h3 className="text-sm font-semibold text-slate-100">Manual JSON Export</h3>
             <p className="text-xs text-slate-400">
-              Export and save your entire dictionary and word pairs into a JSON backup file.
+              Download an offline file backup copy of your dictionary words and relations.
             </p>
           </div>
         </div>
@@ -250,9 +310,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="flex items-center gap-2">
           <Upload className="w-4 h-4 text-sky-400" />
           <div>
-            <h3 className="text-sm font-semibold text-slate-100">Restore / Import</h3>
+            <h3 className="text-sm font-semibold text-slate-100">Manual JSON Restore / Import</h3>
             <p className="text-xs text-slate-400">
-              Import words and relations from a previously exported backup file.
+              Import words and relations from a JSON backup file.
             </p>
           </div>
         </div>
@@ -276,7 +336,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               onChange={() => setImportMode('replace')}
               className="accent-sky-400 cursor-pointer"
             />
-            <span>Replace existing (Clean restore)</span>
+            <span>Replace temporary cache</span>
           </label>
           <label className="flex items-center gap-1.5 cursor-pointer">
             <input
@@ -363,19 +423,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </form>
       </section>
 
-      {/* 3. Delete All / Clear Dictionary Feature (Danger Zone) */}
+      {/* 3. Delete All / Clear Cache (Danger Zone) */}
       <section
         id="section-danger-zone-delete"
         className="bg-[#1E293B] border border-rose-900/50 rounded-xl p-4.5 space-y-3.5 shadow-sm"
       >
         <div className="flex items-center gap-2 text-rose-400">
           <Trash2 className="w-4 h-4" />
-          <h3 className="text-sm font-semibold">Delete All Dictionary Data</h3>
+          <h3 className="text-sm font-semibold">Clear Temporary Local Cache</h3>
         </div>
 
         <p className="text-xs text-slate-400 leading-relaxed">
-          Wipe all {words.length} words and {allPairs.length} pairs from your local storage.
-          This will return the website to a clean state with 0 words.
+          Clear {words.length} cached words and {allPairs.length} pairs from your browser's temporary storage.
+          {user && ' Your master database saved on Google Drive will remain intact.'}
         </p>
 
         <div className="pt-1">
@@ -388,7 +448,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             className="inline-flex items-center gap-2 px-3.5 py-2 bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/40 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-            <span>Delete All Words & Pairs</span>
+            <span>Clear Local Cache</span>
           </button>
         </div>
       </section>
@@ -408,30 +468,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           >
             <div className="flex items-center gap-2.5 text-rose-400">
               <AlertTriangle className="w-5 h-5" />
-              <h4 className="font-semibold text-sm text-slate-100">Delete Entire Dictionary?</h4>
+              <h4 className="font-semibold text-sm text-slate-100">Clear Temporary Local Cache?</h4>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              This action will permanently delete all{' '}
-              <strong className="text-rose-300">{words.length} words</strong> and{' '}
-              <strong className="text-rose-300">{allPairs.length} pairs</strong>.
+              This will clear the current browser session cache ({words.length} words).
+              {user
+                ? ' You can re-download your database anytime from your Google Drive.'
+                : ' Note: You are currently not signed in to Google Drive.'}
             </p>
 
             <div className="bg-[#0F172A] border border-rose-900/60 p-2.5 rounded-lg text-[11px] text-rose-300/90 flex items-start gap-2">
               <Info className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
-              <span>Tip: Make sure you have downloaded a backup if you need this data later.</span>
+              <span>Type CLEAR to confirm clearing local cache.</span>
             </div>
 
             <div className="space-y-1.5 pt-1">
               <label className="text-[11px] font-medium text-slate-400">
-                Type <strong className="text-rose-400 font-mono">DELETE</strong> to confirm:
+                Type <strong className="text-rose-400 font-mono">CLEAR</strong> to confirm:
               </label>
               <input
                 id="input-confirm-delete-all"
                 type="text"
                 value={confirmInput}
                 onChange={(e) => setConfirmInput(e.target.value)}
-                placeholder="DELETE"
+                placeholder="CLEAR"
                 className="w-full px-3 py-2 bg-[#0F172A] text-rose-200 text-xs rounded-lg border border-rose-900 focus:outline-none focus:border-rose-500 font-mono placeholder:text-slate-600"
               />
             </div>
@@ -448,11 +509,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <button
                 type="button"
                 id="btn-confirm-delete-all-submit"
-                disabled={confirmInput.trim().toUpperCase() !== 'DELETE'}
+                disabled={confirmInput.trim().toUpperCase() !== 'CLEAR'}
                 onClick={handleConfirmDeleteAll}
                 className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:hover:bg-rose-600 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed shadow-xs"
               >
-                Permanently Delete
+                Clear Local Cache
               </button>
             </div>
           </div>
