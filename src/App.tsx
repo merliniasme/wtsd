@@ -147,12 +147,12 @@ export default function App() {
     (term: string) => {
       const res = getOrCreateWord(words, term);
       if (!res.created) {
-        return { success: false, error: `Word "${term}" already exists.` };
+        return { success: false, error: `Word "${term}" already exists.`, word: res.word };
       }
 
       setWords(res.updatedWords);
       addToast(`Added "${term}".`, 'success');
-      return { success: true };
+      return { success: true, word: res.word };
     },
     [words, addToast]
   );
@@ -491,6 +491,8 @@ export default function App() {
         isOpen={isAddWordOpen}
         onClose={() => setIsAddWordOpen(false)}
         onAddWord={handleAddSingleWord}
+        onLinkWords={handleCreateRelation}
+        existingWords={words}
       />
 
       {/* Create Mutual Relation Modal */}
