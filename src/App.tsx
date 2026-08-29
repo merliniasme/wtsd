@@ -17,7 +17,6 @@ import { SearchBar } from './components/SearchBar';
 import { PairCard } from './components/PairCard';
 import { WordCard } from './components/WordCard';
 import { NoResultsState } from './components/NoResultsState';
-import { SearchPromptState } from './components/SearchPromptState';
 import { SettingsView } from './components/SettingsView';
 import { FloatingAddButton } from './components/FloatingAddButton';
 import { AddWordModal } from './components/AddWordModal';
@@ -26,7 +25,7 @@ import { AddRelationModal } from './components/AddRelationModal';
 import { EditRelationModal } from './components/EditRelationModal';
 import { EditWordModal } from './components/EditWordModal';
 import { ToastContainer } from './components/Toast';
-import { Plus, Settings as SettingsIcon } from 'lucide-react';
+import { Plus, Settings as SettingsIcon, Link2 } from 'lucide-react';
 
 export default function App() {
   // Master Words Database State (starts from 0 words)
@@ -80,8 +79,8 @@ export default function App() {
     return extractAllPairs(words);
   }, [words]);
 
-  // Filtered Pairs for Pairs Tab
-  const displayedPairs = useMemo(() => {
+  // Filtered Pairs based on search and tag
+  const filteredPairs = useMemo(() => {
     const cleanSearch = searchTerm.trim().toLowerCase();
 
     return allPairs.filter((pair) => {
@@ -100,8 +99,16 @@ export default function App() {
     });
   }, [allPairs, searchTerm, selectedTag]);
 
-  // Filtered Words for Words Tab
-  const displayedWords = useMemo(() => {
+  // When search bar is empty, show max 10 pairs
+  const displayedPairs = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return filteredPairs.slice(0, 10);
+    }
+    return filteredPairs;
+  }, [filteredPairs, searchTerm]);
+
+  // Filtered Words based on search
+  const filteredWords = useMemo(() => {
     const cleanSearch = searchTerm.trim().toLowerCase();
 
     return words
@@ -126,6 +133,14 @@ export default function App() {
         return a.term.localeCompare(b.term);
       });
   }, [words, searchTerm, wordsMap]);
+
+  // When search bar is empty, show max 10 words
+  const displayedWords = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return filteredWords.slice(0, 10);
+    }
+    return filteredWords;
+  }, [filteredWords, searchTerm]);
 
   // Handler: Add Standalone Word
   const handleAddSingleWord = useCallback(
@@ -234,10 +249,7 @@ export default function App() {
     [words, wordsMap, addToast]
   );
 
-  const isUnsearchedHome =
-    activeTab === 'pairs'
-      ? !searchTerm.trim() && selectedTag === 'all'
-      : !searchTerm.trim();
+  const isSearchEmpty = !searchTerm.trim();
 
   return (
     <div
@@ -309,15 +321,32 @@ export default function App() {
                   </button>
                 </div>
               </div>
-            ) : isUnsearchedHome ? (
-              /* Clean Home Search Prompt */
-              <SearchPromptState
-                activeTab={activeTab}
-                onSelectTag={(tag) => setSelectedTag(tag)}
-              />
             ) : activeTab === 'pairs' ? (
               /* PAIRS TAB VIEW */
-              displayedPairs.length === 0 ? (
+              allPairs.length === 0 ? (
+                <div
+                  id="no-pairs-linked-state"
+                  className="text-center py-16 px-4 max-w-sm mx-auto space-y-3 animate-in fade-in duration-150"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#1E293B] border border-[#334155] text-slate-400 mx-auto flex items-center justify-center">
+                    <Link2 className="w-4 h-4 text-sky-400" />
+                  </div>
+                  <h3 className="font-semibold text-slate-200 text-sm">No word pairs linked yet</h3>
+                  <p className="text-xs text-slate-400">
+                    Connect two words together by clicking Add Word or linking words from the Words tab.
+                  </p>
+                  <div className="pt-1">
+                    <button
+                      id="btn-pairs-empty-add-word"
+                      onClick={() => setIsAddWordOpen(true)}
+                      className="inline-flex items-center gap-1 px-3.5 py-1.5 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Word / Pair</span>
+                    </button>
+                  </div>
+                </div>
+              ) : displayedPairs.length === 0 ? (
                 <NoResultsState
                   searchTerm={searchTerm}
                   selectedTag={selectedTag}
@@ -331,10 +360,21 @@ export default function App() {
                   }}
                 />
               ) : (
-                <section id="pairs-list-section" className="space-y-3">
+                <section id="pairs-list-section" className="space-y-3 animate-in fade-in duration-150">
                   <div className="flex items-center justify-between text-xs text-slate-400 px-1">
                     <span>
-                      {displayedPairs.length} {displayedPairs.length === 1 ? 'pair' : 'pairs'} found
+                      {isSearchEmpty && filteredPairs.length > 10 ? (
+                        <>
+                          Showing <strong className="text-slate-200">10</strong> of{' '}
+                          <strong className="text-slate-200">{filteredPairs.length}</strong> pairs
+                        </>
+                      ) : (
+                        <>
+                          <strong className="text-slate-200">{displayedPairs.length}</strong>{' '}
+                          {displayedPairs.length === 1 ? 'pair' : 'pairs'}
+                          {!isSearchEmpty && ' found'}
+                        </>
+                      )}
                     </span>
                     {(searchTerm || selectedTag !== 'all') && (
                       <button
@@ -381,10 +421,21 @@ export default function App() {
                   }}
                 />
               ) : (
-                <section id="words-list-section" className="space-y-3">
+                <section id="words-list-section" className="space-y-3 animate-in fade-in duration-150">
                   <div className="flex items-center justify-between text-xs text-slate-400 px-1">
                     <span>
-                      {displayedWords.length} {displayedWords.length === 1 ? 'word' : 'words'} found
+                      {isSearchEmpty && filteredWords.length > 10 ? (
+                        <>
+                          Showing <strong className="text-slate-200">10</strong> of{' '}
+                          <strong className="text-slate-200">{filteredWords.length}</strong> words
+                        </>
+                      ) : (
+                        <>
+                          <strong className="text-slate-200">{displayedWords.length}</strong>{' '}
+                          {displayedWords.length === 1 ? 'word' : 'words'}
+                          {!isSearchEmpty && ' found'}
+                        </>
+                      )}
                     </span>
                     {searchTerm && (
                       <button
