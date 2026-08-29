@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Word, RelationTag, ToastMessage, ActiveTab } from './types';
-import { loadWords, saveWords } from './utils/storage';
 import {
   extractAllPairs,
   addOrLinkPair,
@@ -29,8 +28,8 @@ import { ToastContainer } from './components/Toast';
 import { Plus, Settings as SettingsIcon, Link2 } from 'lucide-react';
 
 export default function App() {
-  // Temporary local cache initialization (falls back to 0 words or cached state)
-  const [words, setWords] = useState<Word[]>(() => loadWords());
+  // In-memory words state (synced with Google Drive)
+  const [words, setWords] = useState<Word[]>([]);
 
   // Active Tab: 'pairs' | 'words' | 'settings'
   const [activeTab, setActiveTab] = useState<ActiveTab>('pairs');
@@ -64,11 +63,6 @@ export default function App() {
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
-
-  // Save words to temporary local cache on updates
-  useEffect(() => {
-    saveWords(words);
-  }, [words]);
 
   // Google Drive Sync Engine & Master Database
   const driveSync = useGoogleDriveSync({
@@ -306,6 +300,7 @@ export default function App() {
             onSyncNow={driveSync.syncNow}
             onBackupToDrive={() => driveSync.saveToDriveNow(words)}
             onRestoreFromDrive={driveSync.restoreFromDrive}
+            onCleanAndDeduplicate={driveSync.cleanAndDeduplicateNow}
             onRefreshStatus={driveSync.refreshStatus}
           />
         ) : (

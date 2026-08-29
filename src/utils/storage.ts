@@ -1,6 +1,10 @@
 import { Word, RELATION_TAGS, RelationTag } from '../types';
 
-const STORAGE_KEY = 'whos_the_spy_dictionary_words_v3';
+const LEGACY_STORAGE_KEYS = [
+  'whos_the_spy_dictionary_words_v3',
+  'whos_the_spy_dictionary_words_v2',
+  'whos_the_spy_dictionary_words',
+];
 
 // Legacy tag mapping for backwards compatibility
 const LEGACY_TAG_MAP: Record<string, RelationTag> = {
@@ -16,72 +20,173 @@ const LEGACY_TAG_MAP: Record<string, RelationTag> = {
   aoh: 'aoh',
 };
 
-export function loadWords(): Word[] {
+/**
+ * Completely purges all legacy offline localStorage caches to ensure pure online sync.
+ */
+export function cleanupLegacyLocalStorage(): void {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      // Start website from 0 words by default
-      return [];
+    for (const key of LEGACY_STORAGE_KEYS) {
+      localStorage.removeItem(key);
     }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return sanitizeWords(parsed);
+  } catch (error) {
+    console.warn('LocalStorage cleanup skipped:', error);
+  }
+}
+
+/**
+ * Strict data deduplication and graph normalization engine.
+ * - Merges duplicate word entries sharing identical normalized terms.
+ * - Remaps all edges across the graph to point to canonical IDs.
+ * - Removes self-referential relations (word linked to itself).
+ * - Removes invalid relations pointing to non-existent words.
+ * - Deduplicates duplicate relation tags between identical word pairs.
+ * - Guarantees strict bidirectional symmetry.
+ */
+export function deduplicateWords(inputWords: Word[]): Word[] {
+  if (!Array.isArray(inputWords) || inputWords.length === 0) {
+    return [];
+  }
+
+  // 1. Group entities by normalized term
+  const termToCanonicalMap = new Map<string, { id: string; term: string; createdAt: number; updatedAt: number }>();
+  const idToCanonicalIdMap = new Map<string, string>();
+
+  // First pass: establish canonical ID for each unique normalized term
+  for (const w of inputWords) {
+    if (!w || typeof w.term !== 'string') continue;
+    const cleanTerm = w.term.trim();
+    if (!cleanTerm) continue;
+
+    const normKey = cleanTerm.toLowerCase();
+    const existing = termToCanonicalMap.get(normKey);
+
+    if (!existing) {
+      const canonicalId = typeof w.id === 'string' && w.id.trim() ? w.id.trim() : 'w_' + Math.random().toString(36).substring(2, 9);
+      termToCanonicalMap.set(normKey, {
+        id: canonicalId,
+        term: cleanTerm,
+        createdAt: typeof w.createdAt === 'number' ? w.createdAt : Date.now(),
+        updatedAt: typeof w.updatedAt === 'number' ? w.updatedAt : Date.now(),
+      });
+      if (typeof w.id === 'string') {
+        idToCanonicalIdMap.set(w.id, canonicalId);
+      }
+    } else {
+      if (typeof w.id === 'string') {
+        idToCanonicalIdMap.set(w.id, existing.id);
+      }
+      // Preserve earliest created date and latest updated date
+      if (typeof w.createdAt === 'number' && w.createdAt < existing.createdAt) {
+        existing.createdAt = w.createdAt;
+      }
+      if (typeof w.updatedAt === 'number' && w.updatedAt > existing.updatedAt) {
+        existing.updatedAt = w.updatedAt;
+      }
     }
-    return [];
-  } catch (error) {
-    console.error('Failed to load words from localStorage:', error);
-    return [];
   }
+
+  // 2. Aggregate unique mutual pairs without double data
+  // Key format: [canonicalIdA, canonicalIdB].sort().join('::') + '::' + tag
+  const uniqueMutualLinks = new Map<string, { idA: string; idB: string; tag: RelationTag }>();
+  const validTags = new Set(RELATION_TAGS);
+
+  for (const w of inputWords) {
+    if (!w || !w.id || !Array.isArray(w.relations)) continue;
+    const sourceCanonicalId = idToCanonicalIdMap.get(w.id);
+    if (!sourceCanonicalId) continue;
+
+    for (const r of w.relations) {
+      if (!r || typeof r.targetWordId !== 'string') continue;
+      const targetCanonicalId = idToCanonicalIdMap.get(r.targetWordId);
+
+      // Skip self-referential links or links pointing to unknown words
+      if (!targetCanonicalId || sourceCanonicalId === targetCanonicalId) {
+        continue;
+      }
+
+      let tag: RelationTag | undefined;
+      if (typeof r.tag === 'string') {
+        const rawTag = r.tag.trim();
+        if (validTags.has(rawTag as RelationTag)) {
+          tag = rawTag as RelationTag;
+        } else if (LEGACY_TAG_MAP[rawTag]) {
+          tag = LEGACY_TAG_MAP[rawTag];
+        }
+      }
+
+      if (!tag) {
+        tag = 'others';
+      }
+
+      const pairKey = [sourceCanonicalId, targetCanonicalId].sort().join('::') + '::' + tag;
+      if (!uniqueMutualLinks.has(pairKey)) {
+        uniqueMutualLinks.set(pairKey, {
+          idA: sourceCanonicalId,
+          idB: targetCanonicalId,
+          tag,
+        });
+      }
+    }
+  }
+
+  // 3. Build finalized canonical words map
+  const resultMap = new Map<string, Word>();
+
+  termToCanonicalMap.forEach((entry) => {
+    resultMap.set(entry.id, {
+      id: entry.id,
+      term: entry.term,
+      relations: [],
+      createdAt: entry.createdAt,
+      updatedAt: entry.updatedAt,
+    });
+  });
+
+  // 4. Attach bidirectional relation entries
+  uniqueMutualLinks.forEach((link) => {
+    const wordA = resultMap.get(link.idA);
+    const wordB = resultMap.get(link.idB);
+
+    if (wordA && wordB) {
+      wordA.relations.push({ targetWordId: wordB.id, tag: link.tag });
+      wordB.relations.push({ targetWordId: wordA.id, tag: link.tag });
+    }
+  });
+
+  // 5. Sort relations deterministically by term and return sorted list
+  const finalWords = Array.from(resultMap.values());
+
+  finalWords.forEach((word) => {
+    word.relations.sort((a, b) => {
+      const termA = resultMap.get(a.targetWordId)?.term || '';
+      const termB = resultMap.get(b.targetWordId)?.term || '';
+      return termA.localeCompare(termB, undefined, { sensitivity: 'base' });
+    });
+  });
+
+  return finalWords.sort((a, b) =>
+    a.term.localeCompare(b.term, undefined, { sensitivity: 'base' })
+  );
 }
 
-export function saveWords(words: Word[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
-  } catch (error) {
-    console.error('Failed to save words to localStorage:', error);
-  }
-}
-
-export function clearAllWords(): Word[] {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-  } catch (error) {
-    console.error('Failed to clear words in localStorage:', error);
-  }
-  return [];
-}
-
+/**
+ * Serializes dictionary words to validated JSON for Google Drive cloud sync.
+ */
 export function exportWordsJson(words: Word[]): string {
+  const cleanWords = deduplicateWords(words);
   const data = {
     appName: "Spy Dictionary",
     version: '3.0.0',
     exportedAt: new Date().toISOString(),
-    totalWords: words.length,
-    words,
+    totalWords: cleanWords.length,
+    words: cleanWords,
   };
   return JSON.stringify(data, null, 2);
 }
 
-export function triggerDownloadBackup(words: Word[]): boolean {
-  try {
-    const jsonString = exportWordsJson(words);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const dateStr = new Date().toISOString().split('T')[0];
-    a.href = url;
-    a.download = `spy-dictionary-backup-${dateStr}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    return true;
-  } catch (err) {
-    console.error('Download backup failed:', err);
-    return false;
-  }
-}
-
+/**
+ * Validates and parses JSON from the verified Google Drive database file.
+ */
 export function validateAndImportJson(
   jsonString: string,
   existingWords: Word[] = [],
@@ -116,73 +221,22 @@ export function validateAndImportJson(
     }
 
     if (mode === 'replace') {
+      const deduplicated = deduplicateWords(sanitizedNew);
       return {
         success: true,
-        words: sanitizedNew,
-        importedCount: sanitizedNew.length,
+        words: deduplicated,
+        importedCount: deduplicated.length,
       };
     }
 
-    // Merge Mode: Combine existing words and new imported words
-    const mergedMap = new Map<string, Word>();
-
-    // Helper to get or add word by normalized term
-    const getOrAddWord = (term: string): Word => {
-      const normalized = term.trim().toLowerCase();
-      let found = Array.from(mergedMap.values()).find(
-        (w) => w.term.trim().toLowerCase() === normalized
-      );
-      if (!found) {
-        const id = 'w_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
-        found = {
-          id,
-          term: term.trim(),
-          relations: [],
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        };
-        mergedMap.set(id, found);
-      }
-      return found;
-    };
-
-    // 1. Populate existing words
-    existingWords.forEach((w) => {
-      mergedMap.set(w.id, {
-        ...w,
-        relations: [...w.relations],
-      });
-    });
-
-    // 2. Merge imported words & their relations
-    sanitizedNew.forEach((newWord) => {
-      const targetEntity = getOrAddWord(newWord.term);
-
-      newWord.relations.forEach((rel) => {
-        const counterpartInImport = sanitizedNew.find((w) => w.id === rel.targetWordId);
-        if (counterpartInImport) {
-          const counterpartEntity = getOrAddWord(counterpartInImport.term);
-          if (counterpartEntity.id !== targetEntity.id) {
-            const exists = targetEntity.relations.some(
-              (r) => r.targetWordId === counterpartEntity.id && r.tag === rel.tag
-            );
-            if (!exists) {
-              targetEntity.relations.push({
-                targetWordId: counterpartEntity.id,
-                tag: rel.tag,
-              });
-            }
-          }
-        }
-      });
-    });
-
-    const finalMerged = sanitizeWords(Array.from(mergedMap.values()));
+    // Merge Mode: Combine existing words and new imported words with zero double data
+    const combined = [...existingWords, ...sanitizedNew];
+    const mergedWords = deduplicateWords(combined);
 
     return {
       success: true,
-      words: finalMerged,
-      importedCount: finalMerged.length,
+      words: mergedWords,
+      importedCount: mergedWords.length,
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Invalid JSON format';
@@ -194,13 +248,13 @@ export function validateAndImportJson(
 }
 
 export function sanitizeWords(rawList: unknown[]): Word[] {
+  if (!Array.isArray(rawList)) return [];
   const validTags = new Set(RELATION_TAGS);
   const result: Word[] = [];
 
   for (const item of rawList) {
     if (!item || typeof item !== 'object') continue;
     const w = item as Record<string, unknown>;
-    if (typeof w.id !== 'string' || !w.id.trim()) continue;
     if (typeof w.term !== 'string' || !w.term.trim()) continue;
 
     const relations: Word['relations'] = [];
@@ -228,8 +282,12 @@ export function sanitizeWords(rawList: unknown[]): Word[] {
       }
     }
 
+    const wordId = typeof w.id === 'string' && w.id.trim()
+      ? w.id.trim()
+      : 'w_' + Math.random().toString(36).substring(2, 9);
+
     result.push({
-      id: w.id.trim(),
+      id: wordId,
       term: w.term.trim(),
       relations,
       createdAt: typeof w.createdAt === 'number' ? w.createdAt : Date.now(),
@@ -237,22 +295,15 @@ export function sanitizeWords(rawList: unknown[]): Word[] {
     });
   }
 
-  // Ensure bidirectional consistency across all words
-  const wordMap = new Map<string, Word>(result.map((w) => [w.id, { ...w, relations: [...w.relations] }]));
-
-  wordMap.forEach((word) => {
-    word.relations.forEach((rel) => {
-      const target = wordMap.get(rel.targetWordId);
-      if (target) {
-        const hasReciprocal = target.relations.some(
-          (r) => r.targetWordId === word.id && r.tag === rel.tag
-        );
-        if (!hasReciprocal) {
-          target.relations.push({ targetWordId: word.id, tag: rel.tag });
-        }
-      }
-    });
-  });
-
-  return Array.from(wordMap.values());
+  return deduplicateWords(result);
 }
+
+/**
+ * Resets the active dictionary words state.
+ */
+export function clearAllWords(): Word[] {
+  cleanupLegacyLocalStorage();
+  return [];
+}
+
+

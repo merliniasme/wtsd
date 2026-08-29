@@ -13,7 +13,7 @@ import {
   downloadBackupFromDrive,
   DriveFileInfo,
 } from '../utils/googleDrive';
-import { validateAndImportJson } from '../utils/storage';
+import { validateAndImportJson, deduplicateWords, cleanupLegacyLocalStorage } from '../utils/storage';
 import { extractAllPairs } from '../utils/wordGraph';
 
 interface UseGoogleDriveSyncProps {
@@ -37,16 +37,15 @@ export function useGoogleDriveSync({
   const [isOperating, setIsOperating] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
 
-  // Ref to track the latest words without resetting interval/debounce closures
+  // Ref to track the latest words without stale closures
   const wordsRef = useRef<Word[]>(words);
   wordsRef.current = words;
 
   // Ref for debounce timer
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Ref to prevent initial mount from triggering a fake unsynced auto-save
   const hasInitializedRef = useRef(false);
 
-  // Helper to ensure we have a valid access token
+  // Helper to get valid access token
   const getValidToken = useCallback(async (): Promise<string | null> => {
     let token = accessToken;
     if (!token) {
@@ -59,7 +58,7 @@ export function useGoogleDriveSync({
     return null;
   }, [accessToken]);
 
-  // Check cloud backup status
+  // Check & Load Cloud Backup from Google Drive
   const checkCloudBackup = useCallback(async (token: string, shouldInitialLoad = false) => {
     try {
       setSyncStatus('syncing');
@@ -68,50 +67,52 @@ export function useGoogleDriveSync({
 
       if (fileInfo?.id) {
         const download = await downloadBackupFromDrive(token, fileInfo.id);
-        setCloudWordCount(download.totalWords);
+        const cleanCloudWords = deduplicateWords(download.words);
+        setCloudWordCount(cleanCloudWords.length);
         setLastSyncedAt(new Date(fileInfo.modifiedTime || Date.now()));
 
         if (shouldInitialLoad) {
-          // If cloud has words, merge or load them
-          if (download.words.length > 0) {
-            setWords((currentLocal) => {
-              if (currentLocal.length === 0) {
-                return download.words;
+          if (cleanCloudWords.length > 0) {
+            setWords((current) => {
+              if (current.length === 0) {
+                return cleanCloudWords;
               }
-              // Merge local cache and cloud data
-              const mergeResult = validateAndImportJson(download.rawText, currentLocal, 'merge');
-              return mergeResult.words || download.words;
+              // Merge & deduplicate
+              return deduplicateWords([...current, ...cleanCloudWords]);
             });
-            addToast(`Loaded ${download.words.length} words from Google Drive database.`, 'success');
+            addToast(`Online Sync: Loaded ${cleanCloudWords.length} words from Google Drive.`, 'success');
           } else if (wordsRef.current.length > 0) {
-            // Local has words but cloud is empty, upload local
-            await uploadBackupToDrive(token, wordsRef.current);
-            setCloudWordCount(wordsRef.current.length);
+            const cleanLocal = deduplicateWords(wordsRef.current);
+            await uploadBackupToDrive(token, cleanLocal);
+            setCloudWordCount(cleanLocal.length);
           }
         }
         setSyncStatus('synced');
       } else {
         setCloudWordCount(null);
-        // If file doesn't exist on drive yet and we have local words, create initial backup
+        // If file doesn't exist on drive yet and we have words in memory, create initial online database
         if (wordsRef.current.length > 0) {
-          const newFile = await uploadBackupToDrive(token, wordsRef.current);
+          const cleanLocal = deduplicateWords(wordsRef.current);
+          const newFile = await uploadBackupToDrive(token, cleanLocal);
           setCloudFileInfo(newFile);
-          setCloudWordCount(wordsRef.current.length);
+          setCloudWordCount(cleanLocal.length);
           setLastSyncedAt(new Date());
-          addToast(`Created new database in Google Drive with ${wordsRef.current.length} words.`, 'success');
+          addToast(`Created new database in Google Drive with ${cleanLocal.length} words.`, 'success');
         }
         setSyncStatus('synced');
       }
     } catch (err: unknown) {
-      console.warn('Google Drive sync check error:', err);
+      console.warn('Google Drive online sync error:', err);
       const msg = err instanceof Error ? err.message : 'Sync check failed';
       setLastError(msg);
       setSyncStatus('error');
     }
   }, [addToast, setWords]);
 
-  // Listen to Auth State
+  // Purge any legacy localStorage cache on mount and listen to Google Auth state
   useEffect(() => {
+    cleanupLegacyLocalStorage();
+
     const unsubscribe = initAuth(
       (loggedInUser, token) => {
         setUser(loggedInUser);
@@ -165,15 +166,16 @@ export function useGoogleDriveSync({
       setCloudFileInfo(null);
       setCloudWordCount(null);
       setSyncStatus('idle');
-      addToast('Signed out from Google Drive. Local cache retained temporarily.', 'info');
+      setWords([]);
+      addToast('Signed out from Google Drive.', 'info');
     } catch (err) {
       console.error('Sign out error:', err);
     }
   };
 
-  // Immediate Save/Backup to Google Drive
+  // Immediate Save to Google Drive with Strict Deduplication
   const saveToDriveNow = useCallback(async (currentWords?: Word[]) => {
-    const targetWords = currentWords || wordsRef.current;
+    const targetWords = deduplicateWords(currentWords || wordsRef.current);
     const token = await getValidToken();
 
     if (!token || !user) {
@@ -200,11 +202,10 @@ export function useGoogleDriveSync({
     }
   }, [getValidToken, user]);
 
-  // Bi-directional Smart Sync with Google Drive
+  // Bi-directional Online Sync with Google Drive & Zero Double Data
   const syncNow = useCallback(async () => {
     let token = await getValidToken();
     if (!token || !user) {
-      // Prompt sign in if not connected
       try {
         const res = await googleSignIn();
         if (res) {
@@ -227,38 +228,38 @@ export function useGoogleDriveSync({
       const existingFile = await findDriveBackupFile(token);
 
       if (!existingFile?.id) {
-        // No file on drive yet, upload current local words
-        const info = await uploadBackupToDrive(token, wordsRef.current);
+        const clean = deduplicateWords(wordsRef.current);
+        const info = await uploadBackupToDrive(token, clean);
         setCloudFileInfo(info);
-        setCloudWordCount(wordsRef.current.length);
+        setCloudWordCount(clean.length);
         setLastSyncedAt(new Date());
         setSyncStatus('synced');
-        addToast(`Synced: Uploaded ${wordsRef.current.length} words to Google Drive.`, 'success');
+        addToast(`Online Sync: Created database in Google Drive with ${clean.length} words.`, 'success');
         return;
       }
 
       // Download from Google Drive
       const cloudData = await downloadBackupFromDrive(token, existingFile.id);
 
-      // Merge local and cloud words
+      // Merge local and cloud words with deduplication
       const mergeRes = validateAndImportJson(cloudData.rawText, wordsRef.current, 'merge');
       if (!mergeRes.success || !mergeRes.words) {
         throw new Error(mergeRes.error || 'Failed to merge cloud database.');
       }
 
-      const mergedWords = mergeRes.words;
-      setWords(mergedWords);
+      const cleanMergedWords = deduplicateWords(mergeRes.words);
+      setWords(cleanMergedWords);
 
       // Save merged result back to Google Drive
-      const updatedInfo = await uploadBackupToDrive(token, mergedWords);
+      const updatedInfo = await uploadBackupToDrive(token, cleanMergedWords);
       setCloudFileInfo(updatedInfo);
-      setCloudWordCount(mergedWords.length);
+      setCloudWordCount(cleanMergedWords.length);
       setLastSyncedAt(new Date());
       setSyncStatus('synced');
 
-      const pairsCount = extractAllPairs(mergedWords).length;
+      const pairsCount = extractAllPairs(cleanMergedWords).length;
       addToast(
-        `Synced with Google Drive: ${mergedWords.length} words (${pairsCount} pairs) up to date.`,
+        `Cloud Synced: ${cleanMergedWords.length} words (${pairsCount} pairs) unified online.`,
         'success'
       );
     } catch (err: unknown) {
@@ -269,6 +270,48 @@ export function useGoogleDriveSync({
       addToast(`Sync error: ${msg}`, 'error');
     } finally {
       setIsOperating(false);
+    }
+  }, [addToast, getValidToken, setWords, user]);
+
+  // Clean and Deduplicate Database Action (minimizes double data & orphan relations)
+  const cleanAndDeduplicateNow = useCallback(async () => {
+    const rawWords = wordsRef.current;
+    const initialCount = rawWords.length;
+    const initialPairs = extractAllPairs(rawWords).length;
+
+    const cleaned = deduplicateWords(rawWords);
+    const finalCount = cleaned.length;
+    const finalPairs = extractAllPairs(cleaned).length;
+
+    setWords(cleaned);
+
+    const token = await getValidToken();
+    if (token && user) {
+      try {
+        setIsOperating(true);
+        setSyncStatus('syncing');
+        const info = await uploadBackupToDrive(token, cleaned);
+        setCloudFileInfo(info);
+        setCloudWordCount(cleaned.length);
+        setLastSyncedAt(new Date());
+        setSyncStatus('synced');
+      } catch (err) {
+        console.error('Failed to upload deduplicated data:', err);
+      } finally {
+        setIsOperating(false);
+      }
+    }
+
+    const removedWords = Math.max(0, initialCount - finalCount);
+    const removedPairs = Math.max(0, initialPairs - finalPairs);
+
+    if (removedWords > 0 || removedPairs > 0) {
+      addToast(
+        `Cleaned & Deduplicated: Removed ${removedWords} duplicate words and ${removedPairs} redundant links.`,
+        'success'
+      );
+    } else {
+      addToast('Dictionary is already 100% clean with zero duplicate data.', 'info');
     }
   }, [addToast, getValidToken, setWords, user]);
 
@@ -289,13 +332,14 @@ export function useGoogleDriveSync({
       setIsOperating(true);
       setSyncStatus('syncing');
       const result = await downloadBackupFromDrive(token, cloudFileInfo.id);
-      setWords(result.words);
-      setCloudWordCount(result.words.length);
+      const clean = deduplicateWords(result.words);
+      setWords(clean);
+      setCloudWordCount(clean.length);
       setLastSyncedAt(new Date());
       setSyncStatus('synced');
 
-      const pairs = extractAllPairs(result.words);
-      addToast(`Restored ${result.words.length} words (${pairs.length} pairs) from Google Drive.`, 'success');
+      const pairs = extractAllPairs(clean);
+      addToast(`Restored ${clean.length} words (${pairs.length} pairs) from Google Drive.`, 'success');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Restore failed';
       setLastError(msg);
@@ -306,7 +350,36 @@ export function useGoogleDriveSync({
     }
   }, [addToast, cloudFileInfo?.id, getValidToken, setWords, user]);
 
-  // Debounced Auto-Save to Drive whenever words change
+  // Reset Cloud Database to Empty
+  const clearCloudDatabase = useCallback(async () => {
+    const token = await getValidToken();
+    if (!token || !user) {
+      setWords([]);
+      addToast('Dictionary cleared.', 'info');
+      return;
+    }
+
+    try {
+      setIsOperating(true);
+      setSyncStatus('syncing');
+      setWords([]);
+      const info = await uploadBackupToDrive(token, []);
+      setCloudFileInfo(info);
+      setCloudWordCount(0);
+      setLastSyncedAt(new Date());
+      setSyncStatus('synced');
+      addToast('Google Drive cloud database reset to 0 words.', 'info');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Reset failed';
+      setLastError(msg);
+      setSyncStatus('error');
+      addToast(`Reset error: ${msg}`, 'error');
+    } finally {
+      setIsOperating(false);
+    }
+  }, [addToast, getValidToken, setWords, user]);
+
+  // Real-time Debounced Auto-Save to Google Drive on word changes
   useEffect(() => {
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true;
@@ -324,10 +397,10 @@ export function useGoogleDriveSync({
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Auto-save to Google Drive after 2.5 seconds of inactivity
+    // Auto-save to Google Drive after 1.2s of inactivity
     debounceTimerRef.current = setTimeout(() => {
       saveToDriveNow(words);
-    }, 2500);
+    }, 1200);
 
     return () => {
       if (debounceTimerRef.current) {
@@ -336,14 +409,13 @@ export function useGoogleDriveSync({
     };
   }, [words, user, accessToken, saveToDriveNow]);
 
-  // Periodic Occasional Sync (Every 4 minutes in background)
+  // Periodic Occasional Online Sync (Every 3 minutes in background)
   useEffect(() => {
     if (!user || !accessToken) return;
 
     const intervalId = setInterval(() => {
-      // Occasional background check / sync
       checkCloudBackup(accessToken, false);
-    }, 4 * 60 * 1000);
+    }, 3 * 60 * 1000);
 
     return () => clearInterval(intervalId);
   }, [user, accessToken, checkCloudBackup]);
@@ -363,6 +435,9 @@ export function useGoogleDriveSync({
     syncNow,
     saveToDriveNow,
     restoreFromDrive,
+    cleanAndDeduplicateNow,
+    clearCloudDatabase,
     refreshStatus: () => accessToken && checkCloudBackup(accessToken, false),
   };
 }
+

@@ -30,23 +30,23 @@ export const Header: React.FC<HeaderProps> = ({
       return 'Syncing to Drive...';
     }
     if (!user) {
-      return 'Local Cache Only';
+      return 'Online Sync Off';
     }
     if (syncStatus === 'synced') {
       if (lastSyncedAt) {
         const diffMs = Date.now() - lastSyncedAt.getTime();
         const diffMins = Math.floor(diffMs / 60000);
-        if (diffMins < 1) return 'Saved to Drive (Just now)';
-        if (diffMins === 1) return 'Saved to Drive (1m ago)';
-        return `Saved to Drive (${diffMins}m ago)`;
+        if (diffMins < 1) return 'Cloud Synced (Just now)';
+        if (diffMins === 1) return 'Cloud Synced (1m ago)';
+        return `Cloud Synced (${diffMins}m ago)`;
       }
-      return 'Saved to Drive';
+      return 'Cloud Synced';
     }
     if (syncStatus === 'unsaved') {
-      return 'Unsynced Changes';
+      return 'Syncing changes...';
     }
     if (syncStatus === 'error') {
-      return 'Sync Error';
+      return 'Sync Issue';
     }
     return 'Drive Connected';
   };
@@ -133,20 +133,15 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </div>
           ) : (
-            /* Logged out state: Sign In Button & Temporary Local Cache Indicator */
+            /* Logged out state: Sign In Button */
             <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-1 text-[11px] text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md font-mono">
-                <CloudOff className="w-3 h-3" />
-                <span>Temporary Cache</span>
-              </div>
-
               <button
                 type="button"
                 id="btn-header-google-signin"
                 onClick={onSignIn}
                 disabled={isSigningIn}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-900 font-medium text-xs rounded-lg shadow-sm border border-slate-200 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:shadow"
-                title="Sign in with Google to save database into Google Drive"
+                title="Sign in with Google to access and sync your dictionary online"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 48 48">
                   <path
@@ -166,7 +161,7 @@ export const Header: React.FC<HeaderProps> = ({
                     d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
                   />
                 </svg>
-                <span>{isSigningIn ? 'Connecting...' : 'Sign In with Google'}</span>
+                <span>{isSigningIn ? 'Connecting...' : 'Sign in to Sync'}</span>
               </button>
             </div>
           )}

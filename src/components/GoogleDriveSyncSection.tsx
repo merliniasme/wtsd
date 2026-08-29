@@ -14,6 +14,8 @@ import {
   FileCheck,
   ShieldCheck,
   Zap,
+  Sparkles,
+  Layers,
 } from 'lucide-react';
 
 interface GoogleDriveSyncSectionProps {
@@ -30,6 +32,7 @@ interface GoogleDriveSyncSectionProps {
   onSyncNow: () => void;
   onBackupToDrive: () => void;
   onRestoreFromDrive: () => void;
+  onCleanAndDeduplicate: () => void;
   onRefreshStatus: () => void;
 }
 
@@ -47,6 +50,7 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
   onSyncNow,
   onBackupToDrive,
   onRestoreFromDrive,
+  onCleanAndDeduplicate,
   onRefreshStatus,
 }) => {
   // Confirmation Modal State for Restore / Overwrite
@@ -63,8 +67,8 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
     setConfirmModal({
       isOpen: true,
       title: 'Restore from Google Drive?',
-      description: `This will replace your current temporary local cache (${words.length} words) with the latest cloud database (${cloudWordCount ?? 'all'} words) stored on your Google Drive.`,
-      actionLabel: 'Restore & Replace',
+      description: `This will refresh your dictionary with the latest cloud database (${cloudWordCount ?? 'all'} words) stored on your Google Drive.`,
+      actionLabel: 'Restore & Sync',
       onConfirm: () => {
         setConfirmModal(null);
         onRestoreFromDrive();
@@ -85,13 +89,13 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-slate-100">Google Drive Master Database</h3>
+              <h3 className="text-sm font-semibold text-slate-100">Google Drive Online Master Database</h3>
               <span className="text-[10px] px-1.5 py-0.2 bg-sky-950 text-sky-300 border border-sky-800/80 rounded font-mono">
-                Primary Store
+                Full Online Sync
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Persistent storage saved in your Google Drive. LocalStorage is used only as temporary cache.
+              Live cloud database stored in your Google Drive with zero offline redundancy.
             </p>
           </div>
         </div>
@@ -117,7 +121,7 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
               </p>
               <p className="text-[9px] text-emerald-400 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Connected & Syncing</span>
+                <span>Online & Synchronized</span>
               </p>
             </div>
             <button
@@ -137,9 +141,9 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
       {!user ? (
         <div className="py-4 text-center space-y-3 bg-[#0F172A] rounded-xl border border-[#334155] p-5">
           <div className="max-w-md mx-auto space-y-1.5">
-            <h4 className="text-xs font-semibold text-slate-200">Sign in to save your database in Google Drive</h4>
+            <h4 className="text-xs font-semibold text-slate-200">Sign in to connect your Google Drive Database</h4>
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              When signed in, all your words and mutual relations are securely preserved on your personal Google Drive, with automatic sync whenever you make changes and across devices.
+              All word pairs and undercover relations are stored securely on your personal Google Drive with automated real-time synchronization and deduplication.
             </p>
           </div>
 
@@ -176,7 +180,7 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
 
           <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-500 pt-1">
             <ShieldCheck className="w-3 h-3 text-emerald-400" />
-            <span>Files are stored strictly within your personal Google Drive storage.</span>
+            <span>Files are stored strictly in your private Google Drive storage.</span>
           </div>
         </div>
       ) : (
@@ -195,11 +199,11 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
               <div className="space-y-0.5">
                 <p className="text-xs font-semibold text-slate-200 flex items-center gap-2">
                   <span>
-                    {cloudFileInfo ? 'Google Drive Database Active' : 'Initial Drive DB Pending'}
+                    {cloudFileInfo ? 'Google Drive Cloud Database Active' : 'Initial Drive DB Connecting'}
                   </span>
                   {cloudWordCount !== null && (
                     <span className="text-[10px] font-mono px-1.5 py-0.2 bg-slate-800 text-sky-300 rounded border border-slate-700">
-                      {cloudWordCount} words in cloud
+                      {cloudWordCount} words online
                     </span>
                   )}
                 </p>
@@ -212,7 +216,7 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
                       </span>
                     </>
                   ) : (
-                    'Automatic auto-save is enabled on changes.'
+                    'Real-time auto-sync is active.'
                   )}
                 </p>
               </div>
@@ -239,12 +243,12 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
           <div className="flex items-center gap-2 text-[11px] text-sky-300 bg-sky-950/40 border border-sky-900/60 rounded-lg px-3 py-2">
             <Zap className="w-3.5 h-3.5 text-sky-400 shrink-0" />
             <span>
-              <strong>Auto-Sync Active:</strong> Any word or relation edits are automatically saved to your Google Drive database with background periodic synchronization.
+              <strong>Real-Time Online Sync:</strong> All changes are auto-saved straight to your Google Drive database with automated deduplication to prevent double data.
             </span>
           </div>
 
           {/* Cloud Action Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
             {/* 1. Occasional Sync / Sync Now */}
             <button
               type="button"
@@ -258,15 +262,34 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
                   className={`w-4 h-4 ${isOperating && syncStatus === 'syncing' ? 'animate-spin' : ''}`}
                 />
                 <span className="text-xs font-semibold text-sky-200 group-hover:text-sky-100">
-                  Sync Now
+                  Online Sync Now
                 </span>
               </div>
               <p className="text-[10px] text-slate-400 leading-relaxed">
-                Bi-directional merge: keep Google Drive & local cache fully aligned.
+                Re-sync and unify Google Drive database.
               </p>
             </button>
 
-            {/* 2. Backup to Drive */}
+            {/* 2. Clean & Deduplicate */}
+            <button
+              type="button"
+              id="btn-clean-deduplicate"
+              onClick={onCleanAndDeduplicate}
+              disabled={isOperating}
+              className="flex flex-col items-start p-3 rounded-lg border border-emerald-900/70 bg-emerald-950/25 hover:border-emerald-400 hover:bg-emerald-950/40 transition-all text-left group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
+            >
+              <div className="flex items-center gap-1.5 text-emerald-400 mb-1">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-xs font-semibold text-emerald-200 group-hover:text-emerald-100">
+                  Clean & Deduplicate
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 leading-relaxed">
+                Scan & eliminate double data or orphan relations.
+              </p>
+            </button>
+
+            {/* 3. Force Push to Drive */}
             <button
               type="button"
               id="btn-backup-to-drive"
@@ -277,15 +300,15 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
               <div className="flex items-center gap-1.5 text-sky-400 mb-1">
                 <CloudUpload className="w-4 h-4" />
                 <span className="text-xs font-semibold text-slate-200 group-hover:text-sky-300">
-                  Force Save to Drive
+                  Push to Drive
                 </span>
               </div>
               <p className="text-[10px] text-slate-400 leading-relaxed">
-                Overwrite Drive database with current temporary cache ({words.length} words).
+                Upload current database ({words.length} words) to Drive.
               </p>
             </button>
 
-            {/* 3. Restore from Drive */}
+            {/* 4. Restore from Drive */}
             <button
               type="button"
               id="btn-restore-from-drive"
@@ -296,20 +319,20 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
               <div className="flex items-center gap-1.5 text-sky-400 mb-1">
                 <CloudDownload className="w-4 h-4" />
                 <span className="text-xs font-semibold text-slate-200 group-hover:text-sky-300">
-                  Restore from Drive
+                  Pull from Drive
                 </span>
               </div>
               <p className="text-[10px] text-slate-400 leading-relaxed">
                 {cloudFileInfo
-                  ? `Pull cloud database (${cloudWordCount ?? 'all'} words) to replace local cache.`
-                  : 'No cloud database found on Drive.'}
+                  ? `Pull cloud database (${cloudWordCount ?? 'all'} words) directly.`
+                  : 'No database found on Drive.'}
               </p>
             </button>
           </div>
         </div>
       )}
 
-      {/* Confirmation Modal for Google Drive Mutating Actions */}
+      {/* Confirmation Modal */}
       {confirmModal?.isOpen && (
         <div
           id="gdrive-confirm-modal-backdrop"
@@ -352,3 +375,4 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
     </section>
   );
 };
+
