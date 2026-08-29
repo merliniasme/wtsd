@@ -1,0 +1,6 @@
+{
+  "name": "Who's the Spy? Dictionary",
+  "description": "A single-page dictionary for 'Who is the Undercover' game word pairs, mutual relation tracking, and category-filtered search.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
