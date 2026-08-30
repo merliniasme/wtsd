@@ -1,6 +1,7 @@
-export type RelationTag = 'others' | 'aoh' | 'ectm' | 'mag' | 'cghn';
+export type RelationTag = 'unknown' | 'others' | 'aoh' | 'ectm' | 'mag' | 'cghn';
 
 export const RELATION_TAGS: readonly RelationTag[] = [
+  'unknown',
   'others',
   'aoh',
   'ectm',
@@ -35,6 +36,18 @@ export interface TagInfo {
 }
 
 export const TAG_METADATA: Record<RelationTag, TagInfo> = {
+  unknown: {
+    tag: 'unknown',
+    label: 'Unknown',
+    shortCode: 'UNK',
+    description: 'Unspecified relation tag',
+    color: 'zinc',
+    badgeBg: 'bg-zinc-800/80',
+    badgeText: 'text-zinc-300',
+    badgeBorder: 'border-zinc-700/70',
+    activeBg: 'bg-zinc-300',
+    activeText: 'text-zinc-950',
+  },
   others: {
     tag: 'others',
     label: 'Others',

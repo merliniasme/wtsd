@@ -33,7 +33,7 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
   const [pastedNew, setPastedNew] = useState(false);
 
   // Tag type selection
-  const [tag, setTag] = useState<RelationTag>('others');
+  const [tag, setTag] = useState<RelationTag>('unknown');
   const [error, setError] = useState<string | null>(null);
 
   // Reset when modal opens/closes
@@ -43,7 +43,7 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
       setSearchQuery('');
       setSelectedWord(null);
       setNewTerm('');
-      setTag('others');
+      setTag('unknown');
       setError(null);
     }
   }, [isOpen, sourceWord]);
@@ -121,7 +121,7 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
         setError('Please enter or paste a word to add & link.');
         return;
       }
-      if (targetTerm.toLowerCase() === sourceWord.term.toLowerCase()) {
+      if (targetTerm === sourceWord.term) {
         setError('A word cannot be linked to itself.');
         return;
       }

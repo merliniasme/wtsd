@@ -53,7 +53,7 @@ export const AddWordModal: React.FC<AddWordModalProps> = ({
   const [pastedSecond, setPastedSecond] = useState(false);
 
   // Shared Tag Selection for linking
-  const [tag, setTag] = useState<RelationTag>('others');
+  const [tag, setTag] = useState<RelationTag>('unknown');
 
   // Reset state when modal opens or closes
   useEffect(() => {
@@ -65,7 +65,7 @@ export const AddWordModal: React.FC<AddWordModalProps> = ({
       setSecondTerm('');
       setSearchQuery('');
       setSelectedWord(null);
-      setTag('others');
+      setTag('unknown');
       setError(null);
     }
   }, [isOpen]);
@@ -83,7 +83,7 @@ export const AddWordModal: React.FC<AddWordModalProps> = ({
   // Candidates for existing words picker (excluding the newly added word)
   const candidateWords = useMemo(() => {
     if (!addedWord) return existingWords;
-    return existingWords.filter((w) => w.id !== addedWord.id && w.term.toLowerCase() !== addedWord.term.toLowerCase());
+    return existingWords.filter((w) => w.id !== addedWord.id && w.term !== addedWord.term);
   }, [existingWords, addedWord]);
 
   const filteredCandidates = useMemo(() => {
@@ -136,7 +136,6 @@ export const AddWordModal: React.FC<AddWordModalProps> = ({
     const clean = term.trim();
     if (!clean) {
       setError('Please paste a word first.');
-      return;
     }
 
     const res = onAddWord(clean);
@@ -147,7 +146,7 @@ export const AddWordModal: React.FC<AddWordModalProps> = ({
 
     const createdWord =
       res.word ||
-      existingWords.find((w) => w.term.toLowerCase() === clean.toLowerCase()) || {
+      existingWords.find((w) => w.term === clean) || {
         id: 'w_' + Math.random().toString(36).substring(2, 9),
         term: clean,
         relations: [],
@@ -194,7 +193,7 @@ export const AddWordModal: React.FC<AddWordModalProps> = ({
       return;
     }
 
-    if (cleanSecond.toLowerCase() === addedWord.term.toLowerCase()) {
+    if (cleanSecond === addedWord.term) {
       setError('Cannot link a word to itself.');
       return;
     }

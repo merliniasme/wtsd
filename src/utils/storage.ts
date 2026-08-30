@@ -8,6 +8,7 @@ const LEGACY_STORAGE_KEYS = [
 
 // Legacy tag mapping for backwards compatibility
 const LEGACY_TAG_MAP: Record<string, RelationTag> = {
+  unknown: 'unknown',
   anime: 'mag',
   celebrity: 'ectm',
   humaniora: 'cghn',
@@ -35,11 +36,12 @@ export function cleanupLegacyLocalStorage(): void {
 
 /**
  * Strict data deduplication and graph normalization engine.
- * - Merges duplicate word entries sharing identical normalized terms.
+ * - Merges duplicate word entries sharing identical exact case-sensitive terms.
  * - Remaps all edges across the graph to point to canonical IDs.
  * - Removes self-referential relations (word linked to itself).
  * - Removes invalid relations pointing to non-existent words.
- * - Deduplicates duplicate relation tags between identical word pairs.
+ * - Preserves different relation tags for identical word pairs.
+ * - Replaces 'unknown' tag when a specific relation tag is assigned.
  * - Guarantees strict bidirectional symmetry.
  */
 export function deduplicateWords(inputWords: Word[]): Word[] {
@@ -47,17 +49,17 @@ export function deduplicateWords(inputWords: Word[]): Word[] {
     return [];
   }
 
-  // 1. Group entities by normalized term
+  // 1. Group entities by exact term (case-sensitive exact match)
   const termToCanonicalMap = new Map<string, { id: string; term: string; createdAt: number; updatedAt: number }>();
   const idToCanonicalIdMap = new Map<string, string>();
 
-  // First pass: establish canonical ID for each unique normalized term
+  // First pass: establish canonical ID for each unique exact term
   for (const w of inputWords) {
     if (!w || typeof w.term !== 'string') continue;
     const cleanTerm = w.term.trim();
     if (!cleanTerm) continue;
 
-    const normKey = cleanTerm.toLowerCase();
+    const normKey = cleanTerm; // Case-sensitive exact match
     const existing = termToCanonicalMap.get(normKey);
 
     if (!existing) {
@@ -85,9 +87,9 @@ export function deduplicateWords(inputWords: Word[]): Word[] {
     }
   }
 
-  // 2. Aggregate unique mutual pairs without double data
-  // Key format: [canonicalIdA, canonicalIdB].sort().join('::') + '::' + tag
-  const uniqueMutualLinks = new Map<string, { idA: string; idB: string; tag: RelationTag }>();
+  // 2. Aggregate unique mutual pairs and their tags
+  // pairBaseKey: [canonicalIdA, canonicalIdB].sort().join('::') -> Set of tags
+  const pairTagsMap = new Map<string, { idA: string; idB: string; tags: Set<RelationTag> }>();
   const validTags = new Set(RELATION_TAGS);
 
   for (const w of inputWords) {
@@ -115,21 +117,28 @@ export function deduplicateWords(inputWords: Word[]): Word[] {
       }
 
       if (!tag) {
-        tag = 'others';
+        tag = 'unknown';
       }
 
-      const pairKey = [sourceCanonicalId, targetCanonicalId].sort().join('::') + '::' + tag;
-      if (!uniqueMutualLinks.has(pairKey)) {
-        uniqueMutualLinks.set(pairKey, {
-          idA: sourceCanonicalId,
-          idB: targetCanonicalId,
-          tag,
-        });
+      const [idA, idB] = [sourceCanonicalId, targetCanonicalId].sort();
+      const pairBaseKey = `${idA}::${idB}`;
+
+      if (!pairTagsMap.has(pairBaseKey)) {
+        pairTagsMap.set(pairBaseKey, { idA, idB, tags: new Set<RelationTag>() });
       }
+
+      pairTagsMap.get(pairBaseKey)!.tags.add(tag);
     }
   }
 
-  // 3. Build finalized canonical words map
+  // 3. For any pair with both 'unknown' and specific tags, remove 'unknown'
+  pairTagsMap.forEach((entry) => {
+    if (entry.tags.size > 1 && entry.tags.has('unknown')) {
+      entry.tags.delete('unknown');
+    }
+  });
+
+  // 4. Build finalized canonical words map
   const resultMap = new Map<string, Word>();
 
   termToCanonicalMap.forEach((entry) => {
@@ -142,14 +151,16 @@ export function deduplicateWords(inputWords: Word[]): Word[] {
     });
   });
 
-  // 4. Attach bidirectional relation entries
-  uniqueMutualLinks.forEach((link) => {
-    const wordA = resultMap.get(link.idA);
-    const wordB = resultMap.get(link.idB);
+  // 5. Attach bidirectional relation entries for each distinct tag
+  pairTagsMap.forEach((entry) => {
+    const wordA = resultMap.get(entry.idA);
+    const wordB = resultMap.get(entry.idB);
 
     if (wordA && wordB) {
-      wordA.relations.push({ targetWordId: wordB.id, tag: link.tag });
-      wordB.relations.push({ targetWordId: wordA.id, tag: link.tag });
+      entry.tags.forEach((tag) => {
+        wordA.relations.push({ targetWordId: wordB.id, tag });
+        wordB.relations.push({ targetWordId: wordA.id, tag });
+      });
     }
   });
 

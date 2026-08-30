@@ -27,6 +27,7 @@ export function calculateTotalRelations(words: Word[]): number {
  */
 export function calculateRelationsByTag(words: Word[]): Record<RelationTag, number> {
   const counts: Record<RelationTag, number> = {
+    unknown: 0,
     others: 0,
     aoh: 0,
     ectm: 0,
@@ -52,11 +53,11 @@ export function calculateRelationsByTag(words: Word[]): Record<RelationTag, numb
 }
 
 /**
- * Find word by term (case-insensitive)
+ * Find word by term (exact case-sensitive match)
  */
 export function findWordByTerm(words: Word[], term: string): Word | undefined {
-  const clean = term.trim().toLowerCase();
-  return words.find((w) => w.term.trim().toLowerCase() === clean);
+  const clean = term.trim();
+  return words.find((w) => w.term.trim() === clean);
 }
 
 /**
@@ -109,36 +110,65 @@ export function hasRelation(
 
 /**
  * Links two words bidirectionally with automatic mirror update.
+ * If linking with a specific tag and an 'unknown' relation exists,
+ * 'unknown' is removed and replaced by the new specified tag.
+ * If linking with different specific tags, both tags are preserved for the pair.
  */
 export function linkWords(
   words: Word[],
   wordIdA: string,
   wordIdB: string,
-  tag: RelationTag
+  tag: RelationTag = 'unknown'
 ): Word[] {
   if (wordIdA === wordIdB) return words;
 
   return words.map((w) => {
     if (w.id === wordIdA) {
-      const alreadyLinked = w.relations.some(
+      // If specifying a non-unknown tag, remove any existing 'unknown' tag relation for this target
+      let filteredRelations = w.relations;
+      if (tag !== 'unknown') {
+        filteredRelations = filteredRelations.filter(
+          (r) => !(r.targetWordId === wordIdB && r.tag === 'unknown')
+        );
+      }
+
+      const alreadyLinked = filteredRelations.some(
         (r) => r.targetWordId === wordIdB && r.tag === tag
       );
-      if (alreadyLinked) return w;
+      if (alreadyLinked && filteredRelations.length === w.relations.length) return w;
+
+      const finalRelations = alreadyLinked
+        ? filteredRelations
+        : [...filteredRelations, { targetWordId: wordIdB, tag }];
+
       return {
         ...w,
-        relations: [...w.relations, { targetWordId: wordIdB, tag }],
+        relations: finalRelations,
         updatedAt: Date.now(),
       };
     }
 
     if (w.id === wordIdB) {
-      const alreadyLinked = w.relations.some(
+      // If specifying a non-unknown tag, remove any existing 'unknown' tag relation for this target
+      let filteredRelations = w.relations;
+      if (tag !== 'unknown') {
+        filteredRelations = filteredRelations.filter(
+          (r) => !(r.targetWordId === wordIdA && r.tag === 'unknown')
+        );
+      }
+
+      const alreadyLinked = filteredRelations.some(
         (r) => r.targetWordId === wordIdA && r.tag === tag
       );
-      if (alreadyLinked) return w;
+      if (alreadyLinked && filteredRelations.length === w.relations.length) return w;
+
+      const finalRelations = alreadyLinked
+        ? filteredRelations
+        : [...filteredRelations, { targetWordId: wordIdA, tag }];
+
       return {
         ...w,
-        relations: [...w.relations, { targetWordId: wordIdA, tag }],
+        relations: finalRelations,
         updatedAt: Date.now(),
       };
     }
@@ -154,7 +184,7 @@ export function addOrLinkPair(
   words: Word[],
   termA: string,
   termB: string,
-  tag: RelationTag
+  tag: RelationTag = 'unknown'
 ): { updatedWords: Word[]; wordA: Word; wordB: Word; duplicate: boolean } {
   let currentWords = [...words];
 

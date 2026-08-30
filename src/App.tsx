@@ -148,13 +148,19 @@ export default function App() {
   // Handler: Add Standalone Word
   const handleAddSingleWord = useCallback(
     (term: string) => {
-      const res = getOrCreateWord(words, term);
+      const clean = term.trim();
+      if (!clean) {
+        return { success: false, error: 'Word cannot be empty.' };
+      }
+
+      const res = getOrCreateWord(words, clean);
       if (!res.created) {
-        return { success: false, error: `Word "${term}" already exists.`, word: res.word };
+        // Exact case-sensitive match already exists: succeed silently without warning
+        return { success: true, word: res.word };
       }
 
       setWords(res.updatedWords);
-      addToast(`Added "${term}".`, 'success');
+      addToast(`Added "${clean}".`, 'success');
       return { success: true, word: res.word };
     },
     [words, addToast]
@@ -237,16 +243,19 @@ export default function App() {
       const target = wordsMap.get(wordId);
       if (!target) return { success: false, error: 'Word not found.' };
 
+      const cleanNew = newTerm.trim();
+      if (!cleanNew) return { success: false, error: 'Word cannot be empty.' };
+
       const duplicate = words.find(
-        (w) => w.id !== wordId && w.term.trim().toLowerCase() === newTerm.trim().toLowerCase()
+        (w) => w.id !== wordId && w.term.trim() === cleanNew
       );
       if (duplicate) {
-        return { success: false, error: `Word "${newTerm}" already exists.` };
+        return { success: false, error: `Word "${cleanNew}" already exists.` };
       }
 
-      const updated = updateWordTerm(words, wordId, newTerm);
+      const updated = updateWordTerm(words, wordId, cleanNew);
       setWords(updated);
-      addToast(`Updated to "${newTerm}".`, 'success');
+      addToast(`Updated to "${cleanNew}".`, 'success');
       return { success: true };
     },
     [words, wordsMap, addToast]

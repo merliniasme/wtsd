@@ -20,7 +20,7 @@ export const CreateRelationModal: React.FC<CreateRelationModalProps> = ({
 }) => {
   const [termA, setTermA] = useState('');
   const [termB, setTermB] = useState('');
-  const [tag, setTag] = useState<RelationTag>('others');
+  const [tag, setTag] = useState<RelationTag>('unknown');
   const [error, setError] = useState<string | null>(null);
   const [pastedA, setPastedA] = useState(false);
   const [pastedB, setPastedB] = useState(false);
@@ -83,7 +83,7 @@ export const CreateRelationModal: React.FC<CreateRelationModalProps> = ({
       return;
     }
 
-    if (cleanA.toLowerCase() === cleanB.toLowerCase()) {
+    if (cleanA === cleanB) {
       setError('Word A and Word B cannot be the same word.');
       return;
     }
@@ -104,7 +104,7 @@ export const CreateRelationModal: React.FC<CreateRelationModalProps> = ({
   const handleClose = () => {
     setTermA('');
     setTermB('');
-    setTag('others');
+    setTag('unknown');
     setError(null);
     onClose();
   };
