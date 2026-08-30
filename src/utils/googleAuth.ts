@@ -6,12 +6,19 @@ import {
   onAuthStateChanged,
   User,
   signOut,
+  setPersistence,
+  browserLocalPersistence,
 } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 // Initialize Firebase App
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// Enable persistent authentication across browser closures and sessions
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.warn('Could not set auth persistence to browserLocalPersistence:', err);
+});
 
 // Google Auth Provider with Google Drive Scopes
 export const SCOPES = [
@@ -22,16 +29,13 @@ export const SCOPES = [
 const provider = new GoogleAuthProvider();
 SCOPES.forEach((scope) => provider.addScope(scope));
 
-// Set custom parameters to ensure prompt selection if needed
-provider.setCustomParameters({
-  prompt: 'select_account',
-});
+// Constant key for caching Google Drive access token in browser persistent storage
+const TOKEN_STORAGE_KEY = 'whos_the_spy_gdrive_token';
 
-// Internal auth state tracking
-let isSigningIn = false;
+// Internal in-memory and cached token access
 let cachedAccessToken: string | null = (() => {
   try {
-    return sessionStorage.getItem('gdrive_session_token');
+    return localStorage.getItem(TOKEN_STORAGE_KEY) || sessionStorage.getItem(TOKEN_STORAGE_KEY);
   } catch {
     return null;
   }
@@ -43,33 +47,34 @@ export interface GoogleAuthState {
   isAuthenticated: boolean;
 }
 
-// Initialize Auth Listener on App Load
+// Initialize Auth Listener on App Load with persistent cache restoration
 export const initAuth = (
   onAuthSuccess?: (user: User, token: string) => void,
   onAuthFailure?: () => void
 ) => {
   return onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
-      if (cachedAccessToken) {
-        if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
-      } else {
-        // Try reading session token
-        try {
-          const sessionToken = sessionStorage.getItem('gdrive_session_token');
-          if (sessionToken) {
-            cachedAccessToken = sessionToken;
-            if (onAuthSuccess) onAuthSuccess(user, sessionToken);
-            return;
+      const storedToken =
+        cachedAccessToken ||
+        (() => {
+          try {
+            return localStorage.getItem(TOKEN_STORAGE_KEY) || sessionStorage.getItem(TOKEN_STORAGE_KEY);
+          } catch {
+            return null;
           }
-        } catch {
-          // ignore
-        }
+        })();
+
+      if (storedToken) {
+        cachedAccessToken = storedToken;
+        if (onAuthSuccess) onAuthSuccess(user, storedToken);
+      } else {
         if (onAuthFailure) onAuthFailure();
       }
     } else {
       cachedAccessToken = null;
       try {
-        sessionStorage.removeItem('gdrive_session_token');
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
       } catch {
         // ignore
       }
@@ -78,10 +83,9 @@ export const initAuth = (
   });
 };
 
-// Sign in with Google Popup
+// Sign in with Google Popup and cache access token to localStorage
 export const googleSignIn = async (): Promise<{ user: User; accessToken: string } | null> => {
   try {
-    isSigningIn = true;
     const result = await signInWithPopup(auth, provider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
 
@@ -91,24 +95,28 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
 
     cachedAccessToken = credential.accessToken;
     try {
-      sessionStorage.setItem('gdrive_session_token', credential.accessToken);
+      localStorage.setItem(TOKEN_STORAGE_KEY, credential.accessToken);
     } catch {
-      // ignore
+      // fallback
+      try {
+        sessionStorage.setItem(TOKEN_STORAGE_KEY, credential.accessToken);
+      } catch {
+        // ignore
+      }
     }
     return { user: result.user, accessToken: cachedAccessToken };
   } catch (error) {
     console.error('Google sign in error:', error);
     throw error;
-  } finally {
-    isSigningIn = false;
   }
 };
 
-// Retrieve in-memory access token
+// Retrieve cached access token from memory / localStorage
 export const getAccessToken = async (): Promise<string | null> => {
   if (!cachedAccessToken) {
     try {
-      cachedAccessToken = sessionStorage.getItem('gdrive_session_token');
+      cachedAccessToken =
+        localStorage.getItem(TOKEN_STORAGE_KEY) || sessionStorage.getItem(TOKEN_STORAGE_KEY);
     } catch {
       // ignore
     }
@@ -116,28 +124,30 @@ export const getAccessToken = async (): Promise<string | null> => {
   return cachedAccessToken;
 };
 
-// Set token in memory (e.g. if refreshed)
+// Set token in memory and persistent cache
 export const setCachedToken = (token: string | null) => {
   cachedAccessToken = token;
   try {
     if (token) {
-      sessionStorage.setItem('gdrive_session_token', token);
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
     } else {
-      sessionStorage.removeItem('gdrive_session_token');
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      sessionStorage.removeItem(TOKEN_STORAGE_KEY);
     }
   } catch {
     // ignore
   }
 };
 
-// Google Sign out
+// Google Sign out and clear cached credentials
 export const googleSignOut = async () => {
   try {
     await signOut(auth);
   } finally {
     cachedAccessToken = null;
     try {
-      sessionStorage.removeItem('gdrive_session_token');
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      sessionStorage.removeItem(TOKEN_STORAGE_KEY);
     } catch {
       // ignore
     }

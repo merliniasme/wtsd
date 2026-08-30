@@ -504,13 +504,6 @@ export default function App() {
       {/* Floating Add Word Action Button */}
       <FloatingAddButton onClick={() => setIsAddWordOpen(true)} />
 
-      {/* Minimal Footer */}
-      <footer className="border-t border-[#334155]/40 py-4 text-center text-xs text-slate-500 flex items-center justify-center gap-3">
-        <span>Google Drive Master Storage</span>
-        <span>•</span>
-        <span>{words.length} words in active session</span>
-      </footer>
-
       {/* Add Word Modal */}
       <AddWordModal
         isOpen={isAddWordOpen}

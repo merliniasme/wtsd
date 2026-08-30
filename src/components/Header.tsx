@@ -60,14 +60,9 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Brand */}
         <div className="flex items-center gap-2.5">
           <span className="text-base">🕵️</span>
-          <div>
-            <h1 className="text-sm font-semibold tracking-tight text-slate-100 flex items-center gap-1.5">
-              <span>Spy Dictionary</span>
-            </h1>
-            <p className="text-[10px] text-slate-400 font-mono hidden sm:block">
-              Undercover Word Pairs • Cloud Database
-            </p>
-          </div>
+          <h1 className="text-sm font-semibold tracking-tight text-slate-100">
+            Spy Dictionary
+          </h1>
         </div>
 
         {/* Right Section: Sync Status & Auth Controls */}
