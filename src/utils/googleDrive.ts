@@ -3,10 +3,20 @@ import { exportWordsJson, validateAndImportJson } from './storage';
 
 export const BACKUP_FILE_NAME = 'whos_the_spy_dictionary_backup.json';
 
+export class DriveApiError extends Error {
+  status?: number;
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = 'DriveApiError';
+    this.status = status;
+  }
+}
+
 export interface DriveFileInfo {
   id: string;
   name: string;
   modifiedTime: string;
+  lastModifiedTimestamp?: number;
   size?: string;
   totalWords?: number;
 }
@@ -31,7 +41,10 @@ export async function findDriveBackupFile(accessToken: string): Promise<DriveFil
     if (!res.ok) {
       const errorText = await res.text();
       console.error('Google Drive search failed:', res.status, errorText);
-      throw new Error(`Google Drive API error: ${res.statusText}`);
+      if (res.status === 401) {
+        throw new DriveApiError('Authentication token expired or invalid', 401);
+      }
+      throw new DriveApiError(`Google Drive API error: ${res.statusText}`, res.status);
     }
 
     const data = await res.json();
@@ -46,13 +59,14 @@ export async function findDriveBackupFile(accessToken: string): Promise<DriveFil
 }
 
 /**
- * Uploads (Creates or Overwrites) dictionary backup to Google Drive
+ * Uploads (Creates or Overwrites) dictionary backup to Google Drive with session timestamp
  */
 export async function uploadBackupToDrive(
   accessToken: string,
-  words: Word[]
+  words: Word[],
+  sessionTimestamp: number = Date.now()
 ): Promise<DriveFileInfo> {
-  const jsonContent = exportWordsJson(words);
+  const jsonContent = exportWordsJson(words, sessionTimestamp);
   const existingFile = await findDriveBackupFile(accessToken);
 
   if (existingFile?.id) {
@@ -69,15 +83,19 @@ export async function uploadBackupToDrive(
 
     if (!res.ok) {
       const err = await res.text();
-      console.error('Failed to overwrite Drive file:', err);
-      throw new Error('Failed to update Google Drive backup file.');
+      console.error('Failed to overwrite Drive file:', res.status, err);
+      if (res.status === 401) {
+        throw new DriveApiError('Authentication token expired during upload', 401);
+      }
+      throw new DriveApiError('Failed to update Google Drive database file.', res.status);
     }
 
     const data = await res.json();
     return {
       id: data.id || existingFile.id,
       name: BACKUP_FILE_NAME,
-      modifiedTime: new Date().toISOString(),
+      modifiedTime: new Date(sessionTimestamp).toISOString(),
+      lastModifiedTimestamp: sessionTimestamp,
       totalWords: words.length,
     };
   }
@@ -114,15 +132,19 @@ export async function uploadBackupToDrive(
 
   if (!res.ok) {
     const err = await res.text();
-    console.error('Failed to create Drive file:', err);
-    throw new Error('Failed to create Google Drive backup file.');
+    console.error('Failed to create Drive file:', res.status, err);
+    if (res.status === 401) {
+      throw new DriveApiError('Authentication token expired during file creation', 401);
+    }
+    throw new DriveApiError('Failed to create Google Drive database file.', res.status);
   }
 
   const data = await res.json();
   return {
     id: data.id,
     name: data.name || BACKUP_FILE_NAME,
-    modifiedTime: new Date().toISOString(),
+    modifiedTime: new Date(sessionTimestamp).toISOString(),
+    lastModifiedTimestamp: sessionTimestamp,
     totalWords: words.length,
   };
 }
@@ -133,7 +155,7 @@ export async function uploadBackupToDrive(
 export async function downloadBackupFromDrive(
   accessToken: string,
   fileId: string
-): Promise<{ words: Word[]; rawText: string; totalWords: number }> {
+): Promise<{ words: Word[]; rawText: string; totalWords: number; lastModified: number }> {
   const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
   const res = await fetch(url, {
     method: 'GET',
@@ -144,8 +166,11 @@ export async function downloadBackupFromDrive(
 
   if (!res.ok) {
     const err = await res.text();
-    console.error('Failed to download Drive backup:', err);
-    throw new Error('Failed to download backup file from Google Drive.');
+    console.error('Failed to download Drive backup:', res.status, err);
+    if (res.status === 401) {
+      throw new DriveApiError('Authentication token expired during download', 401);
+    }
+    throw new DriveApiError('Failed to download database file from Google Drive.', res.status);
   }
 
   const rawText = await res.text();
@@ -159,6 +184,7 @@ export async function downloadBackupFromDrive(
     words: parsedResult.words,
     rawText,
     totalWords: parsedResult.words.length,
+    lastModified: parsedResult.lastModified || Date.now(),
   };
 }
 
@@ -180,6 +206,7 @@ export async function deleteDriveBackupFile(
   if (!res.ok && res.status !== 404) {
     const err = await res.text();
     console.error('Failed to delete Drive file:', err);
-    throw new Error('Failed to delete backup file from Google Drive.');
+    throw new Error('Failed to delete database file from Google Drive.');
   }
 }
+

@@ -26,10 +26,7 @@ interface SettingsViewProps {
   onSignIn: () => void;
   onSignOut: () => void;
   onSyncNow: () => void;
-  onBackupToDrive: () => void;
-  onRestoreFromDrive: () => void;
-  onCleanAndDeduplicate: () => void;
-  onRefreshStatus: () => void;
+  onClearCloudDatabase: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -46,10 +43,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSignIn,
   onSignOut,
   onSyncNow,
-  onBackupToDrive,
-  onRestoreFromDrive,
-  onCleanAndDeduplicate,
-  onRefreshStatus,
+  onClearCloudDatabase,
 }) => {
   // State for Delete Confirmation Modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -60,11 +54,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   // Handle Clear Database
   const handleConfirmDeleteAll = () => {
+    onClearCloudDatabase();
     const cleared = clearAllWords();
     onUpdateWords(cleared);
     setIsDeleteModalOpen(false);
     setConfirmInput('');
-    onToast('Active dictionary reset.', 'info');
+    onToast('Active dictionary cleared.', 'info');
   };
 
   return (
@@ -80,7 +75,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {user ? (
               <span className="flex items-center gap-1 text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded">
                 <Cloud className="w-3 h-3" />
-                <span>Google Drive Synced</span>
+                <span>Auto-Sync Active</span>
               </span>
             ) : (
               <span className="flex items-center gap-1 text-slate-400 font-mono bg-slate-900 border border-slate-700 px-2 py-0.5 rounded">
@@ -120,7 +115,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Google Drive Primary Store & Auto-Sync Section */}
       <GoogleDriveSyncSection
-        words={words}
         user={user}
         syncStatus={syncStatus}
         lastSyncedAt={lastSyncedAt}
@@ -131,10 +125,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         onSignIn={onSignIn}
         onSignOut={onSignOut}
         onSyncNow={onSyncNow}
-        onBackupToDrive={onBackupToDrive}
-        onRestoreFromDrive={onRestoreFromDrive}
-        onCleanAndDeduplicate={onCleanAndDeduplicate}
-        onRefreshStatus={onRefreshStatus}
       />
 
       {/* Reset Active Dictionary (Danger Zone) */}
@@ -180,8 +170,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              This will clear the active dictionary ({words.length} words).
-              {user && ' You can re-sync from Google Drive at any time.'}
+              This will clear your active dictionary ({words.length} words) and reset your Google Drive cloud database to 0 words.
             </p>
 
             <div className="space-y-1.5 pt-1">

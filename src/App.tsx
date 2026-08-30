@@ -12,6 +12,7 @@ import {
 import { useGoogleDriveSync } from './hooks/useGoogleDriveSync';
 
 import { Header } from './components/Header';
+import { LandingView } from './components/LandingView';
 import { TabsNav } from './components/TabsNav';
 import { SearchBar } from './components/SearchBar';
 import { PairCard } from './components/PairCard';
@@ -253,6 +254,19 @@ export default function App() {
 
   const isSearchEmpty = !searchTerm.trim();
 
+  // If user is not signed in, show the forced sign-in landing page
+  if (!driveSync.user) {
+    return (
+      <LandingView
+        onSignIn={driveSync.signIn}
+        isSigningIn={driveSync.isSigningIn}
+        isAuthLoading={driveSync.isAuthLoading}
+        isTokenExpired={driveSync.isTokenExpired}
+        lastError={driveSync.lastError}
+      />
+    );
+  }
+
   return (
     <div
       id="app-root-container"
@@ -298,10 +312,7 @@ export default function App() {
             onSignIn={driveSync.signIn}
             onSignOut={driveSync.signOut}
             onSyncNow={driveSync.syncNow}
-            onBackupToDrive={() => driveSync.saveToDriveNow(words)}
-            onRestoreFromDrive={driveSync.restoreFromDrive}
-            onCleanAndDeduplicate={driveSync.cleanAndDeduplicateNow}
-            onRefreshStatus={driveSync.refreshStatus}
+            onClearCloudDatabase={driveSync.clearCloudDatabase}
           />
         ) : (
           <>

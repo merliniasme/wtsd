@@ -169,15 +169,25 @@ export function deduplicateWords(inputWords: Word[]): Word[] {
   );
 }
 
+export interface DictionaryCloudPayload {
+  appName: string;
+  version: string;
+  lastModified: number; // Unix timestamp in ms
+  exportedAt: string;
+  totalWords: number;
+  words: Word[];
+}
+
 /**
- * Serializes dictionary words to validated JSON for Google Drive cloud sync.
+ * Serializes dictionary words to validated JSON for Google Drive cloud sync with accurate session timestamp.
  */
-export function exportWordsJson(words: Word[]): string {
+export function exportWordsJson(words: Word[], sessionTimestamp: number = Date.now()): string {
   const cleanWords = deduplicateWords(words);
-  const data = {
+  const data: DictionaryCloudPayload = {
     appName: "Spy Dictionary",
-    version: '3.0.0',
-    exportedAt: new Date().toISOString(),
+    version: '3.1.0',
+    lastModified: sessionTimestamp,
+    exportedAt: new Date(sessionTimestamp).toISOString(),
     totalWords: cleanWords.length,
     words: cleanWords,
   };
@@ -194,17 +204,24 @@ export function validateAndImportJson(
 ): {
   success: boolean;
   words?: Word[];
+  lastModified?: number;
   error?: string;
   importedCount?: number;
 } {
   try {
     const parsed = JSON.parse(jsonString);
     let candidateWords: unknown;
+    let fileLastModified: number = Date.now();
 
     if (Array.isArray(parsed)) {
       candidateWords = parsed;
     } else if (parsed && typeof parsed === 'object' && Array.isArray((parsed as Record<string, unknown>).words)) {
       candidateWords = (parsed as Record<string, unknown>).words;
+      if (typeof (parsed as Record<string, unknown>).lastModified === 'number') {
+        fileLastModified = (parsed as Record<string, unknown>).lastModified as number;
+      } else if (typeof (parsed as Record<string, unknown>).exportedAt === 'string') {
+        fileLastModified = new Date((parsed as Record<string, unknown>).exportedAt as string).getTime() || Date.now();
+      }
     } else {
       return {
         success: false,
@@ -213,10 +230,10 @@ export function validateAndImportJson(
     }
 
     const sanitizedNew = sanitizeWords(candidateWords as Word[]);
-    if (sanitizedNew.length === 0) {
+    if (sanitizedNew.length === 0 && candidateWords && Array.isArray(candidateWords) && candidateWords.length > 0) {
       return {
         success: false,
-        error: 'No valid word entities found in imported data.',
+        error: 'No valid word entities found in data.',
       };
     }
 
@@ -225,17 +242,19 @@ export function validateAndImportJson(
       return {
         success: true,
         words: deduplicated,
+        lastModified: fileLastModified,
         importedCount: deduplicated.length,
       };
     }
 
-    // Merge Mode: Combine existing words and new imported words with zero double data
+    // Merge Mode: Combine existing words and new imported words with timestamp prioritization
     const combined = [...existingWords, ...sanitizedNew];
     const mergedWords = deduplicateWords(combined);
 
     return {
       success: true,
       words: mergedWords,
+      lastModified: fileLastModified,
       importedCount: mergedWords.length,
     };
   } catch (err: unknown) {

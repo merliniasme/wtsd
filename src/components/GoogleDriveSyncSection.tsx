@@ -1,25 +1,19 @@
-import React, { useState } from 'react';
-import { Word, SyncStatus } from '../types';
+import React from 'react';
+import { SyncStatus } from '../types';
 import { User } from 'firebase/auth';
 import { DriveFileInfo } from '../utils/googleDrive';
 import {
   Cloud,
-  CloudUpload,
-  CloudDownload,
   RefreshCw,
   LogOut,
-  Check,
-  AlertCircle,
+  CheckCircle2,
+  AlertTriangle,
   Clock,
-  FileCheck,
   ShieldCheck,
   Zap,
-  Sparkles,
-  Layers,
 } from 'lucide-react';
 
 interface GoogleDriveSyncSectionProps {
-  words: Word[];
   user: User | null;
   syncStatus: SyncStatus;
   lastSyncedAt: Date | null;
@@ -30,64 +24,62 @@ interface GoogleDriveSyncSectionProps {
   onSignIn: () => void;
   onSignOut: () => void;
   onSyncNow: () => void;
-  onBackupToDrive: () => void;
-  onRestoreFromDrive: () => void;
-  onCleanAndDeduplicate: () => void;
-  onRefreshStatus: () => void;
 }
 
 export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
-  words,
   user,
   syncStatus,
   lastSyncedAt,
-  cloudFileInfo,
   cloudWordCount,
   isSigningIn,
   isOperating,
   onSignIn,
   onSignOut,
   onSyncNow,
-  onBackupToDrive,
-  onRestoreFromDrive,
-  onCleanAndDeduplicate,
-  onRefreshStatus,
 }) => {
-  // Confirmation Modal State for Restore / Overwrite
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    description: string;
-    actionLabel: string;
-    onConfirm: () => void;
-  } | null>(null);
-
-  const handleRestoreClick = () => {
-    if (!cloudFileInfo?.id) return;
-    setConfirmModal({
-      isOpen: true,
-      title: 'Restore from Google Drive?',
-      description: `This will refresh your dictionary with the latest cloud database (${cloudWordCount ?? 'all'} words) stored on your Google Drive.`,
-      actionLabel: 'Restore & Sync',
-      onConfirm: () => {
-        setConfirmModal(null);
-        onRestoreFromDrive();
-      },
-    });
+  // Format last synced label
+  const getSyncText = () => {
+    if (isOperating || syncStatus === 'syncing') {
+      return 'Saving to Google Drive...';
+    }
+    if (syncStatus === 'synced') {
+      if (lastSyncedAt) {
+        return `Synced automatically at ${lastSyncedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+      }
+      return 'Synced automatically with Drive';
+    }
+    if (syncStatus === 'unsaved') {
+      return 'Saving pending session changes...';
+    }
+    if (syncStatus === 'error') {
+      return 'Sync error — Click Sync Now or reconnect account';
+    }
+    return 'Cloud auto-sync active';
   };
 
   return (
     <section
       id="section-google-drive-sync"
-      className="bg-[#1E293B] border border-sky-900/60 rounded-xl p-4 space-y-3.5 shadow-sm relative overflow-hidden"
+      className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 space-y-4 shadow-sm"
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#334155]/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#334155]/60">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400">
             <Cloud className="w-4 h-4" />
           </div>
-          <h3 className="text-sm font-semibold text-slate-100">Google Drive Sync</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
+              <span>Automatic Google Drive Cloud Sync</span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                <Zap className="w-2.5 h-2.5" />
+                <span>Auto-Active</span>
+              </span>
+            </h3>
+            <p className="text-xs text-slate-400">
+              Changes are saved and timestamped automatically on every session.
+            </p>
+          </div>
         </div>
 
         {/* User Auth Status Pill */}
@@ -105,13 +97,13 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
                 {(user.displayName || user.email || 'G')[0].toUpperCase()}
               </div>
             )}
-            <div className="text-left pr-1 max-w-[140px] truncate">
+            <div className="text-left pr-1 max-w-[150px] truncate">
               <p className="text-[11px] font-semibold text-slate-200 truncate">
                 {user.displayName || user.email}
               </p>
               <p className="text-[9px] text-emerald-400 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Connected</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Online & Authenticated</span>
               </p>
             </div>
             <button
@@ -127,9 +119,10 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
         ) : null}
       </div>
 
-      {/* Main Auth / Drive Controls */}
+      {/* Main Status & Controls */}
       {!user ? (
         <div className="py-4 text-center space-y-3 bg-[#0F172A] rounded-xl border border-[#334155] p-4">
+          <p className="text-xs text-slate-300">Sign in with Google to enable automatic cloud synchronization.</p>
           <button
             type="button"
             id="btn-google-signin"
@@ -159,104 +152,46 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
           </button>
         </div>
       ) : (
-        /* Logged In Dashboard & Actions */
         <div className="space-y-3">
-          {/* Cloud Action Buttons */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-            {/* 1. Sync Now */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-[#0F172A] rounded-lg border border-[#334155]">
+            <div className="flex items-center gap-2.5">
+              {syncStatus === 'syncing' || isOperating ? (
+                <RefreshCw className="w-4 h-4 text-sky-400 animate-spin" />
+              ) : syncStatus === 'synced' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              ) : syncStatus === 'unsaved' ? (
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-rose-400" />
+              )}
+              <div>
+                <p className="text-xs font-semibold text-slate-200">{getSyncText()}</p>
+                <p className="text-[11px] text-slate-400">
+                  {cloudWordCount !== null ? `${cloudWordCount} words stored on Drive` : 'Automatic synchronization active'}
+                </p>
+              </div>
+            </div>
+
             <button
               type="button"
               id="btn-sync-with-drive"
               onClick={onSyncNow}
               disabled={isOperating}
-              className="flex items-center justify-center gap-1.5 p-2.5 rounded-lg border border-sky-800/70 bg-sky-950/25 hover:border-sky-400 hover:bg-sky-950/40 transition-all text-xs font-semibold text-sky-200 group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-800 bg-sky-950/40 hover:border-sky-400 text-xs font-semibold text-sky-200 transition-all cursor-pointer disabled:opacity-50"
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 text-sky-400 ${isOperating && syncStatus === 'syncing' ? 'animate-spin' : ''}`}
+                className={`w-3.5 h-3.5 text-sky-400 ${isOperating ? 'animate-spin' : ''}`}
               />
               <span>Sync Now</span>
             </button>
-
-            {/* 2. Clean & Deduplicate */}
-            <button
-              type="button"
-              id="btn-clean-deduplicate"
-              onClick={onCleanAndDeduplicate}
-              disabled={isOperating}
-              className="flex items-center justify-center gap-1.5 p-2.5 rounded-lg border border-emerald-900/70 bg-emerald-950/25 hover:border-emerald-400 hover:bg-emerald-950/40 transition-all text-xs font-semibold text-emerald-200 group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Deduplicate</span>
-            </button>
-
-            {/* 3. Force Push to Drive */}
-            <button
-              type="button"
-              id="btn-backup-to-drive"
-              onClick={onBackupToDrive}
-              disabled={isOperating}
-              className="flex items-center justify-center gap-1.5 p-2.5 rounded-lg border border-[#334155] bg-[#0F172A] hover:border-sky-400/80 hover:bg-slate-800/60 transition-all text-xs font-semibold text-slate-200 group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
-            >
-              <CloudUpload className="w-3.5 h-3.5 text-sky-400" />
-              <span>Push to Drive</span>
-            </button>
-
-            {/* 4. Restore from Drive */}
-            <button
-              type="button"
-              id="btn-restore-from-drive"
-              onClick={handleRestoreClick}
-              disabled={isOperating || !cloudFileInfo}
-              className="flex items-center justify-center gap-1.5 p-2.5 rounded-lg border border-[#334155] bg-[#0F172A] hover:border-sky-400/80 hover:bg-slate-800/60 transition-all text-xs font-semibold text-slate-200 group cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
-            >
-              <CloudDownload className="w-3.5 h-3.5 text-sky-400" />
-              <span>Pull from Drive</span>
-            </button>
           </div>
-        </div>
-      )}
 
-      {/* Confirmation Modal */}
-      {confirmModal?.isOpen && (
-        <div
-          id="gdrive-confirm-modal-backdrop"
-          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setConfirmModal(null);
-          }}
-        >
-          <div
-            id="gdrive-confirm-modal-card"
-            className="bg-[#1E293B] w-full max-w-sm rounded-xl border border-sky-800/80 shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150"
-          >
-            <div className="flex items-center gap-2 text-sky-400">
-              <AlertCircle className="w-5 h-5" />
-              <h4 className="font-semibold text-sm text-slate-100">{confirmModal.title}</h4>
-            </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed">{confirmModal.description}</p>
-
-            <div className="flex items-center gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setConfirmModal(null)}
-                className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors cursor-pointer border border-[#334155]"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmModal.onConfirm}
-                className="flex-1 py-2 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs flex items-center justify-center gap-1"
-              >
-                <Check className="w-3.5 h-3.5" />
-                <span>{confirmModal.actionLabel}</span>
-              </button>
-            </div>
+          <div className="flex items-center gap-2 text-[11px] text-slate-400">
+            <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
+            <span>Encrypted cloud backup stored directly on your personal Google Drive.</span>
           </div>
         </div>
       )}
     </section>
   );
 };
-
