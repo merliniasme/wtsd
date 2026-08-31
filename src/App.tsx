@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { Word, RelationTag, ToastMessage, ActiveTab } from './types';
+import React, { useState, useMemo, useCallback, useDeferredValue, useEffect } from 'react';
+import { Word, RelationTag, ToastMessage, ActiveTab, PairItem } from './types';
 import {
   extractAllPairs,
   addOrLinkPair,
@@ -8,6 +8,7 @@ import {
   deleteWord,
   updateWordTerm,
   getOrCreateWord,
+  fastStringCompare,
 } from './utils/wordGraph';
 import { useGoogleDriveSync } from './hooks/useGoogleDriveSync';
 
@@ -27,7 +28,10 @@ import { EditRelationModal } from './components/EditRelationModal';
 import { EditWordModal } from './components/EditWordModal';
 import { RawImportModal } from './components/RawImportModal';
 import { ToastContainer } from './components/Toast';
-import { Plus, Settings as SettingsIcon, Link2, FileUp } from 'lucide-react';
+import { Plus, Settings as SettingsIcon, Link2, FileUp, ChevronDown } from 'lucide-react';
+
+const INITIAL_PAGE_SIZE = 40;
+const PAGE_INCREMENT = 40;
 
 export default function App() {
   // In-memory words state (synced with Google Drive)
@@ -38,7 +42,12 @@ export default function App() {
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const deferredSearchTerm = useDeferredValue(searchTerm);
   const [selectedTag, setSelectedTag] = useState<RelationTag | 'all'>('all');
+
+  // Progressive Display Pagination
+  const [visiblePairsCount, setVisiblePairsCount] = useState<number>(INITIAL_PAGE_SIZE);
+  const [visibleWordsCount, setVisibleWordsCount] = useState<number>(INITIAL_PAGE_SIZE);
 
   // Modal States
   const [isAddWordOpen, setIsAddWordOpen] = useState(false);
@@ -74,78 +83,155 @@ export default function App() {
     addToast,
   });
 
-  // Fast Word Lookup Map
+  // Fast Word Lookup Map (O(1) lookups)
   const wordsMap = useMemo(() => {
-    return new Map<string, Word>(words.map((w) => [w.id, w]));
+    const map = new Map<string, Word>();
+    for (let i = 0; i < words.length; i++) {
+      map.set(words[i].id, words[i]);
+    }
+    return map;
   }, [words]);
 
-  // All Pairs Extraction
+  // All Pairs Extraction (Optimized graph traversal)
   const allPairs = useMemo(() => {
     return extractAllPairs(words);
   }, [words]);
 
-  // Filtered Pairs based on search and tag
-  const filteredPairs = useMemo(() => {
-    const cleanSearch = searchTerm.trim().toLowerCase();
+  // Fast Pre-lowercased Pair Search Index
+  const pairSearchIndex = useMemo(() => {
+    return allPairs.map((p) => ({
+      pair: p,
+      termALower: p.wordA.term.toLowerCase(),
+      termBLower: p.wordB.term.toLowerCase(),
+      tag: p.tag,
+    }));
+  }, [allPairs]);
 
-    return allPairs.filter((pair) => {
-      // Tag filter
-      if (selectedTag !== 'all' && pair.tag !== selectedTag) {
-        return false;
+  // Filtered Pairs based on search and tag (Non-blocking & Instant)
+  const filteredPairs = useMemo(() => {
+    const cleanSearch = deferredSearchTerm.trim().toLowerCase();
+
+    if (!cleanSearch && selectedTag === 'all') {
+      return allPairs;
+    }
+
+    const results: PairItem[] = [];
+    for (let i = 0; i < pairSearchIndex.length; i++) {
+      const item = pairSearchIndex[i];
+      if (selectedTag !== 'all' && item.tag !== selectedTag) {
+        continue;
+      }
+      if (
+        cleanSearch &&
+        !item.termALower.includes(cleanSearch) &&
+        !item.termBLower.includes(cleanSearch)
+      ) {
+        continue;
+      }
+      results.push(item.pair);
+    }
+    return results;
+  }, [allPairs, pairSearchIndex, deferredSearchTerm, selectedTag]);
+
+  // Fast Pre-lowercased Word Search Index
+  const wordSearchIndex = useMemo(() => {
+    return words.map((w) => {
+      const targetTermsLower: string[] = [];
+      for (let i = 0; i < w.relations.length; i++) {
+        const target = wordsMap.get(w.relations[i].targetWordId);
+        if (target) {
+          targetTermsLower.push(target.term.toLowerCase());
+        }
+      }
+      return {
+        word: w,
+        termLower: w.term.toLowerCase(),
+        targetTermsLower,
+      };
+    });
+  }, [words, wordsMap]);
+
+  // Filtered Words based on search (Instant & Non-blocking)
+  const filteredWords = useMemo(() => {
+    const cleanSearch = deferredSearchTerm.trim().toLowerCase();
+
+    if (!cleanSearch) {
+      return words;
+    }
+
+    const results: Word[] = [];
+    for (let i = 0; i < wordSearchIndex.length; i++) {
+      const item = wordSearchIndex[i];
+      if (item.termLower.includes(cleanSearch)) {
+        results.push(item.word);
+        continue;
       }
 
-      // Search filter
-      if (!cleanSearch) return true;
+      let hasTargetMatch = false;
+      for (let j = 0; j < item.targetTermsLower.length; j++) {
+        if (item.targetTermsLower[j].includes(cleanSearch)) {
+          hasTargetMatch = true;
+          break;
+        }
+      }
 
-      return (
-        pair.wordA.term.toLowerCase().includes(cleanSearch) ||
-        pair.wordB.term.toLowerCase().includes(cleanSearch)
-      );
+      if (hasTargetMatch) {
+        results.push(item.word);
+      }
+    }
+
+    // Fast sort with relation density and reusable collator
+    return results.sort((a, b) => {
+      if (b.relations.length !== a.relations.length) {
+        return b.relations.length - a.relations.length;
+      }
+      return fastStringCompare(a.term, b.term);
     });
-  }, [allPairs, searchTerm, selectedTag]);
+  }, [words, wordSearchIndex, deferredSearchTerm]);
 
-  // When search bar is empty, show max 10 pairs
+  // Reset pagination when search query or filter tags change
+  useEffect(() => {
+    setVisiblePairsCount(INITIAL_PAGE_SIZE);
+  }, [deferredSearchTerm, selectedTag, activeTab]);
+
+  useEffect(() => {
+    setVisibleWordsCount(INITIAL_PAGE_SIZE);
+  }, [deferredSearchTerm, activeTab]);
+
+  // Windowed display subsets (Ensures 60fps rendering without DOM node explosion)
   const displayedPairs = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return filteredPairs.slice(0, 10);
-    }
-    return filteredPairs;
-  }, [filteredPairs, searchTerm]);
+    return filteredPairs.slice(0, visiblePairsCount);
+  }, [filteredPairs, visiblePairsCount]);
 
-  // Filtered Words based on search
-  const filteredWords = useMemo(() => {
-    const cleanSearch = searchTerm.trim().toLowerCase();
-
-    return words
-      .filter((word) => {
-        if (!cleanSearch) return true;
-
-        if (word.term.toLowerCase().includes(cleanSearch)) {
-          return true;
-        }
-
-        const hasTargetMatch = word.relations.some((r) => {
-          const target = wordsMap.get(r.targetWordId);
-          return target && target.term.toLowerCase().includes(cleanSearch);
-        });
-
-        return hasTargetMatch;
-      })
-      .sort((a, b) => {
-        if (b.relations.length !== a.relations.length) {
-          return b.relations.length - a.relations.length;
-        }
-        return a.term.localeCompare(b.term);
-      });
-  }, [words, searchTerm, wordsMap]);
-
-  // When search bar is empty, show max 10 words
   const displayedWords = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return filteredWords.slice(0, 10);
-    }
-    return filteredWords;
-  }, [filteredWords, searchTerm]);
+    return filteredWords.slice(0, visibleWordsCount);
+  }, [filteredWords, visibleWordsCount]);
+
+  // Memoized card interaction callbacks
+  const handleSelectWord = useCallback((term: string) => {
+    setSearchTerm(term);
+  }, []);
+
+  const handleEditPairRelationTag = useCallback(
+    (wordA: PairItem['wordA'], wordB: PairItem['wordB'], currentTag: RelationTag) => {
+      setRelationToEdit({ wordA, wordB, currentTag });
+    },
+    []
+  );
+
+  const handleEditWordRelationTag = useCallback(
+    (word: Word, targetWord: Word, currentTag: RelationTag) => {
+      setRelationToEdit({ wordA: word, wordB: targetWord, currentTag });
+    },
+    []
+  );
+
+  const handleCopyToast = useCallback(
+    (text: string) => {
+      addToast(`Copied "${text}"`, 'info');
+    },
+    [addToast]
+  );
 
   // Handler: Add Standalone Word
   const handleAddSingleWord = useCallback(
@@ -157,7 +243,6 @@ export default function App() {
 
       const res = getOrCreateWord(words, clean);
       if (!res.created) {
-        // Exact case-sensitive match already exists: succeed silently without warning
         return { success: true, word: res.word };
       }
 
@@ -248,11 +333,10 @@ export default function App() {
       const cleanNew = newTerm.trim();
       if (!cleanNew) return { success: false, error: 'Word cannot be empty.' };
 
-      const duplicate = words.find(
-        (w) => w.id !== wordId && w.term.trim() === cleanNew
-      );
-      if (duplicate) {
-        return { success: false, error: `Word "${cleanNew}" already exists.` };
+      for (let i = 0; i < words.length; i++) {
+        if (words[i].id !== wordId && words[i].term === cleanNew) {
+          return { success: false, error: `Word "${cleanNew}" already exists.` };
+        }
       }
 
       const updated = updateWordTerm(words, wordId, cleanNew);
@@ -260,7 +344,7 @@ export default function App() {
       addToast(`Updated to "${cleanNew}".`, 'success');
       return { success: true };
     },
-    [words, wordsMap, addToast]
+    [words, addToast]
   );
 
   const isSearchEmpty = !searchTerm.trim();
@@ -302,8 +386,6 @@ export default function App() {
           <TabsNav
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            pairsCount={allPairs.length}
-            wordsCount={words.length}
           />
 
           <div className="flex items-center gap-2">
@@ -442,15 +524,15 @@ export default function App() {
                 <section id="pairs-list-section" className="space-y-3 animate-in fade-in duration-150">
                   <div className="flex items-center justify-between text-xs text-slate-400 px-1">
                     <span>
-                      {isSearchEmpty && filteredPairs.length > 10 ? (
+                      {filteredPairs.length > displayedPairs.length ? (
                         <>
-                          Showing <strong className="text-slate-200">10</strong> of{' '}
+                          Showing <strong className="text-slate-200">{displayedPairs.length}</strong> of{' '}
                           <strong className="text-slate-200">{filteredPairs.length}</strong> pairs
                         </>
                       ) : (
                         <>
-                          <strong className="text-slate-200">{displayedPairs.length}</strong>{' '}
-                          {displayedPairs.length === 1 ? 'pair' : 'pairs'}
+                          <strong className="text-slate-200">{filteredPairs.length}</strong>{' '}
+                          {filteredPairs.length === 1 ? 'pair' : 'pairs'}
                           {!isSearchEmpty && ' found'}
                         </>
                       )}
@@ -474,15 +556,38 @@ export default function App() {
                       <PairCard
                         key={pair.id}
                         pair={pair}
-                        onSelectWord={(term) => setSearchTerm(term)}
-                        onEditRelationTag={(wA, wB, currTag) =>
-                          setRelationToEdit({ wordA: wA, wordB: wB, currentTag: currTag })
-                        }
+                        onSelectWord={handleSelectWord}
+                        onEditRelationTag={handleEditPairRelationTag}
                         onUnlinkRelation={handleUnlinkRelation}
-                        onCopyText={(text) => addToast(`Copied "${text}"`, 'info')}
+                        onCopyText={handleCopyToast}
                       />
                     ))}
                   </div>
+
+                  {/* Load More Pagination Trigger */}
+                  {filteredPairs.length > displayedPairs.length && (
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-3 pb-2">
+                      <button
+                        id="btn-load-more-pairs"
+                        type="button"
+                        onClick={() => setVisiblePairsCount((prev) => prev + PAGE_INCREMENT)}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-200 hover:text-white border border-[#334155] rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5 text-sky-400" />
+                        <span>Load More Pairs (+{PAGE_INCREMENT})</span>
+                      </button>
+                      {filteredPairs.length > displayedPairs.length + PAGE_INCREMENT && (
+                        <button
+                          id="btn-show-all-pairs"
+                          type="button"
+                          onClick={() => setVisiblePairsCount(filteredPairs.length)}
+                          className="text-xs text-slate-400 hover:text-slate-200 px-3 py-2 transition-colors cursor-pointer"
+                        >
+                          Show All ({filteredPairs.length})
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </section>
               )
             ) : (
@@ -503,15 +608,15 @@ export default function App() {
                 <section id="words-list-section" className="space-y-3 animate-in fade-in duration-150">
                   <div className="flex items-center justify-between text-xs text-slate-400 px-1">
                     <span>
-                      {isSearchEmpty && filteredWords.length > 10 ? (
+                      {filteredWords.length > displayedWords.length ? (
                         <>
-                          Showing <strong className="text-slate-200">10</strong> of{' '}
+                          Showing <strong className="text-slate-200">{displayedWords.length}</strong> of{' '}
                           <strong className="text-slate-200">{filteredWords.length}</strong> words
                         </>
                       ) : (
                         <>
-                          <strong className="text-slate-200">{displayedWords.length}</strong>{' '}
-                          {displayedWords.length === 1 ? 'word' : 'words'}
+                          <strong className="text-slate-200">{filteredWords.length}</strong>{' '}
+                          {filteredWords.length === 1 ? 'word' : 'words'}
                           {!isSearchEmpty && ' found'}
                         </>
                       )}
@@ -535,19 +640,42 @@ export default function App() {
                         key={word.id}
                         word={word}
                         allWordsMap={wordsMap}
-                        onSelectWord={(term) => setSearchTerm(term)}
+                        onSelectWord={handleSelectWord}
                         onAddRelationToWord={(w) => setActiveWordForRelation(w)}
                         onEditWord={(w) => setWordToEdit(w)}
                         onDeleteWord={handleDeleteWord}
-                        onEditRelationTag={(wA, wB, currTag) =>
-                          setRelationToEdit({ wordA: wA, wordB: wB, currentTag: currTag })
-                        }
+                        onEditRelationTag={handleEditWordRelationTag}
                         onUnlinkRelation={handleUnlinkRelation}
-                        onCopyTerm={(term) => addToast(`Copied "${term}"`, 'info')}
+                        onCopyTerm={handleCopyToast}
                         highlightTerm={searchTerm}
                       />
                     ))}
                   </div>
+
+                  {/* Load More Pagination Trigger */}
+                  {filteredWords.length > displayedWords.length && (
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-3 pb-2">
+                      <button
+                        id="btn-load-more-words"
+                        type="button"
+                        onClick={() => setVisibleWordsCount((prev) => prev + PAGE_INCREMENT)}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-200 hover:text-white border border-[#334155] rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5 text-sky-400" />
+                        <span>Load More Words (+{PAGE_INCREMENT})</span>
+                      </button>
+                      {filteredWords.length > displayedWords.length + PAGE_INCREMENT && (
+                        <button
+                          id="btn-show-all-words"
+                          type="button"
+                          onClick={() => setVisibleWordsCount(filteredWords.length)}
+                          className="text-xs text-slate-400 hover:text-slate-200 px-3 py-2 transition-colors cursor-pointer"
+                        >
+                          Show All ({filteredWords.length})
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </section>
               )
             )}

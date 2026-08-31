@@ -10,7 +10,7 @@ interface PairCardProps {
   onCopyText: (text: string) => void;
 }
 
-export const PairCard: React.FC<PairCardProps> = ({
+export const PairCard: React.FC<PairCardProps> = React.memo(({
   pair,
   onSelectWord,
   onEditRelationTag,
@@ -101,4 +101,4 @@ export const PairCard: React.FC<PairCardProps> = ({
       </div>
     </article>
   );
-};
+});

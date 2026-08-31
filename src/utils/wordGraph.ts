@@ -1,5 +1,13 @@
 import { Word, Relation, RelationTag, PairItem } from '../types';
 
+// Reusable fast collator for natural language sorting
+const fastCollator = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
+
+export function fastStringCompare(a: string, b: string): number {
+  if (a === b) return 0;
+  return fastCollator.compare(a, b);
+}
+
 export function generateId(): string {
   return 'w_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
 }
@@ -11,13 +19,17 @@ export function generateId(): string {
 export function calculateTotalRelations(words: Word[]): number {
   const uniqueEdges = new Set<string>();
 
-  words.forEach((word) => {
-    word.relations.forEach((rel) => {
-      // Sort IDs to ensure (A, B, tag) and (B, A, tag) produce identical key
-      const pairKey = [word.id, rel.targetWordId].sort().join('::') + '::' + rel.tag;
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const wId = word.id;
+    const rels = word.relations;
+    for (let j = 0; j < rels.length; j++) {
+      const rel = rels[j];
+      const tId = rel.targetWordId;
+      const pairKey = (wId < tId ? `${wId}::${tId}` : `${tId}::${wId}`) + '::' + rel.tag;
       uniqueEdges.add(pairKey);
-    });
-  });
+    }
+  }
 
   return uniqueEdges.size;
 }
@@ -37,17 +49,22 @@ export function calculateRelationsByTag(words: Word[]): Record<RelationTag, numb
 
   const uniqueEdges = new Set<string>();
 
-  words.forEach((word) => {
-    word.relations.forEach((rel) => {
-      const pairKey = [word.id, rel.targetWordId].sort().join('::') + '::' + rel.tag;
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const wId = word.id;
+    const rels = word.relations;
+    for (let j = 0; j < rels.length; j++) {
+      const rel = rels[j];
+      const tId = rel.targetWordId;
+      const pairKey = (wId < tId ? `${wId}::${tId}` : `${tId}::${wId}`) + '::' + rel.tag;
       if (!uniqueEdges.has(pairKey)) {
         uniqueEdges.add(pairKey);
         if (counts[rel.tag] !== undefined) {
           counts[rel.tag]++;
         }
       }
-    });
-  });
+    }
+  }
 
   return counts;
 }
@@ -57,7 +74,10 @@ export function calculateRelationsByTag(words: Word[]): Record<RelationTag, numb
  */
 export function findWordByTerm(words: Word[], term: string): Word | undefined {
   const clean = term.trim();
-  return words.find((w) => w.term.trim() === clean);
+  for (let i = 0; i < words.length; i++) {
+    if (words[i].term === clean) return words[i];
+  }
+  return undefined;
 }
 
 /**
@@ -101,11 +121,13 @@ export function hasRelation(
   const wordA = words.find((w) => w.id === wordIdA);
   if (!wordA) return false;
 
-  return wordA.relations.some((r) => {
-    if (r.targetWordId !== wordIdB) return false;
-    if (tag) return r.tag === tag;
-    return true;
-  });
+  for (let i = 0; i < wordA.relations.length; i++) {
+    const r = wordA.relations[i];
+    if (r.targetWordId === wordIdB) {
+      if (!tag || r.tag === tag) return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -333,24 +355,33 @@ export function updateWordTerm(words: Word[], wordId: string, newTerm: string): 
 
 /**
  * Extracts all unique mutual spy pairs from the word graph.
+ * Highly optimized for 5,000+ words / pairs.
  */
 export function extractAllPairs(words: Word[]): PairItem[] {
-  const wordsMap = new Map<string, Word>(words.map((w) => [w.id, w]));
+  const wordsMap = new Map<string, Word>();
+  for (let i = 0; i < words.length; i++) {
+    wordsMap.set(words[i].id, words[i]);
+  }
+
   const uniqueEdges = new Set<string>();
   const pairs: PairItem[] = [];
 
-  for (const word of words) {
-    for (const rel of word.relations) {
-      const pairKey = [word.id, rel.targetWordId].sort().join('::') + '::' + rel.tag;
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const wId = word.id;
+    const rels = word.relations;
+    for (let j = 0; j < rels.length; j++) {
+      const rel = rels[j];
+      const tId = rel.targetWordId;
+      const pairKey = (wId < tId ? `${wId}::${tId}` : `${tId}::${wId}`) + '::' + rel.tag;
+
       if (!uniqueEdges.has(pairKey)) {
         uniqueEdges.add(pairKey);
-        const target = wordsMap.get(rel.targetWordId);
+        const target = wordsMap.get(tId);
         if (target) {
           // Standardize display order: alphabetical
-          const [wA, wB] =
-            word.term.localeCompare(target.term, undefined, { sensitivity: 'base' }) <= 0
-              ? [word, target]
-              : [target, word];
+          const isWordFirst = fastCollator.compare(word.term, target.term) <= 0;
+          const [wA, wB] = isWordFirst ? [word, target] : [target, word];
 
           pairs.push({
             id: pairKey,
@@ -363,11 +394,12 @@ export function extractAllPairs(words: Word[]): PairItem[] {
     }
   }
 
-  // Sort pairs alphabetically by first word
+  // Fast alphabetized sort using reusable collator
   return pairs.sort((a, b) => {
-    const compA = a.wordA.term.localeCompare(b.wordA.term, undefined, { sensitivity: 'base' });
+    const compA = fastCollator.compare(a.wordA.term, b.wordA.term);
     if (compA !== 0) return compA;
-    return a.wordB.term.localeCompare(b.wordB.term, undefined, { sensitivity: 'base' });
+    return fastCollator.compare(a.wordB.term, b.wordB.term);
   });
 }
+
 

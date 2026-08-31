@@ -34,6 +34,9 @@ export function cleanupLegacyLocalStorage(): void {
   }
 }
 
+// Fast reusable Intl.Collator instance
+const fastCollator = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
+
 /**
  * Strict data deduplication and graph normalization engine.
  * - Merges duplicate word entries sharing identical exact case-sensitive terms.
@@ -43,6 +46,7 @@ export function cleanupLegacyLocalStorage(): void {
  * - Preserves different relation tags for identical word pairs.
  * - Replaces 'unknown' tag when a specific relation tag is assigned.
  * - Guarantees strict bidirectional symmetry.
+ * - High performance optimized for 5,000+ words.
  */
 export function deduplicateWords(inputWords: Word[]): Word[] {
   if (!Array.isArray(inputWords) || inputWords.length === 0) {
@@ -54,7 +58,8 @@ export function deduplicateWords(inputWords: Word[]): Word[] {
   const idToCanonicalIdMap = new Map<string, string>();
 
   // First pass: establish canonical ID for each unique exact term
-  for (const w of inputWords) {
+  for (let i = 0; i < inputWords.length; i++) {
+    const w = inputWords[i];
     if (!w || typeof w.term !== 'string') continue;
     const cleanTerm = w.term.trim();
     if (!cleanTerm) continue;
@@ -88,16 +93,18 @@ export function deduplicateWords(inputWords: Word[]): Word[] {
   }
 
   // 2. Aggregate unique mutual pairs and their tags
-  // pairBaseKey: [canonicalIdA, canonicalIdB].sort().join('::') -> Set of tags
   const pairTagsMap = new Map<string, { idA: string; idB: string; tags: Set<RelationTag> }>();
   const validTags = new Set(RELATION_TAGS);
 
-  for (const w of inputWords) {
+  for (let i = 0; i < inputWords.length; i++) {
+    const w = inputWords[i];
     if (!w || !w.id || !Array.isArray(w.relations)) continue;
     const sourceCanonicalId = idToCanonicalIdMap.get(w.id);
     if (!sourceCanonicalId) continue;
 
-    for (const r of w.relations) {
+    const rels = w.relations;
+    for (let j = 0; j < rels.length; j++) {
+      const r = rels[j];
       if (!r || typeof r.targetWordId !== 'string') continue;
       const targetCanonicalId = idToCanonicalIdMap.get(r.targetWordId);
 
@@ -120,14 +127,18 @@ export function deduplicateWords(inputWords: Word[]): Word[] {
         tag = 'unknown';
       }
 
-      const [idA, idB] = [sourceCanonicalId, targetCanonicalId].sort();
+      const isSourceFirst = sourceCanonicalId < targetCanonicalId;
+      const idA = isSourceFirst ? sourceCanonicalId : targetCanonicalId;
+      const idB = isSourceFirst ? targetCanonicalId : sourceCanonicalId;
       const pairBaseKey = `${idA}::${idB}`;
 
-      if (!pairTagsMap.has(pairBaseKey)) {
-        pairTagsMap.set(pairBaseKey, { idA, idB, tags: new Set<RelationTag>() });
+      let entry = pairTagsMap.get(pairBaseKey);
+      if (!entry) {
+        entry = { idA, idB, tags: new Set<RelationTag>() };
+        pairTagsMap.set(pairBaseKey, entry);
       }
 
-      pairTagsMap.get(pairBaseKey)!.tags.add(tag);
+      entry.tags.add(tag);
     }
   }
 
@@ -164,20 +175,19 @@ export function deduplicateWords(inputWords: Word[]): Word[] {
     }
   });
 
-  // 5. Sort relations deterministically by term and return sorted list
+  // 6. Sort relations deterministically by term and return sorted list using fastCollator
   const finalWords = Array.from(resultMap.values());
 
-  finalWords.forEach((word) => {
+  for (let i = 0; i < finalWords.length; i++) {
+    const word = finalWords[i];
     word.relations.sort((a, b) => {
       const termA = resultMap.get(a.targetWordId)?.term || '';
       const termB = resultMap.get(b.targetWordId)?.term || '';
-      return termA.localeCompare(termB, undefined, { sensitivity: 'base' });
+      return fastCollator.compare(termA, termB);
     });
-  });
+  }
 
-  return finalWords.sort((a, b) =>
-    a.term.localeCompare(b.term, undefined, { sensitivity: 'base' })
-  );
+  return finalWords.sort((a, b) => fastCollator.compare(a.term, b.term));
 }
 
 export interface DictionaryCloudPayload {

@@ -15,7 +15,7 @@ interface WordCardProps {
   highlightTerm?: string;
 }
 
-export const WordCard: React.FC<WordCardProps> = ({
+export const WordCard: React.FC<WordCardProps> = React.memo(({
   word,
   allWordsMap,
   onSelectWord,
@@ -146,4 +146,4 @@ export const WordCard: React.FC<WordCardProps> = ({
       </div>
     </article>
   );
-};
+});
