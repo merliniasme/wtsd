@@ -25,8 +25,9 @@ import { CreateRelationModal } from './components/CreateRelationModal';
 import { AddRelationModal } from './components/AddRelationModal';
 import { EditRelationModal } from './components/EditRelationModal';
 import { EditWordModal } from './components/EditWordModal';
+import { RawImportModal } from './components/RawImportModal';
 import { ToastContainer } from './components/Toast';
-import { Plus, Settings as SettingsIcon, Link2 } from 'lucide-react';
+import { Plus, Settings as SettingsIcon, Link2, FileUp } from 'lucide-react';
 
 export default function App() {
   // In-memory words state (synced with Google Drive)
@@ -42,6 +43,7 @@ export default function App() {
   // Modal States
   const [isAddWordOpen, setIsAddWordOpen] = useState(false);
   const [isCreateRelationOpen, setIsCreateRelationOpen] = useState(false);
+  const [isRawImportOpen, setIsRawImportOpen] = useState(false);
   const [activeWordForRelation, setActiveWordForRelation] = useState<Word | null>(null);
   const [wordToEdit, setWordToEdit] = useState<Word | null>(null);
   const [relationToEdit, setRelationToEdit] = useState<{
@@ -295,7 +297,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main id="app-main-content" className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-5 space-y-4">
-        {/* Navigation Tabs Bar */}
+        {/* Navigation Tabs Bar & Action Buttons */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <TabsNav
             activeTab={activeTab}
@@ -303,6 +305,29 @@ export default function App() {
             pairsCount={allPairs.length}
             wordsCount={words.length}
           />
+
+          <div className="flex items-center gap-2">
+            <button
+              id="btn-open-raw-import-top"
+              type="button"
+              onClick={() => setIsRawImportOpen(true)}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#1E293B] hover:bg-slate-700 text-slate-300 hover:text-white border border-[#334155] text-xs font-medium rounded-lg transition-colors cursor-pointer"
+              title="Import plain text dictionary rules ([Word1] # [Word2] & [Word3])"
+            >
+              <FileUp className="w-3.5 h-3.5 text-sky-400" />
+              <span>Raw Import</span>
+            </button>
+
+            <button
+              id="btn-open-add-word-top"
+              type="button"
+              onClick={() => setIsAddWordOpen(true)}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Word</span>
+            </button>
+          </div>
         </div>
 
         {/* Tab 3: Settings View */}
@@ -322,6 +347,7 @@ export default function App() {
             onSignOut={driveSync.signOut}
             onSyncNow={driveSync.syncNow}
             onClearCloudDatabase={driveSync.clearCloudDatabase}
+            onOpenRawImport={() => setIsRawImportOpen(true)}
           />
         ) : (
           <>
@@ -345,9 +371,9 @@ export default function App() {
                 </div>
                 <h3 className="font-semibold text-slate-200 text-sm">Dictionary is empty (0 words)</h3>
                 <p className="text-xs text-slate-400">
-                  Get started by adding your first word pair, or sync with your Google Drive database.
+                  Get started by adding your first word pair, or import plain text rules.
                 </p>
-                <div className="flex items-center justify-center gap-2 pt-2">
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
                   <button
                     id="btn-empty-state-add-word"
                     onClick={() => setIsAddWordOpen(true)}
@@ -355,6 +381,14 @@ export default function App() {
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add Word</span>
+                  </button>
+                  <button
+                    id="btn-empty-state-raw-import"
+                    onClick={() => setIsRawImportOpen(true)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#1E293B] hover:bg-slate-700 text-slate-200 border border-[#334155] text-xs font-medium rounded-md transition-colors cursor-pointer"
+                  >
+                    <FileUp className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Raw Import</span>
                   </button>
                   <button
                     id="btn-empty-state-go-settings"
@@ -566,6 +600,17 @@ export default function App() {
         onClose={() => setWordToEdit(null)}
         word={wordToEdit}
         onSaveTerm={handleEditWordTerm}
+      />
+
+      {/* Raw Plain Text Importer Modal */}
+      <RawImportModal
+        isOpen={isRawImportOpen}
+        onClose={() => setIsRawImportOpen(false)}
+        existingWords={words}
+        onImportComplete={(newWords, msg) => {
+          setWords(newWords);
+          addToast(msg, 'success');
+        }}
       />
 
       {/* Minimal Toast Feedback Alerts */}

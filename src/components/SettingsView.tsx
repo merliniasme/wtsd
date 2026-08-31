@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   Database,
   Cloud,
+  FileUp,
+  ArrowRight,
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -27,6 +29,7 @@ interface SettingsViewProps {
   onSignOut: () => void;
   onSyncNow: () => void;
   onClearCloudDatabase: () => void;
+  onOpenRawImport: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -44,6 +47,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSignOut,
   onSyncNow,
   onClearCloudDatabase,
+  onOpenRawImport,
 }) => {
   // State for Delete Confirmation Modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -126,6 +130,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         onSignOut={onSignOut}
         onSyncNow={onSyncNow}
       />
+
+      {/* Raw Plain Text Import Section */}
+      <section
+        id="section-raw-import-settings"
+        className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 space-y-3 shadow-sm"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-sky-400">
+              <FileUp className="w-4 h-4" />
+              <h3 className="text-sm font-semibold text-slate-100">Raw Text Dictionary Import</h3>
+            </div>
+            <p className="text-xs text-slate-400">
+              Import plain text files formatted as{' '}
+              <code className="text-sky-300 font-mono text-[11px] bg-slate-900 px-1 py-0.5 rounded border border-slate-800">
+                [Word1] # [Word2] & [Word3]
+              </code>{' '}
+              with automatic validation and Unknown tag assignment.
+            </p>
+          </div>
+
+          <button
+            id="btn-open-raw-import-settings"
+            type="button"
+            onClick={onOpenRawImport}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/40 text-xs font-semibold rounded-lg transition-colors cursor-pointer shrink-0"
+          >
+            <FileUp className="w-3.5 h-3.5 text-sky-400" />
+            <span>Open Raw Importer</span>
+          </button>
+        </div>
+      </section>
 
       {/* Reset Active Dictionary (Danger Zone) */}
       <section
