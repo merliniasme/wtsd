@@ -44,9 +44,22 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
         body: JSON.stringify({ word1, word2 }),
       });
 
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || 'Gagal membuat clue AI. Silakan coba lagi.');
+      const contentType = res.headers.get('content-type') || '';
+      let json: any = null;
+
+      if (contentType.includes('application/json')) {
+        json = await res.json();
+      } else {
+        const rawText = await res.text();
+        try {
+          json = JSON.parse(rawText);
+        } catch {
+          throw new Error('Gagal menghubungi server AI. Server sedang sibuk, silakan coba lagi.');
+        }
+      }
+
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.error || 'Gagal membuat clue AI. Silakan coba lagi.');
       }
 
       setData({
@@ -57,7 +70,7 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
       });
     } catch (err: any) {
       console.error('AI Clue fetch error:', err);
-      setError(err?.message || 'Terjadi kesalahan saat menghubungi Gemini AI.');
+      setError(err?.message || 'Terjadi kesalahan saat membuat petunjuk AI.');
     } finally {
       setLoading(false);
     }

@@ -41,44 +41,68 @@ app.post('/api/ai/clue', async (req, res) => {
     const ai = getGeminiClient();
     const prompt = `Berikan clue yang bisa di validasi ke kosa kata "${word1.trim()}" dan "${word2.trim()}", tuliskan clue yang tidak umum tapi tidak spesifik terhadap salah satu kosa kata, berikan juga detail masing masing cabang validasi`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
-      contents: prompt,
-      config: {
-        systemInstruction:
-          'Kamu adalah asisten ahli pembuat clue game "Who is the Undercover / Siapa yang Spy". Tugasmu adalah memberikan petunjuk (clue) yang cerdas, tidak terlalu umum tapi juga tidak spesifik terhadap salah satu kata saja, sehingga kedua pemain bisa memvalidasinya secara logis. Berikan output dalam format JSON.',
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            clue: {
-              type: Type.STRING,
-              description: 'Clue atau petunjuk yang cerdas dan berimbang untuk kedua kosa kata',
-            },
-            validationWord1: {
-              type: Type.STRING,
-              description: `Detail cabang validasi bagaimana clue ini terhubung ke kosa kata ${word1.trim()}`,
-            },
-            validationWord2: {
-              type: Type.STRING,
-              description: `Detail cabang validasi bagaimana clue ini terhubung ke kosa kata ${word2.trim()}`,
-            },
-            description: {
-              type: Type.STRING,
-              description: 'Deskripsi singkat dan analisa mengapa clue ini cocok dan seimbang',
-            },
-          },
-          required: ['clue', 'validationWord1', 'validationWord2'],
+    const systemInstruction =
+      'Kamu adalah asisten ahli pembuat clue game "Who is the Undercover / Siapa yang Spy". Tugasmu adalah memberikan petunjuk (clue) yang cerdas, tidak terlalu umum tapi juga tidak spesifik terhadap salah satu kata saja, sehingga kedua pemain bisa memvalidasinya secara logis. Berikan output dalam format JSON.';
+
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        clue: {
+          type: Type.STRING,
+          description: 'Clue atau petunjuk yang cerdas dan berimbang untuk kedua kosa kata',
+        },
+        validationWord1: {
+          type: Type.STRING,
+          description: `Detail cabang validasi bagaimana clue ini terhubung ke kosa kata ${word1.trim()}`,
+        },
+        validationWord2: {
+          type: Type.STRING,
+          description: `Detail cabang validasi bagaimana clue ini terhubung ke kosa kata ${word2.trim()}`,
+        },
+        description: {
+          type: Type.STRING,
+          description: 'Deskripsi singkat dan analisa mengapa clue ini cocok dan seimbang',
         },
       },
-    });
+      required: ['clue', 'validationWord1', 'validationWord2'],
+    };
 
-    const text = response.text;
-    if (!text) {
-      throw new Error('No text returned by AI model.');
+    // Candidate models ordered by stability and speed
+    const candidateModels = [
+      'gemini-3.5-flash',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-3.7-flash',
+    ];
+    let lastError: any = null;
+    let responseText: string | undefined;
+
+    for (const model of candidateModels) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            systemInstruction,
+            responseMimeType: 'application/json',
+            responseSchema: schema,
+          },
+        });
+        if (response.text) {
+          responseText = response.text;
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`Model ${model} warning, trying next fallback...`, err?.message);
+        lastError = err;
+      }
     }
 
-    const parsed = JSON.parse(text);
+    if (!responseText) {
+      throw lastError || new Error('No text returned by AI models.');
+    }
+
+    const parsed = JSON.parse(responseText);
     return res.json({
       success: true,
       clue: parsed.clue,
@@ -88,8 +112,19 @@ app.post('/api/ai/clue', async (req, res) => {
     });
   } catch (error: any) {
     console.error('Error generating AI clue:', error);
+    let message = 'Gagal membuat clue AI. Silakan coba lagi sebentar lagi.';
+    if (error?.message) {
+      try {
+        const parsedErr = JSON.parse(error.message);
+        if (parsedErr?.error?.message) {
+          message = parsedErr.error.message;
+        }
+      } catch {
+        message = error.message;
+      }
+    }
     return res.status(500).json({
-      error: error?.message || 'Failed to generate AI clue. Please try again.',
+      error: message,
     });
   }
 });
