@@ -54,7 +54,11 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
         try {
           json = JSON.parse(rawText);
         } catch {
-          throw new Error('Gagal menghubungi server AI. Server sedang sibuk, silakan coba lagi.');
+          throw new Error(
+            res.status === 503 || res.status === 502 || res.status === 504
+              ? 'Layanan AI sedang sibuk atau mengalami lonjakan antrean. Silakan klik tombol Coba Lagi di bawah.'
+              : 'Gagal terhubung dengan server AI. Silakan klik Coba Lagi.'
+          );
         }
       }
 

@@ -67,10 +67,9 @@ app.post('/api/ai/clue', async (req, res) => {
       required: ['clue', 'validationWord1', 'validationWord2'],
     };
 
-    // Candidate models ordered by stability and speed
+    // Candidate models ordered by speed, stability, and intelligence
     const candidateModels = [
       'gemini-3.5-flash',
-      'gemini-3.6-flash',
       'gemini-3.5-flash-lite',
       'gemini-3.7-flash',
     ];
@@ -103,6 +102,7 @@ app.post('/api/ai/clue', async (req, res) => {
     }
 
     const parsed = JSON.parse(responseText);
+    res.setHeader('Content-Type', 'application/json');
     return res.json({
       success: true,
       clue: parsed.clue,
@@ -123,7 +123,9 @@ app.post('/api/ai/clue', async (req, res) => {
         message = error.message;
       }
     }
+    res.setHeader('Content-Type', 'application/json');
     return res.status(500).json({
+      success: false,
       error: message,
     });
   }
