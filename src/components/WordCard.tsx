@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Word, RelationTag, TAG_METADATA } from '../types';
-import { Trash2, Edit2, X, Copy, Check, Link2 } from 'lucide-react';
+import { Trash2, Edit2, X, Copy, Check, Link2, Sparkles } from 'lucide-react';
 
 interface WordCardProps {
   word: Word;
@@ -12,6 +12,7 @@ interface WordCardProps {
   onEditRelationTag: (word: Word, targetWord: Word, currentTag: RelationTag) => void;
   onUnlinkRelation: (wordAId: string, wordBId: string, tag: RelationTag) => void;
   onCopyTerm: (term: string) => void;
+  onOpenAiClue: (word1: string, word2: string, tag?: RelationTag) => void;
   highlightTerm?: string;
 }
 
@@ -25,6 +26,7 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
   onEditRelationTag,
   onUnlinkRelation,
   onCopyTerm,
+  onOpenAiClue,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -117,6 +119,17 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
                   >
                     {meta.shortCode}
                   </button>
+
+                  {/* AI Generated Clue */}
+                  {target && (
+                    <button
+                      onClick={() => onOpenAiClue(word.term, target.term, rel.tag)}
+                      className="text-slate-400 hover:text-sky-400 transition-colors p-0.5 cursor-pointer ml-0.5"
+                      title={`Generate AI Clue: "${word.term}" ⇄ "${target.term}"`}
+                    >
+                      <Sparkles className="w-3 h-3 text-sky-400" />
+                    </button>
+                  )}
 
                   {/* Remove relation */}
                   <button

@@ -27,6 +27,7 @@ import { AddRelationModal } from './components/AddRelationModal';
 import { EditRelationModal } from './components/EditRelationModal';
 import { EditWordModal } from './components/EditWordModal';
 import { RawImportModal } from './components/RawImportModal';
+import { AiClueModal } from './components/AiClueModal';
 import { ToastContainer } from './components/Toast';
 import { Plus, Settings as SettingsIcon, Link2, FileUp, ChevronDown } from 'lucide-react';
 
@@ -59,6 +60,11 @@ export default function App() {
     wordA: Word;
     wordB: Word;
     currentTag: RelationTag;
+  } | null>(null);
+  const [aiClueTarget, setAiClueTarget] = useState<{
+    word1: string;
+    word2: string;
+    tag?: RelationTag;
   } | null>(null);
 
   // Toast Notifications State
@@ -231,6 +237,13 @@ export default function App() {
       addToast(`Copied "${text}"`, 'info');
     },
     [addToast]
+  );
+
+  const handleOpenAiClue = useCallback(
+    (word1: string, word2: string, tag?: RelationTag) => {
+      setAiClueTarget({ word1, word2, tag });
+    },
+    []
   );
 
   // Handler: Add Standalone Word
@@ -560,6 +573,7 @@ export default function App() {
                         onEditRelationTag={handleEditPairRelationTag}
                         onUnlinkRelation={handleUnlinkRelation}
                         onCopyText={handleCopyToast}
+                        onOpenAiClue={handleOpenAiClue}
                       />
                     ))}
                   </div>
@@ -647,6 +661,7 @@ export default function App() {
                         onEditRelationTag={handleEditWordRelationTag}
                         onUnlinkRelation={handleUnlinkRelation}
                         onCopyTerm={handleCopyToast}
+                        onOpenAiClue={handleOpenAiClue}
                         highlightTerm={searchTerm}
                       />
                     ))}
@@ -739,6 +754,16 @@ export default function App() {
           setWords(newWords);
           addToast(msg, 'success');
         }}
+      />
+
+      {/* AI Generated Clue Modal */}
+      <AiClueModal
+        isOpen={!!aiClueTarget}
+        onClose={() => setAiClueTarget(null)}
+        word1={aiClueTarget?.word1 || ''}
+        word2={aiClueTarget?.word2 || ''}
+        tag={aiClueTarget?.tag}
+        onCopyToast={(msg) => addToast(msg, 'info')}
       />
 
       {/* Minimal Toast Feedback Alerts */}
