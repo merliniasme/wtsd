@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PairItem, RelationTag, TAG_METADATA } from '../types';
-import { Copy, Check, Tag, Unlink, Sparkles } from 'lucide-react';
+import { Copy, Check, Tag, Unlink } from 'lucide-react';
 
 interface PairCardProps {
   pair: PairItem;
@@ -8,7 +8,6 @@ interface PairCardProps {
   onEditRelationTag: (wordA: PairItem['wordA'], wordB: PairItem['wordB'], currentTag: RelationTag) => void;
   onUnlinkRelation: (wordAId: string, wordBId: string, tag: RelationTag) => void;
   onCopyText: (text: string) => void;
-  onOpenAiClue: (word1: string, word2: string, tag?: RelationTag) => void;
 }
 
 export const PairCard: React.FC<PairCardProps> = React.memo(({
@@ -17,7 +16,6 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
   onEditRelationTag,
   onUnlinkRelation,
   onCopyText,
-  onOpenAiClue,
 }) => {
   const [copied, setCopied] = useState(false);
   const meta = TAG_METADATA[pair.tag] || TAG_METADATA.others;
@@ -70,15 +68,6 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
 
       {/* Action Controls */}
       <div className="flex items-center gap-1 shrink-0 opacity-75 group-hover:opacity-100 transition-opacity">
-        {/* AI Generated Clue */}
-        <button
-          onClick={() => onOpenAiClue(pair.wordA.term, pair.wordB.term, pair.tag)}
-          className="p-1.5 text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 transition-colors cursor-pointer rounded"
-          title="Buat Clue AI (Who is Undercover)"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-        </button>
-
         {/* Quick Copy Pair */}
         <button
           onClick={handleCopyPair}

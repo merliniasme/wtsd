@@ -27,7 +27,7 @@ import { AddRelationModal } from './components/AddRelationModal';
 import { EditRelationModal } from './components/EditRelationModal';
 import { EditWordModal } from './components/EditWordModal';
 import { RawImportModal } from './components/RawImportModal';
-import { AiClueModal } from './components/AiClueModal';
+import { MemoryGameModal } from './components/MemoryGameModal';
 import { ToastContainer } from './components/Toast';
 import { Plus, Settings as SettingsIcon, Link2, FileUp, ChevronDown } from 'lucide-react';
 
@@ -54,17 +54,13 @@ export default function App() {
   const [isAddWordOpen, setIsAddWordOpen] = useState(false);
   const [isCreateRelationOpen, setIsCreateRelationOpen] = useState(false);
   const [isRawImportOpen, setIsRawImportOpen] = useState(false);
+  const [isMemoryGameOpen, setIsMemoryGameOpen] = useState(false);
   const [activeWordForRelation, setActiveWordForRelation] = useState<Word | null>(null);
   const [wordToEdit, setWordToEdit] = useState<Word | null>(null);
   const [relationToEdit, setRelationToEdit] = useState<{
     wordA: Word;
     wordB: Word;
     currentTag: RelationTag;
-  } | null>(null);
-  const [aiClueTarget, setAiClueTarget] = useState<{
-    word1: string;
-    word2: string;
-    tag?: RelationTag;
   } | null>(null);
 
   // Toast Notifications State
@@ -237,13 +233,6 @@ export default function App() {
       addToast(`Copied "${text}"`, 'info');
     },
     [addToast]
-  );
-
-  const handleOpenAiClue = useCallback(
-    (word1: string, word2: string, tag?: RelationTag) => {
-      setAiClueTarget({ word1, word2, tag });
-    },
-    []
   );
 
   // Handler: Add Standalone Word
@@ -573,7 +562,6 @@ export default function App() {
                         onEditRelationTag={handleEditPairRelationTag}
                         onUnlinkRelation={handleUnlinkRelation}
                         onCopyText={handleCopyToast}
-                        onOpenAiClue={handleOpenAiClue}
                       />
                     ))}
                   </div>
@@ -661,7 +649,6 @@ export default function App() {
                         onEditRelationTag={handleEditWordRelationTag}
                         onUnlinkRelation={handleUnlinkRelation}
                         onCopyTerm={handleCopyToast}
-                        onOpenAiClue={handleOpenAiClue}
                         highlightTerm={searchTerm}
                       />
                     ))}
@@ -698,8 +685,11 @@ export default function App() {
         )}
       </main>
 
-      {/* Floating Add Word Action Button */}
-      <FloatingAddButton onClick={() => setIsAddWordOpen(true)} />
+      {/* Floating Action Buttons (Puzzle Game & Add Word) */}
+      <FloatingAddButton
+        onAddWord={() => setIsAddWordOpen(true)}
+        onOpenPuzzle={() => setIsMemoryGameOpen(true)}
+      />
 
       {/* Add Word Modal */}
       <AddWordModal
@@ -756,14 +746,11 @@ export default function App() {
         }}
       />
 
-      {/* AI Generated Clue Modal */}
-      <AiClueModal
-        isOpen={!!aiClueTarget}
-        onClose={() => setAiClueTarget(null)}
-        word1={aiClueTarget?.word1 || ''}
-        word2={aiClueTarget?.word2 || ''}
-        tag={aiClueTarget?.tag}
-        onCopyToast={(msg) => addToast(msg, 'info')}
+      {/* Memory Puzzle Game Modal */}
+      <MemoryGameModal
+        isOpen={isMemoryGameOpen}
+        onClose={() => setIsMemoryGameOpen(false)}
+        words={words}
       />
 
       {/* Minimal Toast Feedback Alerts */}
