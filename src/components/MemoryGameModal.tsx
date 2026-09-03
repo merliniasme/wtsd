@@ -1,22 +1,21 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Word, RelationTag, TAG_METADATA } from '../types';
 import { extractAllPairs } from '../utils/wordGraph';
 import {
   X,
   RotateCcw,
-  Brain,
   Check,
   BarChart2,
   Trash2,
   Sparkles,
   Flame,
-  Award,
-  AlertTriangle,
   ArrowRight,
-  HelpCircle,
   Search,
   CheckCircle2,
   XCircle,
+  Volume2,
+  VolumeX,
+  Play,
   Zap,
 } from 'lucide-react';
 
@@ -26,9 +25,10 @@ interface PairDefinition {
   tag: RelationTag;
 }
 
+// Generous library of default starter pairs to ensure infinite, varied gameplay
 const DEFAULT_STARTER_PAIRS: PairDefinition[] = [
-  { wordA: 'Kopi', wordB: 'Teh', tag: 'others' },
   { wordA: 'Matahari', wordB: 'Bulan', tag: 'cghn' },
+  { wordA: 'Kopi', wordB: 'Teh', tag: 'others' },
   { wordA: 'Kucing', wordB: 'Anjing', tag: 'cghn' },
   { wordA: 'Gitar', wordB: 'Biola', tag: 'ectm' },
   { wordA: 'Dokter', wordB: 'Perawat', tag: 'others' },
@@ -52,12 +52,28 @@ const DEFAULT_STARTER_PAIRS: PairDefinition[] = [
   { wordA: 'Piring', wordB: 'Mangkuk', tag: 'others' },
   { wordA: 'Sabun', wordB: 'Sampo', tag: 'others' },
   { wordA: 'Kamera', wordB: 'Handphone', tag: 'ectm' },
+  { wordA: 'Emas', wordB: 'Perak', tag: 'cghn' },
+  { wordA: 'Raja', wordB: 'Ratu', tag: 'cghn' },
+  { wordA: 'Pintu', wordB: 'Jendela', tag: 'others' },
+  { wordA: 'Guru', wordB: 'Murid', tag: 'others' },
+  { wordA: 'Jarum', wordB: 'Benang', tag: 'others' },
+  { wordA: 'Kunci', wordB: 'Gembok', tag: 'others' },
+  { wordA: 'Kaos', wordB: 'Kemeja', tag: 'others' },
+  { wordA: 'Danau', wordB: 'Kolam', tag: 'cghn' },
+  { wordA: 'Kasur', wordB: 'Bantal', tag: 'others' },
+  { wordA: 'Jam', wordB: 'Menit', tag: 'others' },
+  { wordA: 'Rumah', wordB: 'Kantor', tag: 'others' },
+  { wordA: 'Palu', wordB: 'Paku', tag: 'others' },
+  { wordA: 'Roti', wordB: 'Selai', tag: 'others' },
+  { wordA: 'Susu', wordB: 'Cokelat', tag: 'others' },
+  { wordA: 'Topi', wordB: 'Kacamata', tag: 'others' },
 ];
 
 const FALLBACK_DISTRACTOR_POOL = [
   'Batu', 'Pohon', 'Gunung', 'Sungai', 'Angin', 'Awan', 'Roti', 'Susu', 'Apel', 'Jeruk',
-  'Kacamata', 'Topi', 'Jaket', 'Tas', 'Jam Tangan', 'Lampu', 'Kipas', 'Pintu', 'Jendela', 'Lantai',
-  'Sepeda', 'Kapal', 'Bus', 'Truk', 'Helikopter', 'Bunga', 'Daun', 'Rumput', 'Pelangi', 'Salju'
+  'Kacamata', 'Topi', 'Jaket', 'Tas', 'Lampu', 'Kipas', 'Lantai', 'Sepeda', 'Kapal', 'Bus',
+  'Truk', 'Helikopter', 'Bunga', 'Daun', 'Rumput', 'Pelangi', 'Salju', 'Jembatan', 'Pasar', 'Taman',
+  'Dompet', 'Kabel', 'Kardus', 'Gelas', 'Botol', 'Kain', 'Payung', 'Bantal', 'Sapu', 'Ember'
 ];
 
 export interface MasteredPairRecord {
@@ -88,7 +104,47 @@ const DEFAULT_STATS: MemoryGameStats = {
   uniquePairs: {},
 };
 
-const STATS_STORAGE_KEY = 'spy_dict_pair_memory_limitless_v2';
+const STATS_STORAGE_KEY = 'spy_dict_pair_memory_limitless_v3';
+const SOUND_SETTING_KEY = 'spy_dict_memory_game_sound';
+const AUTO_NEXT_SETTING_KEY = 'spy_dict_memory_game_autonext';
+
+function playSound(type: 'correct' | 'wrong', enabled: boolean) {
+  if (!enabled) return;
+  try {
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    if (type === 'correct') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+      osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.08); // E5
+      osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.16); // G5
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.32);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.32);
+    } else {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(200, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.16);
+      gain.gain.setValueAtTime(0.14, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.22);
+    }
+  } catch {
+    // Ignore audio permission or blocked playback issues
+  }
+}
 
 function loadSavedStats(): MemoryGameStats {
   try {
@@ -147,8 +203,33 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
   const [stats, setStats] = useState<MemoryGameStats>(loadSavedStats);
   const [activeTab, setActiveTab] = useState<'game' | 'stats'>('game');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [questionCount, setQuestionCount] = useState(0);
   const [statsSearchQuery, setStatsSearchQuery] = useState('');
+  const [isSoundOn, setIsSoundOn] = useState<boolean>(() => {
+    return localStorage.getItem(SOUND_SETTING_KEY) !== 'false';
+  });
+  const [isAutoNext, setIsAutoNext] = useState<boolean>(() => {
+    return localStorage.getItem(AUTO_NEXT_SETTING_KEY) === 'true';
+  });
+
+  const autoNextTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Toggle Sound setting
+  const toggleSound = () => {
+    setIsSoundOn((prev) => {
+      const next = !prev;
+      localStorage.setItem(SOUND_SETTING_KEY, String(next));
+      return next;
+    });
+  };
+
+  // Toggle Auto-Next setting
+  const toggleAutoNext = () => {
+    setIsAutoNext((prev) => {
+      const next = !prev;
+      localStorage.setItem(AUTO_NEXT_SETTING_KEY, String(next));
+      return next;
+    });
+  };
 
   // 1. Build unified pool of pairs from current dictionary + default starter pairs
   const allPairs = useMemo<PairDefinition[]>(() => {
@@ -158,23 +239,35 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
 
     // Prioritize dictionary pairs
     for (const p of extracted) {
-      const key = normalizeKey(p.wordA.term, p.wordB.term);
+      const termA = p.wordA?.term?.trim();
+      const termB = p.wordB?.term?.trim();
+      if (!termA || !termB) continue;
+
+      const key = normalizeKey(termA, termB);
       if (!seen.has(key)) {
         seen.add(key);
         list.push({
-          wordA: p.wordA.term,
-          wordB: p.wordB.term,
+          wordA: termA,
+          wordB: termB,
           tag: p.tag,
         });
       }
     }
 
-    // Complement with starter pairs for richness
+    // Complement with starter pairs for variety
     for (const s of DEFAULT_STARTER_PAIRS) {
-      const key = normalizeKey(s.wordA, s.wordB);
+      const termA = s.wordA.trim();
+      const termB = s.wordB.trim();
+      if (!termA || !termB) continue;
+
+      const key = normalizeKey(termA, termB);
       if (!seen.has(key)) {
         seen.add(key);
-        list.push(s);
+        list.push({
+          wordA: termA,
+          wordB: termB,
+          tag: s.tag,
+        });
       }
     }
 
@@ -197,45 +290,54 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     return map;
   }, [allPairs]);
 
-  // 3. Pool of all known words
+  // 3. Pool of all known words for distractors
   const allWordsPool = useMemo(() => {
     const set = new Set<string>();
     for (const p of allPairs) {
-      set.add(p.wordA.trim());
-      set.add(p.wordB.trim());
+      if (p.wordA.trim()) set.add(p.wordA.trim());
+      if (p.wordB.trim()) set.add(p.wordB.trim());
     }
     for (const f of FALLBACK_DISTRACTOR_POOL) {
-      set.add(f.trim());
+      if (f.trim()) set.add(f.trim());
     }
     return Array.from(set);
   }, [allPairs]);
 
-  // 4. Generate next question
+  // 4. Generate next question (Guaranteed to produce valid non-empty prompt and 5 distinct options)
   const generateNextQuestion = useCallback(() => {
-    if (allPairs.length === 0) return;
+    if (autoNextTimerRef.current) {
+      clearTimeout(autoNextTimerRef.current);
+      autoNextTimerRef.current = null;
+    }
 
-    // Pick random pair
-    const randomPair = allPairs[Math.floor(Math.random() * allPairs.length)];
+    const sourcePool = allPairs.length > 0 ? allPairs : DEFAULT_STARTER_PAIRS;
+    const randomPair = sourcePool[Math.floor(Math.random() * sourcePool.length)];
+
     const isReverse = Math.random() > 0.5;
-    const promptWord = isReverse ? randomPair.wordB : randomPair.wordA;
-    const correctPartner = isReverse ? randomPair.wordA : randomPair.wordB;
+    const promptWord = (isReverse ? randomPair.wordB : randomPair.wordA).trim();
+    const correctPartner = (isReverse ? randomPair.wordA : randomPair.wordB).trim();
     const pairKey = normalizeKey(promptWord, correctPartner);
 
-    const promptLower = promptWord.trim().toLowerCase();
-    const partnerLower = correctPartner.trim().toLowerCase();
+    const promptLower = promptWord.toLowerCase();
+    const partnerLower = correctPartner.toLowerCase();
     const forbiddenPartners = partnersMap.get(promptLower) || new Set<string>();
 
-    // Candidate distractors: words that are NOT promptWord AND NOT in forbiddenPartners
+    // Filter candidate distractors
     const candidateDistractors = allWordsPool.filter((w) => {
       const lower = w.trim().toLowerCase();
-      return lower !== promptLower && lower !== partnerLower && !forbiddenPartners.has(lower);
+      return (
+        lower.length > 0 &&
+        lower !== promptLower &&
+        lower !== partnerLower &&
+        !forbiddenPartners.has(lower)
+      );
     });
 
-    // Shuffle candidate distractors and pick exactly 4
+    // Shuffle and pick 4 distractors
     const shuffledDistractors = [...candidateDistractors].sort(() => Math.random() - 0.5);
     const chosenDistractors = shuffledDistractors.slice(0, 4);
 
-    // If candidate distractors are fewer than 4 (unlikely), fill from fallback
+    // Fallback if not enough distractors
     while (chosenDistractors.length < 4) {
       for (const fallback of FALLBACK_DISTRACTOR_POOL) {
         const fLower = fallback.trim().toLowerCase();
@@ -250,7 +352,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
       }
     }
 
-    // Combine 1 correct partner + 4 distractors = 5 options
+    // Combine into exactly 5 options: 1 correct + 4 distractors
     const options = [correctPartner, ...chosenDistractors].sort(() => Math.random() - 0.5);
 
     setCurrentQuestion({
@@ -262,10 +364,18 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     });
     setSelectedOption(null);
     setIsAnswered(false);
-    setQuestionCount((prev) => prev + 1);
   }, [allPairs, partnersMap, allWordsPool]);
 
-  // Initialize on modal open
+  // Clean up timer on unmount or close
+  useEffect(() => {
+    return () => {
+      if (autoNextTimerRef.current) {
+        clearTimeout(autoNextTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Initialize immediately on open
   useEffect(() => {
     if (isOpen) {
       generateNextQuestion();
@@ -282,10 +392,14 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     const isCorrect =
       option.trim().toLowerCase() === currentQuestion.correctPartner.trim().toLowerCase();
 
+    // Play feedback sound
+    playSound(isCorrect ? 'correct' : 'wrong', isSoundOn);
+
+    // Update persistent stats
     setStats((prev) => {
       const totalAnswers = prev.totalAnswers + 1;
       const correctAnswers = prev.correctAnswers + (isCorrect ? 1 : 0);
-      const wrongAnswers = prev.wrongAnswers + (isCorrect ? 0 : 1); // "every wrong answer count in stats"
+      const wrongAnswers = prev.wrongAnswers + (isCorrect ? 0 : 1); // Counts every wrong answer
       const currentStreak = isCorrect ? prev.currentStreak + 1 : 0;
       const maxStreak = Math.max(prev.maxStreak, currentStreak);
 
@@ -293,7 +407,6 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
       const pairKey = currentQuestion.pairKey;
 
       if (isCorrect) {
-        // Record or increment unique pair guess
         const existing = uniquePairs[pairKey];
         uniquePairs[pairKey] = {
           pairKey,
@@ -305,7 +418,6 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
           lastGuessedAt: Date.now(),
         };
       } else {
-        // Increment wrong count for this pair if encountered
         const existing = uniquePairs[pairKey];
         if (existing) {
           uniquePairs[pairKey] = {
@@ -327,14 +439,20 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
       saveStats(updatedStats);
       return updatedStats;
     });
+
+    // Handle auto-advance if enabled
+    if (isAutoNext) {
+      autoNextTimerRef.current = setTimeout(() => {
+        generateNextQuestion();
+      }, 1250);
+    }
   };
 
-  // Keyboard shortcut support (1-5 or A-E for options, Space/Enter for Next)
+  // Keyboard shortcut support (1-5 or A-E to select, Space/Enter to advance)
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in search bar
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
 
       if (!isAnswered && currentQuestion) {
@@ -361,7 +479,6 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isAnswered, currentQuestion, generateNextQuestion]);
 
-  // Reset stats handler
   const handleResetStats = () => {
     setStats(DEFAULT_STATS);
     saveStats(DEFAULT_STATS);
@@ -378,7 +495,6 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
       ? Math.round((stats.correctAnswers / stats.totalAnswers) * 100)
       : 0;
 
-  // Filter mastered pairs for stats list
   const filteredMasteredPairs = uniquePairsList.filter((p) => {
     if (!statsSearchQuery.trim()) return true;
     const q = statsSearchQuery.toLowerCase();
@@ -393,150 +509,153 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     ? TAG_METADATA[currentQuestion.tag] || TAG_METADATA.others
     : TAG_METADATA.others;
 
+  const isCurrentCorrect =
+    isAnswered &&
+    currentQuestion &&
+    selectedOption?.trim().toLowerCase() === currentQuestion.correctPartner.trim().toLowerCase();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md">
       <div
         id="memory-puzzle-game-dialog"
-        className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-800 shrink-0 bg-slate-900/95">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400">
-              <Brain className="w-5 h-5" />
+        {/* Sleek, Clean Header */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-800/80 bg-slate-900">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 font-bold">
+              <Sparkles className="w-4 h-4 text-purple-400" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                Asah Memori Pasangan Kata
+              <h2 className="text-sm sm:text-base font-bold text-slate-100 leading-tight">
+                Tebak Pasangan Kata
               </h2>
-              <p className="text-xs text-slate-400">
-                Mode tanpa batas waktu — pilih 1 pasangan yang tepat dari 5 opsi
+              <p className="text-[11px] text-slate-400">
+                Mode santai tanpa batas waktu
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Sound Toggle */}
+            <button
+              onClick={toggleSound}
+              className={`p-2 rounded-lg border transition-colors cursor-pointer ${
+                isSoundOn
+                  ? 'bg-slate-800 text-purple-300 border-slate-700'
+                  : 'bg-slate-900 text-slate-500 border-slate-800'
+              }`}
+              title={isSoundOn ? 'Suara Aktif (Klik untuk mute)' : 'Suara Mati'}
+            >
+              {isSoundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+
+            {/* Switch to Stats / Back to Game */}
             <button
               id="btn-toggle-game-stats"
               onClick={() => setActiveTab(activeTab === 'game' ? 'stats' : 'game')}
               className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'stats'
                   ? 'bg-purple-500/20 text-purple-300 border-purple-500/50'
-                  : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border-slate-700/60'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
               }`}
-              title="Lihat Statistik & Koleksi Pasangan"
             >
               <BarChart2 className="w-3.5 h-3.5" />
-              <span>{activeTab === 'game' ? 'Statistik' : 'Kembali Main'}</span>
+              <span>{activeTab === 'game' ? 'Statistik' : 'Main'}</span>
             </button>
 
+            {/* Close Button */}
             <button
               id="btn-close-memory-game"
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-              title="Tutup Game"
+              className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer ml-0.5"
+              title="Tutup"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Live Status Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5 bg-slate-950/70 border-b border-slate-800/70 text-xs">
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Unique Pairs Guessed Badge */}
-            <div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-500/10 border border-purple-500/25 text-purple-300 font-medium"
-              title="Jumlah pasangan unik yang berhasil Anda tebak dengan benar"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-              <span>
-                <strong className="text-purple-200">{uniquePairsCount}</strong> Pasangan Unik
-              </span>
-            </div>
-
-            {/* Streak Badge */}
-            <div
-              className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-300 font-medium"
-              title="Streak jawaban benar beruntun saat ini"
-            >
-              <Flame className="w-3.5 h-3.5 text-amber-400" />
-              <span>
-                Streak: <strong className="text-amber-200">{stats.currentStreak}</strong>
-              </span>
-            </div>
+        {/* Minimal High-Contrast Live Score Pill Bar */}
+        <div className="flex items-center justify-around px-4 py-2 bg-slate-950/60 border-b border-slate-800 text-xs">
+          {/* Unique Pairs Guessed Correct */}
+          <div className="flex items-center gap-1.5" title="Jumlah total pasangan unik yang berhasil ditebak">
+            <span className="text-[11px] text-slate-400">Pasangan Unik:</span>
+            <span className="font-extrabold text-purple-300 bg-purple-500/15 border border-purple-500/30 px-2 py-0.5 rounded-md font-mono">
+              {uniquePairsCount}
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 text-slate-400 font-mono">
-            {/* Correct Count */}
-            <span className="flex items-center gap-1 text-emerald-400 font-semibold" title="Total Jawaban Benar">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{stats.correctAnswers}</span>
+          {/* Streak Counter */}
+          <div className="flex items-center gap-1" title="Streak jawaban benar beruntun">
+            <Flame className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[11px] text-slate-400">Streak:</span>
+            <span className="font-bold text-amber-300 font-mono">
+              {stats.currentStreak}
             </span>
+          </div>
 
-            {/* Wrong Count */}
-            <span className="flex items-center gap-1 text-rose-400 font-semibold" title="Total Jawaban Salah">
-              <XCircle className="w-3.5 h-3.5" />
-              <span>{stats.wrongAnswers}</span>
+          {/* Wrong Answer Counter */}
+          <div className="flex items-center gap-1" title="Setiap jawaban salah dicatat di sini">
+            <XCircle className="w-3.5 h-3.5 text-rose-400" />
+            <span className="text-[11px] text-slate-400">Salah:</span>
+            <span className="font-bold text-rose-400 font-mono">
+              {stats.wrongAnswers}
             </span>
+          </div>
 
-            {/* Accuracy */}
-            <span className="text-slate-400 hidden sm:inline" title="Rasio Akurasi">
-              ({accuracyRate}%)
-            </span>
+          {/* Accuracy */}
+          <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-400">
+            <span>Akurasi:</span>
+            <span className="font-mono text-slate-200 font-medium">{accuracyRate}%</span>
           </div>
         </div>
 
-        {/* Main Body */}
+        {/* Game Area */}
         {activeTab === 'game' ? (
-          <div className="flex flex-col flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+          <div className="p-5 flex flex-col space-y-4">
             {currentQuestion ? (
               <>
-                {/* Target Prompt Card */}
-                <div className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-5 sm:p-6 text-center space-y-2.5 shadow-lg relative overflow-hidden">
-                  <div className="absolute top-3 left-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1">
-                    <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Pertanyaan #{questionCount}</span>
+                {/* PROMINENT, ULTRA-CLEAR TARGET WORD CARD */}
+                <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 text-center shadow-lg relative overflow-hidden">
+                  <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-purple-400/90 block mb-1">
+                    Cari Pasangan Dari Kata
+                  </span>
+
+                  {/* Guaranteed Solid, Visible, High-Contrast Typography */}
+                  <div className="py-2.5">
+                    <h1 className="text-3xl sm:text-4xl font-black text-white tracking-normal drop-shadow-sm break-words select-all">
+                      {currentQuestion.promptWord}
+                    </h1>
                   </div>
 
-                  <p className="text-xs sm:text-sm font-medium text-slate-400 pt-1">
-                    Manakah pasangan kata yang tepat untuk:
-                  </p>
-
-                  <div className="py-2">
-                    <span className="inline-block text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-white to-purple-300 tracking-wide px-4 py-1.5 rounded-xl bg-slate-800/40 border border-slate-700/50 shadow-inner">
-                      {currentQuestion.promptWord}
+                  {/* Tag Indicator */}
+                  <div className="inline-flex items-center gap-1.5 mt-1">
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${relationMeta.badgeBg} ${relationMeta.badgeText} border ${relationMeta.badgeBorder}`}
+                    >
+                      {relationMeta.label}
                     </span>
                   </div>
 
-                  {/* Feedback on answer */}
+                  {/* Immediate Feedback Notification */}
                   {isAnswered && (
-                    <div className="pt-2 animate-in fade-in zoom-in-95 duration-150">
-                      {selectedOption?.trim().toLowerCase() ===
-                      currentQuestion.correctPartner.trim().toLowerCase() ? (
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs sm:text-sm font-semibold">
+                    <div className="mt-3.5 pt-3 border-t border-slate-800/80 animate-in fade-in duration-150">
+                      {isCurrentCorrect ? (
+                        <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-400">
                           <Check className="w-4 h-4 stroke-[3]" />
                           <span>
-                            Benar! <strong>{currentQuestion.promptWord}</strong> ⇄{' '}
-                            <strong>{currentQuestion.correctPartner}</strong>
-                          </span>
-                          <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded font-mono uppercase ${relationMeta.badgeBg} ${relationMeta.badgeText} border ${relationMeta.badgeBorder}`}
-                          >
-                            {relationMeta.shortCode}
+                            Benar! {currentQuestion.promptWord} ⇄ {currentQuestion.correctPartner}
                           </span>
                         </div>
                       ) : (
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs sm:text-sm font-semibold">
+                        <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-rose-400">
                           <X className="w-4 h-4 stroke-[3]" />
                           <span>
-                            Kurang tepat! Pasangan yang benar:{' '}
-                            <strong className="text-emerald-400">{currentQuestion.correctPartner}</strong>
-                          </span>
-                          <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded font-mono uppercase ${relationMeta.badgeBg} ${relationMeta.badgeText} border ${relationMeta.badgeBorder}`}
-                          >
-                            {relationMeta.shortCode}
+                            Salah! Pasangannya adalah{' '}
+                            <span className="text-emerald-300 underline font-extrabold">
+                              {currentQuestion.correctPartner}
+                            </span>
                           </span>
                         </div>
                       )}
@@ -544,76 +663,68 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                   )}
                 </div>
 
-                {/* 5 Multiple Choice Options */}
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between text-xs text-slate-400 px-1 font-medium">
-                    <span>Pilih 1 dari 5 pilihan kata di bawah ini:</span>
-                    <span className="text-[11px] text-slate-500 hidden sm:inline">
-                      Tips: Tekan tombol 1-5 atau A-E di keyboard
-                    </span>
+                {/* 5 Clean, Multiple-Choice Option Buttons */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 font-medium">
+                    <span>Pilih 1 jawaban yang tepat:</span>
+                    <span className="hidden sm:inline text-slate-500">Shortcut: 1-5 atau A-E</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {currentQuestion.options.map((opt, idx) => {
+                  <div className="flex flex-col gap-2">
+                    {currentQuestion.options.map((optionText, idx) => {
                       const letter = String.fromCharCode(65 + idx); // A, B, C, D, E
                       const isCorrect =
-                        opt.trim().toLowerCase() ===
+                        optionText.trim().toLowerCase() ===
                         currentQuestion.correctPartner.trim().toLowerCase();
-                      const isSelected = selectedOption === opt;
+                      const isSelected = selectedOption === optionText;
 
-                      let buttonStyle =
-                        'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/70 hover:border-slate-600';
-                      let badgeStyle = 'bg-slate-900 text-slate-400 border-slate-700';
+                      let containerStyle =
+                        'bg-slate-800/80 hover:bg-slate-800 hover:border-purple-500/50 text-slate-200 border-slate-700/80 active:scale-[0.99]';
+                      let letterStyle = 'bg-slate-900/90 text-slate-400 border-slate-700';
 
                       if (isAnswered) {
                         if (isCorrect) {
-                          // Correct partner highlights in green
-                          buttonStyle =
-                            'bg-emerald-950/40 border-emerald-500/80 text-emerald-100 shadow-md shadow-emerald-950/30 font-bold';
-                          badgeStyle = 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold';
+                          // Correct answer glows green
+                          containerStyle =
+                            'bg-emerald-950/60 border-emerald-500 text-emerald-100 font-bold ring-1 ring-emerald-500/50';
+                          letterStyle = 'bg-emerald-500 text-slate-950 font-black border-emerald-400';
                         } else if (isSelected && !isCorrect) {
-                          // Selected wrong option highlights in red
-                          buttonStyle =
-                            'bg-rose-950/40 border-rose-500/80 text-rose-200 shadow-md shadow-rose-950/30 font-bold animate-shake';
-                          badgeStyle = 'bg-rose-500 text-white border-rose-400 font-bold';
+                          // Wrong picked option glows red
+                          containerStyle =
+                            'bg-rose-950/60 border-rose-500 text-rose-100 font-bold ring-1 ring-rose-500/50';
+                          letterStyle = 'bg-rose-500 text-white font-black border-rose-400';
                         } else {
-                          // Other unselected wrong options fade out slightly
-                          buttonStyle =
-                            'bg-slate-900/40 border-slate-800 text-slate-500 opacity-60 cursor-not-allowed';
-                          badgeStyle = 'bg-slate-900/60 text-slate-600 border-slate-800';
+                          // Others fade out
+                          containerStyle =
+                            'bg-slate-950/40 border-slate-800/80 text-slate-500 opacity-50 cursor-not-allowed';
+                          letterStyle = 'bg-slate-900/40 text-slate-600 border-slate-800';
                         }
                       }
 
                       return (
                         <button
-                          key={opt}
-                          id={`option-btn-${idx}`}
-                          onClick={() => handleSelectOption(opt)}
+                          key={optionText}
+                          id={`mc-option-${idx}`}
+                          onClick={() => handleSelectOption(optionText)}
                           disabled={isAnswered}
-                          className={`flex items-center justify-between p-3.5 sm:p-4 rounded-xl border text-left transition-all duration-150 cursor-pointer ${buttonStyle} ${
-                            !isAnswered ? 'active:scale-[0.98]' : ''
-                          }`}
+                          className={`flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all duration-150 cursor-pointer ${containerStyle}`}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
                             <span
-                              className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs border font-mono shrink-0 transition-colors ${badgeStyle}`}
+                              className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-mono font-bold shrink-0 border ${letterStyle}`}
                             >
                               {letter}
                             </span>
-                            <span className="text-sm sm:text-base font-semibold break-words">
-                              {opt}
+                            <span className="text-sm font-semibold truncate">
+                              {optionText}
                             </span>
                           </div>
 
-                          {isAnswered && (
-                            <div className="shrink-0 pl-2">
-                              {isCorrect && (
-                                <Check className="w-5 h-5 text-emerald-400 stroke-[3]" />
-                              )}
-                              {isSelected && !isCorrect && (
-                                <X className="w-5 h-5 text-rose-400 stroke-[3]" />
-                              )}
-                            </div>
+                          {isAnswered && isCorrect && (
+                            <Check className="w-5 h-5 text-emerald-400 stroke-[3] shrink-0 ml-2" />
+                          )}
+                          {isAnswered && isSelected && !isCorrect && (
+                            <X className="w-5 h-5 text-rose-400 stroke-[3] shrink-0 ml-2" />
                           )}
                         </button>
                       );
@@ -621,157 +732,132 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                   </div>
                 </div>
 
-                {/* Bottom Control Bar */}
-                <div className="flex items-center justify-between pt-2">
-                  <button
-                    onClick={generateNextQuestion}
-                    className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1.5 transition-colors cursor-pointer py-1.5 px-2.5 rounded-lg hover:bg-slate-800/60"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Ganti Kata / Lewati</span>
-                  </button>
+                {/* Bottom Bar Controls */}
+                <div className="pt-2 flex items-center justify-between">
+                  {/* Auto-Next Switch */}
+                  <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={isAutoNext}
+                      onChange={toggleAutoNext}
+                      className="w-3.5 h-3.5 rounded bg-slate-800 border-slate-700 text-purple-600 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <span>Lanjut Otomatis (1.2s)</span>
+                  </label>
 
-                  {isAnswered && (
+                  <div className="flex items-center gap-2">
                     <button
-                      id="btn-next-question"
                       onClick={generateNextQuestion}
-                      className="px-5 py-2.5 rounded-xl bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-2 transition-transform active:scale-95 shadow-md shadow-purple-950/40 cursor-pointer animate-in fade-in slide-in-from-bottom-2"
+                      className="text-xs text-slate-400 hover:text-slate-200 px-2.5 py-1.5 rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Lewati kata ini"
                     >
-                      <span>Pertanyaan Berikutnya</span>
-                      <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Ganti Kata</span>
                     </button>
-                  )}
+
+                    {isAnswered && (
+                      <button
+                        id="btn-next-question"
+                        onClick={generateNextQuestion}
+                        className="px-4 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-transform active:scale-95 shadow-md shadow-purple-950/50 cursor-pointer"
+                      >
+                        <span>Lanjut</span>
+                        <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </>
-            ) : null}
+            ) : (
+              <div className="p-8 text-center text-slate-400">
+                <p>Memuat soal...</p>
+              </div>
+            )}
           </div>
         ) : (
           /* Stats & Mastered Pairs View */
-          <div className="flex flex-col flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
-            {/* Primary KPI Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {/* Unique Pairs Guessed Correct */}
-              <div className="bg-purple-950/20 border border-purple-500/30 rounded-xl p-3.5 text-center">
-                <div className="flex items-center justify-center text-purple-400 mb-1">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <p className="text-xs text-slate-400">Pasangan Unik Ditebak</p>
-                <p className="text-xl font-extrabold text-purple-300 mt-0.5">
+          <div className="p-5 flex flex-col space-y-4 max-h-[75vh] overflow-y-auto">
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="p-3 bg-purple-950/30 border border-purple-500/30 rounded-xl text-center">
+                <span className="text-[10px] text-purple-300 font-medium block">Pasangan Unik</span>
+                <span className="text-xl font-black text-purple-200 font-mono mt-0.5 block">
                   {uniquePairsCount}
-                </p>
-                <span className="text-[10px] text-purple-400/80 font-medium">
-                  Berhasil Diingat
                 </span>
               </div>
 
-              {/* Accuracy Rate */}
-              <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5 text-center">
-                <div className="flex items-center justify-center text-emerald-400 mb-1">
-                  <Award className="w-4 h-4" />
-                </div>
-                <p className="text-xs text-slate-400">Tingkat Akurasi</p>
-                <p className="text-xl font-extrabold text-slate-100 mt-0.5">
-                  {accuracyRate}%
-                </p>
-                <span className="text-[10px] text-emerald-400 font-medium">
-                  {stats.correctAnswers} / {stats.totalAnswers} Jawaban
+              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl text-center">
+                <span className="text-[10px] text-emerald-400 font-medium block">Total Benar</span>
+                <span className="text-xl font-black text-emerald-300 font-mono mt-0.5 block">
+                  {stats.correctAnswers}
                 </span>
               </div>
 
-              {/* Wrong Answers Count */}
-              <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5 text-center">
-                <div className="flex items-center justify-center text-rose-400 mb-1">
-                  <XCircle className="w-4 h-4" />
-                </div>
-                <p className="text-xs text-slate-400">Total Salah</p>
-                <p className="text-xl font-extrabold text-rose-400 mt-0.5">
+              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl text-center">
+                <span className="text-[10px] text-rose-400 font-medium block">Total Salah</span>
+                <span className="text-xl font-black text-rose-400 font-mono mt-0.5 block">
                   {stats.wrongAnswers}
-                </p>
-                <span className="text-[10px] text-slate-500 font-medium">
-                  Dihitung Setiap Ronde
                 </span>
               </div>
 
-              {/* Max Streak */}
-              <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5 text-center">
-                <div className="flex items-center justify-center text-amber-400 mb-1">
-                  <Flame className="w-4 h-4" />
-                </div>
-                <p className="text-xs text-slate-400">Rekor Streak</p>
-                <p className="text-xl font-extrabold text-amber-400 mt-0.5">
+              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl text-center">
+                <span className="text-[10px] text-amber-400 font-medium block">Max Streak</span>
+                <span className="text-xl font-black text-amber-300 font-mono mt-0.5 block">
                   {stats.maxStreak} 🔥
-                </p>
-                <span className="text-[10px] text-slate-500 font-medium">
-                  Saat ini: {stats.currentStreak}
                 </span>
               </div>
             </div>
 
             {/* List of Unique Pairs Guessed Correct */}
-            <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Daftar Pasangan Unik yang Berhasil Ditebak ({uniquePairsCount})</span>
-                  </h4>
-                  <p className="text-[11px] text-slate-400">
-                    Koleksi pasangan kata yang sudah berhasil Anda ingat dengan benar
-                  </p>
-                </div>
+            <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <h4 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Koleksi Pasangan Unik Ditebak ({uniquePairsCount})</span>
+                </h4>
 
                 {uniquePairsCount > 0 && (
-                  <div className="relative w-full sm:w-48">
-                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <div className="relative w-40">
+                    <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
                       type="text"
                       value={statsSearchQuery}
                       onChange={(e) => setStatsSearchQuery(e.target.value)}
-                      placeholder="Cari pasangan..."
-                      className="w-full pl-8 pr-2.5 py-1 text-xs bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+                      placeholder="Cari..."
+                      className="w-full pl-6 pr-2 py-0.5 text-xs bg-slate-900 border border-slate-700 rounded-md text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
                     />
                   </div>
                 )}
               </div>
 
               {uniquePairsCount === 0 ? (
-                <div className="py-8 text-center text-slate-500 space-y-2">
-                  <Brain className="w-8 h-8 mx-auto text-slate-600 opacity-60" />
-                  <p className="text-xs">
-                    Belum ada pasangan unik yang berhasil ditebak.
-                  </p>
-                  <button
-                    onClick={() => setActiveTab('game')}
-                    className="text-xs font-semibold text-purple-400 hover:text-purple-300 underline cursor-pointer"
-                  >
-                    Mulai bermain sekarang!
-                  </button>
+                <div className="py-6 text-center text-slate-500 text-xs">
+                  Belum ada pasangan unik yang berhasil ditebak. Mainkan tebak pasangan sekarang!
                 </div>
               ) : filteredMasteredPairs.length === 0 ? (
-                <div className="py-6 text-center text-slate-500 text-xs">
-                  Tidak ditemukan pasangan dengan kata kunci "{statsSearchQuery}"
+                <div className="py-4 text-center text-slate-500 text-xs">
+                  Tidak ditemukan dengan kata kunci "{statsSearchQuery}"
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
                   {filteredMasteredPairs.map((pair) => {
                     const meta = TAG_METADATA[pair.tag] || TAG_METADATA.others;
                     return (
                       <div
                         key={pair.pairKey}
-                        className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition-colors"
+                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800/80 text-xs"
                       >
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0">
                           <span
-                            className={`text-[9px] px-1.5 py-0.5 rounded font-mono uppercase font-bold shrink-0 ${meta.badgeBg} ${meta.badgeText} border ${meta.badgeBorder}`}
+                            className={`text-[9px] px-1 rounded uppercase font-mono font-bold ${meta.badgeBg} ${meta.badgeText}`}
                           >
                             {meta.shortCode}
                           </span>
-                          <span className="text-xs font-semibold text-slate-200 truncate">
+                          <span className="font-medium text-slate-200 truncate">
                             {pair.wordA} ⇄ {pair.wordB}
                           </span>
                         </div>
-
-                        <span className="text-[10px] text-emerald-400 font-mono shrink-0 pl-2">
+                        <span className="text-[10px] text-emerald-400 font-mono font-semibold pl-1">
                           ✓ {pair.correctCount}x
                         </span>
                       </div>
@@ -781,43 +867,40 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
               )}
             </div>
 
-            {/* Reset Stats Controls */}
-            <div className="pt-2">
+            {/* Bottom Actions */}
+            <div className="flex items-center justify-between pt-1">
               {showResetConfirm ? (
-                <div className="p-3.5 bg-rose-950/30 border border-rose-500/40 rounded-xl space-y-2.5 animate-in fade-in">
-                  <div className="flex items-center gap-2 text-rose-300 text-xs font-semibold">
-                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                    <span>Konfirmasi Reset Seluruh Statistik?</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400">
-                    Tindakan ini akan menghapus riwayat pasangan unik yang telah ditebak, total jawaban benar/salah, serta rekor streak Anda.
-                  </p>
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      id="btn-confirm-reset-stats"
-                      onClick={handleResetStats}
-                      className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                    >
-                      Ya, Reset Statistik
-                    </button>
-                    <button
-                      onClick={() => setShowResetConfirm(false)}
-                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-                    >
-                      Batal
-                    </button>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleResetStats}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    Ya, Reset
+                  </button>
+                  <button
+                    onClick={() => setShowResetConfirm(false)}
+                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-xs transition-colors cursor-pointer"
+                  >
+                    Batal
+                  </button>
                 </div>
               ) : (
                 <button
-                  id="btn-open-reset-stats"
                   onClick={() => setShowResetConfirm(true)}
-                  className="px-3.5 py-2 text-xs text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer font-medium"
+                  className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Reset Statistik</span>
                 </button>
               )}
+
+              <button
+                onClick={() => setActiveTab('game')}
+                className="px-4 py-1.5 bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>Lanjut Main</span>
+              </button>
             </div>
           </div>
         )}
