@@ -14,16 +14,16 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
 }) => {
   return (
     <div className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5">
-      {/* Memory Puzzle Game Button */}
+      {/* Memory Game Button */}
       <button
         id="btn-floating-puzzle-game"
         onClick={onOpenPuzzle}
-        aria-label="Play Memory Puzzle Game"
-        title="Memory Puzzle Game"
+        aria-label="Play Memory Game"
+        title="Play Memory Game"
         className="flex items-center gap-2 px-3.5 sm:px-4 py-3 bg-slate-900/95 hover:bg-slate-800 text-purple-300 hover:text-purple-200 font-semibold text-xs rounded-full shadow-lg shadow-purple-950/40 hover:shadow-purple-900/30 active:scale-95 transition-all duration-150 cursor-pointer border border-purple-500/40 backdrop-blur-md group"
       >
         <Brain className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform stroke-[2.2]" />
-        <span className="font-medium tracking-wide">Puzzle Game</span>
+        <span className="font-medium tracking-wide">Memory Game</span>
       </button>
 
       {/* Add Word Button */}
