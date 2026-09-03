@@ -11,12 +11,11 @@ import {
   Flame,
   ArrowRight,
   Search,
-  CheckCircle2,
-  XCircle,
   Volume2,
   VolumeX,
   Play,
-  Zap,
+  XCircle,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface PairDefinition {
@@ -25,7 +24,7 @@ interface PairDefinition {
   tag: RelationTag;
 }
 
-// Generous library of default starter pairs to ensure infinite, varied gameplay
+// Built-in starter pairs to ensure infinite, varied gameplay even if dictionary is empty
 const DEFAULT_STARTER_PAIRS: PairDefinition[] = [
   { wordA: 'Matahari', wordB: 'Bulan', tag: 'cghn' },
   { wordA: 'Kopi', wordB: 'Teh', tag: 'others' },
@@ -111,7 +110,9 @@ const AUTO_NEXT_SETTING_KEY = 'spy_dict_memory_game_autonext';
 function playSound(type: 'correct' | 'wrong', enabled: boolean) {
   if (!enabled) return;
   try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
 
@@ -142,7 +143,7 @@ function playSound(type: 'correct' | 'wrong', enabled: boolean) {
       osc.stop(ctx.currentTime + 0.22);
     }
   } catch {
-    // Ignore audio permission or blocked playback issues
+    // Ignore audio playback issues gracefully
   }
 }
 
@@ -168,7 +169,7 @@ function saveStats(stats: MemoryGameStats) {
   try {
     localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
   } catch (e) {
-    console.error('Failed to save memory quiz stats', e);
+    console.error('Failed to save memory game stats', e);
   }
 }
 
@@ -183,7 +184,7 @@ interface Question {
   correctPartner: string;
   pairKey: string;
   tag: RelationTag;
-  options: string[]; // exactly 5 words: 1 correct partner + 4 distractors
+  options: string[]; // exactly 5 options: 1 correct + 4 distractors
 }
 
 interface MemoryGameModalProps {
@@ -213,7 +214,6 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
 
   const autoNextTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Toggle Sound setting
   const toggleSound = () => {
     setIsSoundOn((prev) => {
       const next = !prev;
@@ -222,7 +222,6 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     });
   };
 
-  // Toggle Auto-Next setting
   const toggleAutoNext = () => {
     setIsAutoNext((prev) => {
       const next = !prev;
@@ -254,7 +253,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
       }
     }
 
-    // Complement with starter pairs for variety
+    // Complement with starter pairs
     for (const s of DEFAULT_STARTER_PAIRS) {
       const termA = s.wordA.trim();
       const termB = s.wordB.trim();
@@ -303,7 +302,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     return Array.from(set);
   }, [allPairs]);
 
-  // 4. Generate next question (Guaranteed to produce valid non-empty prompt and 5 distinct options)
+  // 4. Generate next question (Guaranteed valid prompt and 5 distinct choices)
   const generateNextQuestion = useCallback(() => {
     if (autoNextTimerRef.current) {
       clearTimeout(autoNextTimerRef.current);
@@ -322,7 +321,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     const partnerLower = correctPartner.toLowerCase();
     const forbiddenPartners = partnersMap.get(promptLower) || new Set<string>();
 
-    // Filter candidate distractors
+    // Candidate distractors: words that are not the prompt and not a known partner
     const candidateDistractors = allWordsPool.filter((w) => {
       const lower = w.trim().toLowerCase();
       return (
@@ -337,7 +336,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     const shuffledDistractors = [...candidateDistractors].sort(() => Math.random() - 0.5);
     const chosenDistractors = shuffledDistractors.slice(0, 4);
 
-    // Fallback if not enough distractors
+    // Fallback if candidate pool is small
     while (chosenDistractors.length < 4) {
       for (const fallback of FALLBACK_DISTRACTOR_POOL) {
         const fLower = fallback.trim().toLowerCase();
@@ -352,7 +351,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
       }
     }
 
-    // Combine into exactly 5 options: 1 correct + 4 distractors
+    // Combine 1 correct + 4 distractors = 5 options
     const options = [correctPartner, ...chosenDistractors].sort(() => Math.random() - 0.5);
 
     setCurrentQuestion({
@@ -366,7 +365,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     setIsAnswered(false);
   }, [allPairs, partnersMap, allWordsPool]);
 
-  // Clean up timer on unmount or close
+  // Clean up timer on unmount
   useEffect(() => {
     return () => {
       if (autoNextTimerRef.current) {
@@ -382,7 +381,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     }
   }, [isOpen, generateNextQuestion]);
 
-  // Handle Option Click
+  // Handle Option Selection
   const handleSelectOption = (option: string) => {
     if (isAnswered || !currentQuestion) return;
 
@@ -392,10 +391,8 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     const isCorrect =
       option.trim().toLowerCase() === currentQuestion.correctPartner.trim().toLowerCase();
 
-    // Play feedback sound
     playSound(isCorrect ? 'correct' : 'wrong', isSoundOn);
 
-    // Update persistent stats
     setStats((prev) => {
       const totalAnswers = prev.totalAnswers + 1;
       const correctAnswers = prev.correctAnswers + (isCorrect ? 1 : 0);
@@ -440,11 +437,11 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
       return updatedStats;
     });
 
-    // Handle auto-advance if enabled
+    // Auto-advance if enabled
     if (isAutoNext) {
       autoNextTimerRef.current = setTimeout(() => {
         generateNextQuestion();
-      }, 1250);
+      }, 1100);
     }
   };
 
@@ -490,11 +487,6 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
   const uniquePairsList: MasteredPairRecord[] = Object.values(stats.uniquePairs);
   const uniquePairsCount = uniquePairsList.length;
 
-  const accuracyRate =
-    stats.totalAnswers > 0
-      ? Math.round((stats.correctAnswers / stats.totalAnswers) * 100)
-      : 0;
-
   const filteredMasteredPairs = uniquePairsList.filter((p) => {
     if (!statsSearchQuery.trim()) return true;
     const q = statsSearchQuery.toLowerCase();
@@ -515,341 +507,318 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
     selectedOption?.trim().toLowerCase() === currentQuestion.correctPartner.trim().toLowerCase();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md">
+    <div
+      id="memory-game-modal-overlay"
+      className="fixed inset-0 z-50 flex flex-col sm:items-center sm:justify-center bg-slate-950/90 sm:backdrop-blur-md sm:p-4 animate-in fade-in duration-150"
+    >
+      {/* Container: Fullscreen on mobile, Elegant Centered Card on desktop */}
       <div
         id="memory-puzzle-game-dialog"
-        className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="w-full h-full sm:h-auto sm:max-w-md sm:max-h-[92vh] flex flex-col bg-slate-900 sm:border sm:border-slate-800 sm:rounded-2xl sm:shadow-2xl overflow-hidden"
       >
-        {/* Sleek, Clean Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-800/80 bg-slate-900">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 font-bold">
-              <Sparkles className="w-4 h-4 text-purple-400" />
+        {/* Sleek Minimalist Mobile-First Header Bar */}
+        <div className="flex items-center justify-between px-4 py-3 bg-slate-900/95 border-b border-slate-800/80 shrink-0">
+          {/* Left: Score Chips (Streak & Unique Pairs) */}
+          <div className="flex items-center gap-2">
+            {/* Streak Chip */}
+            <div
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold"
+              title="Streak jawaban benar saat ini"
+            >
+              <Flame className="w-3.5 h-3.5 text-amber-400 fill-amber-400/30" />
+              <span className="font-mono">{stats.currentStreak}</span>
             </div>
-            <div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-100 leading-tight">
-                Tebak Pasangan Kata
-              </h2>
-              <p className="text-[11px] text-slate-400">
-                Mode santai tanpa batas waktu
-              </p>
+
+            {/* Unique Pairs Chip */}
+            <div
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-semibold"
+              title="Pasangan unik yang berhasil ditebak"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              <span className="font-mono">{uniquePairsCount}</span>
+              <span className="text-[10px] text-purple-400/80 hidden xs:inline">Pasang</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          {/* Right: Sound, Stats, Close Icon Controls */}
+          <div className="flex items-center gap-1">
             {/* Sound Toggle */}
             <button
               onClick={toggleSound}
-              className={`p-2 rounded-lg border transition-colors cursor-pointer ${
-                isSoundOn
-                  ? 'bg-slate-800 text-purple-300 border-slate-700'
-                  : 'bg-slate-900 text-slate-500 border-slate-800'
+              className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                isSoundOn ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-slate-400'
               }`}
-              title={isSoundOn ? 'Suara Aktif (Klik untuk mute)' : 'Suara Mati'}
+              title={isSoundOn ? 'Suara Aktif' : 'Suara Mati'}
+              aria-label="Toggle sound"
             >
               {isSoundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
 
-            {/* Switch to Stats / Back to Game */}
+            {/* Stats Tab Toggle */}
             <button
               id="btn-toggle-game-stats"
               onClick={() => setActiveTab(activeTab === 'game' ? 'stats' : 'game')}
-              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+              className={`p-2 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'stats'
-                  ? 'bg-purple-500/20 text-purple-300 border-purple-500/50'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                  ? 'bg-purple-500/20 text-purple-300'
+                  : 'text-slate-300 hover:text-white'
               }`}
+              title="Statistik Permainan"
+              aria-label="Toggle statistics"
             >
-              <BarChart2 className="w-3.5 h-3.5" />
-              <span>{activeTab === 'game' ? 'Statistik' : 'Main'}</span>
+              <BarChart2 className="w-4 h-4" />
             </button>
 
-            {/* Close Button */}
+            {/* Close Modal */}
             <button
               id="btn-close-memory-game"
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer ml-0.5"
+              className="p-2 text-slate-400 hover:text-white transition-colors cursor-pointer ml-1"
               title="Tutup"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Minimal High-Contrast Live Score Pill Bar */}
-        <div className="flex items-center justify-around px-4 py-2 bg-slate-950/60 border-b border-slate-800 text-xs">
-          {/* Unique Pairs Guessed Correct */}
-          <div className="flex items-center gap-1.5" title="Jumlah total pasangan unik yang berhasil ditebak">
-            <span className="text-[11px] text-slate-400">Pasangan Unik:</span>
-            <span className="font-extrabold text-purple-300 bg-purple-500/15 border border-purple-500/30 px-2 py-0.5 rounded-md font-mono">
-              {uniquePairsCount}
-            </span>
-          </div>
-
-          {/* Streak Counter */}
-          <div className="flex items-center gap-1" title="Streak jawaban benar beruntun">
-            <Flame className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-[11px] text-slate-400">Streak:</span>
-            <span className="font-bold text-amber-300 font-mono">
-              {stats.currentStreak}
-            </span>
-          </div>
-
-          {/* Wrong Answer Counter */}
-          <div className="flex items-center gap-1" title="Setiap jawaban salah dicatat di sini">
-            <XCircle className="w-3.5 h-3.5 text-rose-400" />
-            <span className="text-[11px] text-slate-400">Salah:</span>
-            <span className="font-bold text-rose-400 font-mono">
-              {stats.wrongAnswers}
-            </span>
-          </div>
-
-          {/* Accuracy */}
-          <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-400">
-            <span>Akurasi:</span>
-            <span className="font-mono text-slate-200 font-medium">{accuracyRate}%</span>
-          </div>
-        </div>
-
-        {/* Game Area */}
+        {/* Modal Body */}
         {activeTab === 'game' ? (
-          <div className="p-5 flex flex-col space-y-4">
+          <div className="flex-1 flex flex-col justify-between p-4 sm:p-5 overflow-y-auto">
             {currentQuestion ? (
-              <>
-                {/* PROMINENT, ULTRA-CLEAR TARGET WORD CARD */}
-                <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 text-center shadow-lg relative overflow-hidden">
-                  <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-purple-400/90 block mb-1">
-                    Cari Pasangan Dari Kata
+              <div className="flex flex-col flex-1 justify-between gap-3">
+                {/* 1. Target Prompt Word Area */}
+                <div className="flex flex-col items-center justify-center text-center py-3 sm:py-4 px-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                    Cari Pasangan Kata
                   </span>
 
-                  {/* Guaranteed Solid, Visible, High-Contrast Typography */}
-                  <div className="py-2.5">
-                    <h1 className="text-3xl sm:text-4xl font-black text-white tracking-normal drop-shadow-sm break-words select-all">
+                  {/* High-Contrast, Big & Legible Target Word */}
+                  <div className="my-1">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-wide break-words">
                       {currentQuestion.promptWord}
                     </h1>
                   </div>
 
-                  {/* Tag Indicator */}
-                  <div className="inline-flex items-center gap-1.5 mt-1">
+                  {/* Subtle category tag pill */}
+                  <div className="mt-1">
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${relationMeta.badgeBg} ${relationMeta.badgeText} border ${relationMeta.badgeBorder}`}
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wider ${relationMeta.badgeBg} ${relationMeta.badgeText} border ${relationMeta.badgeBorder}`}
                     >
-                      {relationMeta.label}
+                      {relationMeta.shortCode} • {relationMeta.label}
                     </span>
                   </div>
 
-                  {/* Immediate Feedback Notification */}
-                  {isAnswered && (
-                    <div className="mt-3.5 pt-3 border-t border-slate-800/80 animate-in fade-in duration-150">
-                      {isCurrentCorrect ? (
-                        <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-400">
-                          <Check className="w-4 h-4 stroke-[3]" />
-                          <span>
+                  {/* Immediate Clear Feedback Text */}
+                  <div className="min-h-[24px] mt-2 flex items-center justify-center">
+                    {isAnswered && (
+                      <div className="text-xs sm:text-sm font-semibold animate-in fade-in duration-150">
+                        {isCurrentCorrect ? (
+                          <span className="text-emerald-400 flex items-center gap-1">
+                            <Check className="w-4 h-4 stroke-[3]" />
                             Benar! {currentQuestion.promptWord} ⇄ {currentQuestion.correctPartner}
                           </span>
-                        </div>
-                      ) : (
-                        <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-rose-400">
-                          <X className="w-4 h-4 stroke-[3]" />
-                          <span>
-                            Salah! Pasangannya adalah{' '}
-                            <span className="text-emerald-300 underline font-extrabold">
+                        ) : (
+                          <span className="text-rose-400 flex items-center gap-1">
+                            <X className="w-4 h-4 stroke-[3]" />
+                            Pasangannya:{' '}
+                            <span className="text-emerald-300 font-bold underline">
                               {currentQuestion.correctPartner}
                             </span>
                           </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* 5 Clean, Multiple-Choice Option Buttons */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 font-medium">
-                    <span>Pilih 1 jawaban yang tepat:</span>
-                    <span className="hidden sm:inline text-slate-500">Shortcut: 1-5 atau A-E</span>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    {currentQuestion.options.map((optionText, idx) => {
-                      const letter = String.fromCharCode(65 + idx); // A, B, C, D, E
-                      const isCorrect =
-                        optionText.trim().toLowerCase() ===
-                        currentQuestion.correctPartner.trim().toLowerCase();
-                      const isSelected = selectedOption === optionText;
-
-                      let containerStyle =
-                        'bg-slate-800/80 hover:bg-slate-800 hover:border-purple-500/50 text-slate-200 border-slate-700/80 active:scale-[0.99]';
-                      let letterStyle = 'bg-slate-900/90 text-slate-400 border-slate-700';
-
-                      if (isAnswered) {
-                        if (isCorrect) {
-                          // Correct answer glows green
-                          containerStyle =
-                            'bg-emerald-950/60 border-emerald-500 text-emerald-100 font-bold ring-1 ring-emerald-500/50';
-                          letterStyle = 'bg-emerald-500 text-slate-950 font-black border-emerald-400';
-                        } else if (isSelected && !isCorrect) {
-                          // Wrong picked option glows red
-                          containerStyle =
-                            'bg-rose-950/60 border-rose-500 text-rose-100 font-bold ring-1 ring-rose-500/50';
-                          letterStyle = 'bg-rose-500 text-white font-black border-rose-400';
-                        } else {
-                          // Others fade out
-                          containerStyle =
-                            'bg-slate-950/40 border-slate-800/80 text-slate-500 opacity-50 cursor-not-allowed';
-                          letterStyle = 'bg-slate-900/40 text-slate-600 border-slate-800';
-                        }
-                      }
-
-                      return (
-                        <button
-                          key={optionText}
-                          id={`mc-option-${idx}`}
-                          onClick={() => handleSelectOption(optionText)}
-                          disabled={isAnswered}
-                          className={`flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all duration-150 cursor-pointer ${containerStyle}`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span
-                              className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-mono font-bold shrink-0 border ${letterStyle}`}
-                            >
-                              {letter}
-                            </span>
-                            <span className="text-sm font-semibold truncate">
-                              {optionText}
-                            </span>
-                          </div>
-
-                          {isAnswered && isCorrect && (
-                            <Check className="w-5 h-5 text-emerald-400 stroke-[3] shrink-0 ml-2" />
-                          )}
-                          {isAnswered && isSelected && !isCorrect && (
-                            <X className="w-5 h-5 text-rose-400 stroke-[3] shrink-0 ml-2" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Bottom Bar Controls */}
-                <div className="pt-2 flex items-center justify-between">
-                  {/* Auto-Next Switch */}
-                  <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={isAutoNext}
-                      onChange={toggleAutoNext}
-                      className="w-3.5 h-3.5 rounded bg-slate-800 border-slate-700 text-purple-600 focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                    />
-                    <span>Lanjut Otomatis (1.2s)</span>
-                  </label>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={generateNextQuestion}
-                      className="text-xs text-slate-400 hover:text-slate-200 px-2.5 py-1.5 rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer"
-                      title="Lewati kata ini"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Ganti Kata</span>
-                    </button>
-
-                    {isAnswered && (
-                      <button
-                        id="btn-next-question"
-                        onClick={generateNextQuestion}
-                        className="px-4 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-transform active:scale-95 shadow-md shadow-purple-950/50 cursor-pointer"
-                      >
-                        <span>Lanjut</span>
-                        <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-                      </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
-              </>
+
+                {/* 2. 5 Touch-Friendly Option Cards (A - E) */}
+                <div className="flex flex-col gap-2 my-auto">
+                  {currentQuestion.options.map((optionText, idx) => {
+                    const letter = String.fromCharCode(65 + idx); // A, B, C, D, E
+                    const isCorrect =
+                      optionText.trim().toLowerCase() ===
+                      currentQuestion.correctPartner.trim().toLowerCase();
+                    const isSelected = selectedOption === optionText;
+
+                    let btnClasses =
+                      'bg-slate-800/80 hover:bg-slate-700/80 text-slate-100 border-slate-700 active:scale-[0.98]';
+                    let badgeClasses = 'bg-slate-900 text-slate-400 border-slate-700';
+
+                    if (isAnswered) {
+                      if (isCorrect) {
+                        // Correct partner flashes green
+                        btnClasses =
+                          'bg-emerald-950/70 border-emerald-500 text-emerald-100 font-bold ring-1 ring-emerald-500/40';
+                        badgeClasses = 'bg-emerald-500 text-slate-950 font-bold border-emerald-400';
+                      } else if (isSelected && !isCorrect) {
+                        // Wrong option flashes red
+                        btnClasses =
+                          'bg-rose-950/70 border-rose-500 text-rose-100 font-bold ring-1 ring-rose-500/40';
+                        badgeClasses = 'bg-rose-500 text-white font-bold border-rose-400';
+                      } else {
+                        // Other non-matching options fade out
+                        btnClasses =
+                          'bg-slate-900/40 border-slate-800 text-slate-500 opacity-40 cursor-not-allowed';
+                        badgeClasses = 'bg-slate-900 text-slate-600 border-slate-800';
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={optionText}
+                        id={`option-${idx}`}
+                        onClick={() => handleSelectOption(optionText)}
+                        disabled={isAnswered}
+                        className={`w-full min-h-[48px] sm:min-h-[50px] px-3.5 py-2.5 rounded-xl border flex items-center justify-between transition-all duration-150 cursor-pointer ${btnClasses}`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span
+                            className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-mono font-bold shrink-0 border ${badgeClasses}`}
+                          >
+                            {letter}
+                          </span>
+                          <span className="text-sm sm:text-base font-semibold truncate text-left">
+                            {optionText}
+                          </span>
+                        </div>
+
+                        {/* Status Icon Indicator */}
+                        {isAnswered && isCorrect && (
+                          <Check className="w-5 h-5 text-emerald-400 stroke-[3] shrink-0 ml-2" />
+                        )}
+                        {isAnswered && isSelected && !isCorrect && (
+                          <X className="w-5 h-5 text-rose-400 stroke-[3] shrink-0 ml-2" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 3. Action Footer */}
+                <div className="pt-2 pb-1 shrink-0 flex flex-col gap-2">
+                  {isAnswered ? (
+                    <button
+                      id="btn-next-question"
+                      onClick={generateNextQuestion}
+                      className="w-full min-h-[46px] rounded-xl bg-purple-500 hover:bg-purple-400 active:scale-[0.98] text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-950/40 cursor-pointer transition-transform animate-in fade-in"
+                    >
+                      <span>Lanjut Berikutnya</span>
+                      <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                    </button>
+                  ) : (
+                    <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+                      <button
+                        onClick={generateNextQuestion}
+                        className="py-2 px-2 hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer text-slate-400"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Lewati Kata</span>
+                      </button>
+
+                      {/* Clean Auto-Next Checkbox */}
+                      <label className="flex items-center gap-1.5 cursor-pointer select-none text-slate-400 hover:text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={isAutoNext}
+                          onChange={toggleAutoNext}
+                          className="w-3.5 h-3.5 rounded bg-slate-800 border-slate-700 text-purple-500 focus:ring-0 cursor-pointer"
+                        />
+                        <span>Otomatis Lanjut</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
             ) : (
-              <div className="p-8 text-center text-slate-400">
-                <p>Memuat soal...</p>
+              <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
+                Memuat soal...
               </div>
             )}
           </div>
         ) : (
           /* Stats & Mastered Pairs View */
-          <div className="p-5 flex flex-col space-y-4 max-h-[75vh] overflow-y-auto">
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div className="p-3 bg-purple-950/30 border border-purple-500/30 rounded-xl text-center">
-                <span className="text-[10px] text-purple-300 font-medium block">Pasangan Unik</span>
-                <span className="text-xl font-black text-purple-200 font-mono mt-0.5 block">
+          <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto space-y-4">
+            {/* 4 Clean Metric Cards */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-3 bg-purple-950/25 border border-purple-500/30 rounded-xl text-center">
+                <span className="text-[10px] text-purple-300 uppercase tracking-wider font-semibold block">
+                  Pasangan Unik
+                </span>
+                <span className="text-xl font-extrabold text-purple-200 font-mono mt-0.5 block">
                   {uniquePairsCount}
                 </span>
               </div>
 
-              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl text-center">
-                <span className="text-[10px] text-emerald-400 font-medium block">Total Benar</span>
-                <span className="text-xl font-black text-emerald-300 font-mono mt-0.5 block">
+              <div className="p-3 bg-slate-800/50 border border-slate-700/60 rounded-xl text-center">
+                <span className="text-[10px] text-emerald-400 uppercase tracking-wider font-semibold block">
+                  Total Benar
+                </span>
+                <span className="text-xl font-extrabold text-emerald-300 font-mono mt-0.5 block">
                   {stats.correctAnswers}
                 </span>
               </div>
 
-              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl text-center">
-                <span className="text-[10px] text-rose-400 font-medium block">Total Salah</span>
-                <span className="text-xl font-black text-rose-400 font-mono mt-0.5 block">
+              <div className="p-3 bg-slate-800/50 border border-slate-700/60 rounded-xl text-center">
+                <span className="text-[10px] text-rose-400 uppercase tracking-wider font-semibold block">
+                  Total Salah
+                </span>
+                <span className="text-xl font-extrabold text-rose-400 font-mono mt-0.5 block">
                   {stats.wrongAnswers}
                 </span>
               </div>
 
-              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl text-center">
-                <span className="text-[10px] text-amber-400 font-medium block">Max Streak</span>
-                <span className="text-xl font-black text-amber-300 font-mono mt-0.5 block">
+              <div className="p-3 bg-slate-800/50 border border-slate-700/60 rounded-xl text-center">
+                <span className="text-[10px] text-amber-400 uppercase tracking-wider font-semibold block">
+                  Max Streak
+                </span>
+                <span className="text-xl font-extrabold text-amber-300 font-mono mt-0.5 block">
                   {stats.maxStreak} 🔥
                 </span>
               </div>
             </div>
 
-            {/* List of Unique Pairs Guessed Correct */}
-            <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-2.5">
+            {/* Mastered Unique Pairs List */}
+            <div className="flex-1 flex flex-col bg-slate-950/60 border border-slate-800 rounded-xl p-3 space-y-2.5 min-h-[160px]">
               <div className="flex items-center justify-between gap-2">
-                <h4 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Koleksi Pasangan Unik Ditebak ({uniquePairsCount})</span>
-                </h4>
+                <span className="text-xs font-bold text-slate-200">
+                  Koleksi Pasangan Ditebak ({uniquePairsCount})
+                </span>
 
                 {uniquePairsCount > 0 && (
-                  <div className="relative w-40">
-                    <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <div className="relative w-36 sm:w-44">
+                    <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
                       type="text"
                       value={statsSearchQuery}
                       onChange={(e) => setStatsSearchQuery(e.target.value)}
                       placeholder="Cari..."
-                      className="w-full pl-6 pr-2 py-0.5 text-xs bg-slate-900 border border-slate-700 rounded-md text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+                      className="w-full pl-7 pr-2 py-1 text-xs bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
                     />
                   </div>
                 )}
               </div>
 
               {uniquePairsCount === 0 ? (
-                <div className="py-6 text-center text-slate-500 text-xs">
-                  Belum ada pasangan unik yang berhasil ditebak. Mainkan tebak pasangan sekarang!
+                <div className="py-8 text-center text-slate-500 text-xs">
+                  Belum ada pasangan unik yang berhasil ditebak. Mulai tebak sekarang!
                 </div>
               ) : filteredMasteredPairs.length === 0 ? (
-                <div className="py-4 text-center text-slate-500 text-xs">
-                  Tidak ditemukan dengan kata kunci "{statsSearchQuery}"
+                <div className="py-6 text-center text-slate-500 text-xs">
+                  Tidak ada pasangan yang cocok dengan pencarian.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                <div className="flex-1 overflow-y-auto space-y-1.5 max-h-48 pr-1">
                   {filteredMasteredPairs.map((pair) => {
                     const meta = TAG_METADATA[pair.tag] || TAG_METADATA.others;
                     return (
                       <div
                         key={pair.pairKey}
-                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800/80 text-xs"
+                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs"
                       >
-                        <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
                           <span
-                            className={`text-[9px] px-1 rounded uppercase font-mono font-bold ${meta.badgeBg} ${meta.badgeText}`}
+                            className={`text-[9px] px-1 py-0.5 rounded font-mono uppercase font-bold ${meta.badgeBg} ${meta.badgeText}`}
                           >
                             {meta.shortCode}
                           </span>
@@ -857,7 +826,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                             {pair.wordA} ⇄ {pair.wordB}
                           </span>
                         </div>
-                        <span className="text-[10px] text-emerald-400 font-mono font-semibold pl-1">
+                        <span className="text-[10px] text-emerald-400 font-mono font-semibold pl-2 shrink-0">
                           ✓ {pair.correctCount}x
                         </span>
                       </div>
@@ -867,8 +836,8 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
               )}
             </div>
 
-            {/* Bottom Actions */}
-            <div className="flex items-center justify-between pt-1">
+            {/* Bottom Controls in Stats View */}
+            <div className="pt-2 flex items-center justify-between shrink-0">
               {showResetConfirm ? (
                 <div className="flex items-center gap-2">
                   <button
@@ -887,19 +856,19 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
               ) : (
                 <button
                   onClick={() => setShowResetConfirm(true)}
-                  className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+                  className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer py-1.5"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Reset Statistik</span>
+                  <span>Reset Data</span>
                 </button>
               )}
 
               <button
                 onClick={() => setActiveTab('game')}
-                className="px-4 py-1.5 bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
+                className="px-4 py-2 bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-purple-950/40 active:scale-95 transition-transform"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Lanjut Main</span>
+                <span>Kembali Bermain</span>
               </button>
             </div>
           </div>
