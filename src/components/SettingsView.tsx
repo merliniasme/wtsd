@@ -30,7 +30,7 @@ interface SettingsViewProps {
   isOperating: boolean;
   onSignIn: () => void;
   onSignOut: () => void;
-  onSyncNow: () => void;
+  onSyncNow?: () => void;
   onClearCloudDatabase: () => void;
   onOpenRawImport: () => void;
   onOpenAntiCensor?: (tab?: 'analyze' | 'escape') => void;
