@@ -23,7 +23,7 @@ interface GoogleDriveSyncSectionProps {
   isOperating: boolean;
   onSignIn: () => void;
   onSignOut: () => void;
-  onSyncNow: () => void;
+  onSyncNow?: () => void;
 }
 
 export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
@@ -52,7 +52,7 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
       return 'Saving pending session changes...';
     }
     if (syncStatus === 'error') {
-      return 'Sync error — Click Sync Now or reconnect account';
+      return 'Sync error — Stored in local database, retrying automatically';
     }
     return 'Cloud auto-sync active';
   };
@@ -172,18 +172,41 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
               </div>
             </div>
 
-            <button
-              type="button"
-              id="btn-sync-with-drive"
-              onClick={onSyncNow}
-              disabled={isOperating}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-800 bg-sky-950/40 hover:border-sky-400 text-xs font-semibold text-sky-200 transition-all cursor-pointer disabled:opacity-50"
+            <div
+              id="sync-auto-indicator-badge"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold ${
+                syncStatus === 'syncing' || syncStatus === 'unsaved' || isOperating
+                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                  : syncStatus === 'synced'
+                  ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                  : syncStatus === 'error'
+                  ? 'bg-rose-500/15 text-rose-300 border-rose-500/40'
+                  : 'bg-slate-800 text-slate-300 border-slate-700'
+              }`}
             >
-              <RefreshCw
-                className={`w-3.5 h-3.5 text-sky-400 ${isOperating ? 'animate-spin' : ''}`}
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  syncStatus === 'syncing' || syncStatus === 'unsaved' || isOperating
+                    ? 'bg-amber-400 animate-pulse'
+                    : syncStatus === 'synced'
+                    ? 'bg-emerald-400'
+                    : syncStatus === 'error'
+                    ? 'bg-rose-400'
+                    : 'bg-slate-400'
+                }`}
               />
-              <span>Sync Now</span>
-            </button>
+              <span>
+                {syncStatus === 'syncing' || isOperating
+                  ? 'Syncing...'
+                  : syncStatus === 'unsaved'
+                  ? 'Pending Sync'
+                  : syncStatus === 'synced'
+                  ? 'Auto-Synchronized'
+                  : syncStatus === 'error'
+                  ? 'Sync Error'
+                  : 'Auto-Sync Ready'}
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 text-[11px] text-slate-400">

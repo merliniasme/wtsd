@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { User } from 'firebase/auth';
 import { SyncStatus } from '../types';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Check, AlertTriangle, Cloud } from 'lucide-react';
 import appLogo from '../assets/logo.jpg';
 
 interface HeaderProps {
@@ -11,7 +11,6 @@ interface HeaderProps {
   isSigningIn: boolean;
   lastSyncedAt: Date | null;
   onSignIn: () => void;
-  onSync: () => void;
   onGoToSettings?: () => void;
 }
 
@@ -22,92 +21,43 @@ export const Header: React.FC<HeaderProps> = ({
   isSigningIn,
   lastSyncedAt,
   onSignIn,
-  onSync,
   onGoToSettings,
 }) => {
-  // Temporary visual color feedback:
-  // white (neutral default) -> yellow (syncing) -> green/red (success/failed for a while) -> white (neutral again)
-  const [visualColor, setVisualColor] = useState<'white' | 'yellow' | 'green' | 'red'>('white');
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevSyncingRef = useRef<boolean>(false);
-
-  useEffect(() => {
-    const isCurrentlySyncing = isOperating || syncStatus === 'syncing';
-    const wasSyncing = prevSyncingRef.current;
-
-    if (isCurrentlySyncing) {
-      // Transition to active syncing (yellow)
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-      setVisualColor('yellow');
-    } else if (wasSyncing && !isCurrentlySyncing) {
-      // Sync operation completed: show green or red for a while, then revert to white
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-
-      if (syncStatus === 'error') {
-        setVisualColor('red');
-      } else {
-        setVisualColor('green');
-      }
-
-      timerRef.current = setTimeout(() => {
-        setVisualColor('white');
-        timerRef.current = null;
-      }, 2500);
+  // Color-coded automatic sync status:
+  // Yellow: changes happened, syncing in progress or pending
+  // Green: successfully synchronized
+  // Red: failed (error)
+  // White: neutral / idle
+  const getIndicatorColorClasses = () => {
+    if (isOperating || syncStatus === 'syncing' || syncStatus === 'unsaved') {
+      return 'bg-amber-500/20 border-amber-400/60 text-amber-400 shadow-sm shadow-amber-950/60 ring-1 ring-amber-500/30';
     }
-
-    prevSyncingRef.current = isCurrentlySyncing;
-  }, [isOperating, syncStatus]);
-
-  // Clean up timer on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
-
-  const handleManualSync = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
+    if (syncStatus === 'synced') {
+      return 'bg-emerald-500/20 border-emerald-400/60 text-emerald-400 shadow-sm shadow-emerald-950/60 ring-1 ring-emerald-500/30';
     }
-    setVisualColor('yellow');
-    onSync();
-  };
-
-  const getSyncButtonColorClasses = () => {
-    switch (visualColor) {
-      case 'green':
-        return 'bg-emerald-500/20 border-emerald-400/60 text-emerald-400 shadow-sm shadow-emerald-950/60 ring-1 ring-emerald-500/30';
-      case 'red':
-        return 'bg-rose-500/20 border-rose-400/60 text-rose-400 shadow-sm shadow-rose-950/60 ring-1 ring-rose-500/30';
-      case 'yellow':
-        return 'bg-amber-500/20 border-amber-400/60 text-amber-400 shadow-sm shadow-amber-950/60 ring-1 ring-amber-500/30';
-      case 'white':
-      default:
-        return 'bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 shadow-xs';
+    if (syncStatus === 'error') {
+      return 'bg-rose-500/20 border-rose-400/60 text-rose-400 shadow-sm shadow-rose-950/60 ring-1 ring-rose-500/30';
     }
+    return 'bg-white/10 border-white/30 text-white shadow-xs';
   };
 
   const getSyncTooltip = () => {
-    if (visualColor === 'yellow') {
-      return 'Syncing to Google Drive...';
+    if (isOperating || syncStatus === 'syncing' || syncStatus === 'unsaved') {
+      return 'Changes detected — Synchronizing automatically with Google Drive... (Yellow)';
     }
-    if (visualColor === 'green') {
-      return 'Sync successful (Green) - Returning to neutral';
+    if (syncStatus === 'synced') {
+      if (lastSyncedAt) {
+        const diffMins = Math.floor((Date.now() - lastSyncedAt.getTime()) / 60000);
+        return diffMins < 1
+          ? 'Synchronized with Google Drive just now (Green)'
+          : `Synchronized with Google Drive ${diffMins}m ago (Green)`;
+      }
+      return 'Synchronized with Google Drive (Green)';
     }
-    if (visualColor === 'red') {
-      return 'Sync failed (Red) - Click to retry';
+    if (syncStatus === 'error') {
+      return 'Synchronization failed — All changes are preserved in local database (Red)';
     }
-    return lastSyncedAt
-      ? 'Drive connected (Neutral) - Click to sync now'
-      : 'Drive connected (Neutral) - Click to sync now';
+    return 'Automatic cloud synchronization ready (Neutral)';
   };
 
   return (
@@ -129,29 +79,29 @@ export const Header: React.FC<HeaderProps> = ({
           </h1>
         </div>
 
-        {/* Right Section: Sync Controls & Auth */}
+        {/* Right Section: Automatic Sync Status Indicator & Auth */}
         <div className="flex items-center gap-2">
           {user ? (
-            /* Logged in state: Compact single sync button + Avatar */
+            /* Logged in state: Automatic sync indicator + Avatar */
             <div className="flex items-center gap-1.5 bg-[#1E293B] border border-[#334155] rounded-lg p-1">
-              {/* Single color-coded manual sync button */}
-              <button
-                type="button"
-                id="btn-header-manual-sync"
-                onClick={handleManualSync}
-                disabled={isOperating}
+              {/* Automatic Synchronization Status Indicator (Replacing manual button) */}
+              <div
+                id="header-sync-indicator"
+                role="status"
                 title={getSyncTooltip()}
                 aria-label={getSyncTooltip()}
-                className={`h-7 w-7 flex items-center justify-center rounded-md border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${getSyncButtonColorClasses()}`}
+                className={`h-7 w-7 flex items-center justify-center rounded-md border transition-all duration-300 ${getIndicatorColorClasses()}`}
               >
-                <RefreshCw
-                  className={`w-3.5 h-3.5 transition-transform ${
-                    isOperating || syncStatus === 'syncing' || visualColor === 'yellow'
-                      ? 'animate-spin'
-                      : ''
-                  }`}
-                />
-              </button>
+                {isOperating || syncStatus === 'syncing' || syncStatus === 'unsaved' ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                ) : syncStatus === 'synced' ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                ) : syncStatus === 'error' ? (
+                  <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                ) : (
+                  <Cloud className="w-3.5 h-3.5 text-slate-300" />
+                )}
+              </div>
 
               {/* User Avatar / Settings Trigger */}
               <button

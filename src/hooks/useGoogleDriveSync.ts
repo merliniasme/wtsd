@@ -17,7 +17,11 @@ import {
   DriveApiError,
 } from '../utils/googleDrive';
 import { deduplicateWords, cleanupLegacyLocalStorage } from '../utils/storage';
-import { extractAllPairs } from '../utils/wordGraph';
+import {
+  getLocalDatabase,
+  saveLocalDatabase,
+  clearLocalDatabase,
+} from '../utils/localDb';
 
 interface UseGoogleDriveSyncProps {
   words: Word[];
@@ -42,17 +46,14 @@ export function useGoogleDriveSync({
   const [isOperating, setIsOperating] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
 
-  // Track session lastModified timestamp (epoch ms)
-  const sessionTimestampRef = useRef<number>(Date.now());
-
   // Ref to track latest words without stale closures
   const wordsRef = useRef<Word[]>(words);
   wordsRef.current = words;
 
-  // Ref for debounce timer
+  // Refs for auto-sync debounce & lifecycle control
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isInitialLoadDoneRef = useRef(false);
-  const isSavingRef = useRef(false);
+  const isInitialSyncDoneRef = useRef(false);
+  const isSyncInProgressRef = useRef(false);
 
   // Helper to get valid access token
   const getValidToken = useCallback(async (): Promise<string | null> => {
@@ -67,114 +68,112 @@ export function useGoogleDriveSync({
     return null;
   }, [accessToken]);
 
-  // Execute Automatic Save to Drive with Session Timestamp
-  const executeAutoSave = useCallback(
-    async (targetWords: Word[], sessionTimestamp: number) => {
-      const token = await getValidToken();
-      if (!token || !user) {
-        setSyncStatus('unsaved');
-        return;
-      }
+  /**
+   * Core Automatic Synchronization Engine:
+   * "database with newer timestamp would always overwrite db with older timestamp"
+   */
+  const executeSynchronization = useCallback(
+    async (token: string): Promise<boolean> => {
+      if (isSyncInProgressRef.current) return false;
 
       try {
-        isSavingRef.current = true;
+        isSyncInProgressRef.current = true;
+        setIsOperating(true);
         setSyncStatus('syncing');
-        const clean = deduplicateWords(targetWords);
-        const info = await uploadBackupToDrive(token, clean, sessionTimestamp);
-        setCloudFileInfo(info);
-        setCloudWordCount(clean.length);
-        setLastSyncedAt(new Date(sessionTimestamp));
-        setSyncStatus('synced');
-        setLastError(null);
-        setIsTokenExpired(false);
-      } catch (err: unknown) {
-        console.warn('Auto-save to Google Drive error:', err);
-        if (err instanceof DriveApiError && err.status === 401) {
-          setIsTokenExpired(true);
-          clearCachedToken();
-          setSyncStatus('error');
-          setLastError('Google session expired. Please sign in again.');
-        } else {
-          const msg = err instanceof Error ? err.message : 'Save error';
-          setLastError(msg);
-          setSyncStatus('error');
-        }
-      } finally {
-        isSavingRef.current = false;
-      }
-    },
-    [getValidToken, user]
-  );
 
-  // Check & Load Cloud Backup from Google Drive with smart timestamp comparison
-  const checkAndLoadCloudBackup = useCallback(
-    async (token: string, isStartup = false) => {
-      try {
-        setSyncStatus('syncing');
+        // 1. Read latest local database record
+        const localRecord = getLocalDatabase();
+        const localTimestamp = localRecord?.updatedAt || 0;
+        const currentLocalWords = localRecord?.words || wordsRef.current;
+
+        // 2. Find cloud database backup file on Google Drive
         const fileInfo = await findDriveBackupFile(token);
         setCloudFileInfo(fileInfo);
 
         if (fileInfo?.id) {
+          // 3. Download cloud database to inspect cloud timestamp
           const download = await downloadBackupFromDrive(token, fileInfo.id);
           const cleanCloudWords = deduplicateWords(download.words);
-          setCloudWordCount(cleanCloudWords.length);
-          const cloudTimestamp = download.lastModified || new Date(fileInfo.modifiedTime).getTime() || Date.now();
-          setLastSyncedAt(new Date(cloudTimestamp));
+          const cloudTimestamp = download.lastModified || new Date(fileInfo.modifiedTime).getTime() || 0;
 
-          if (isStartup) {
-            // Initial load from cloud
+          if (cloudTimestamp > localTimestamp) {
+            // Cloud has newer timestamp: Overwrite local database with cloud database
+            console.log(
+              `[Auto-Sync] Cloud timestamp (${cloudTimestamp}) > Local (${localTimestamp}). Overwriting local database with cloud data.`
+            );
+            saveLocalDatabase(cleanCloudWords, cloudTimestamp);
             setWords(cleanCloudWords);
-            sessionTimestampRef.current = cloudTimestamp;
-            isInitialLoadDoneRef.current = true;
+            setCloudWordCount(cleanCloudWords.length);
+            setLastSyncedAt(new Date(cloudTimestamp));
+            setSyncStatus('synced');
+            setLastError(null);
+            setIsTokenExpired(false);
+          } else if (localTimestamp > cloudTimestamp) {
+            // Local has newer timestamp: Overwrite cloud database with local database
+            console.log(
+              `[Auto-Sync] Local timestamp (${localTimestamp}) > Cloud (${cloudTimestamp}). Overwriting cloud database with local data.`
+            );
+            const cleanLocal = deduplicateWords(currentLocalWords);
+            const updatedInfo = await uploadBackupToDrive(token, cleanLocal, localTimestamp);
+            setCloudFileInfo(updatedInfo);
+            setCloudWordCount(cleanLocal.length);
+            setLastSyncedAt(new Date(localTimestamp));
+            setSyncStatus('synced');
+            setLastError(null);
+            setIsTokenExpired(false);
           } else {
-            // Periodic / manual sync: merge with local changes based on timestamps
-            setWords((current) => {
-              if (current.length === 0) {
-                return cleanCloudWords;
-              }
-              const merged = deduplicateWords([...cleanCloudWords, ...current]);
-              return merged;
-            });
+            // Timestamps are identical: already in sync
+            setCloudWordCount(cleanCloudWords.length);
+            setLastSyncedAt(new Date(localTimestamp));
+            setSyncStatus('synced');
+            setLastError(null);
+            setIsTokenExpired(false);
           }
-          setSyncStatus('synced');
-          setIsTokenExpired(false);
-          setLastError(null);
         } else {
-          // File does not exist yet on user's Drive
-          setCloudWordCount(0);
-          if (wordsRef.current.length > 0) {
-            const now = Date.now();
-            sessionTimestampRef.current = now;
-            const newFile = await uploadBackupToDrive(token, wordsRef.current, now);
-            setCloudFileInfo(newFile);
-            setCloudWordCount(wordsRef.current.length);
-            setLastSyncedAt(new Date(now));
-          }
-          isInitialLoadDoneRef.current = true;
+          // Cloud backup file does not exist yet: push local database to cloud
+          const cleanLocal = deduplicateWords(currentLocalWords);
+          const now = localTimestamp > 0 ? localTimestamp : Date.now();
+          saveLocalDatabase(cleanLocal, now);
+          const newFile = await uploadBackupToDrive(token, cleanLocal, now);
+          setCloudFileInfo(newFile);
+          setCloudWordCount(cleanLocal.length);
+          setLastSyncedAt(new Date(now));
           setSyncStatus('synced');
+          setLastError(null);
           setIsTokenExpired(false);
         }
+
+        return true;
       } catch (err: unknown) {
-        console.warn('Google Drive cloud load error:', err);
+        console.warn('[Auto-Sync] Automatic synchronization error:', err);
+        setSyncStatus('error');
         if (err instanceof DriveApiError && err.status === 401) {
           setIsTokenExpired(true);
           clearCachedToken();
-          setSyncStatus('error');
-          setLastError('Session expired. Please reconnect Google account.');
+          setLastError('Google Drive session expired. Please reconnect.');
         } else {
           const msg = err instanceof Error ? err.message : 'Sync check failed';
           setLastError(msg);
-          setSyncStatus('error');
         }
-        isInitialLoadDoneRef.current = true;
+        return false;
+      } finally {
+        isSyncInProgressRef.current = false;
+        setIsOperating(false);
+        isInitialSyncDoneRef.current = true;
       }
     },
     [setWords]
   );
 
-  // Initialize Auth state on mount
+  // Initialize Auth & Local Database on mount
   useEffect(() => {
     cleanupLegacyLocalStorage();
+
+    // Bootstrap local database if state is currently empty
+    const local = getLocalDatabase();
+    if (local && local.words.length > 0 && wordsRef.current.length === 0) {
+      setWords(local.words);
+    }
 
     const unsubscribe = initAuth((state: AuthListenerState) => {
       setIsAuthLoading(state.isLoading);
@@ -183,12 +182,13 @@ export function useGoogleDriveSync({
       if (state.user && state.token && !state.isExpired) {
         setAccessToken(state.token);
         setIsTokenExpired(false);
-        checkAndLoadCloudBackup(state.token, true);
+        // Execute automatic sync on startup / authentication
+        executeSynchronization(state.token);
       } else if (state.user && (state.isExpired || !state.token)) {
         setAccessToken(null);
         setIsTokenExpired(true);
         setSyncStatus('error');
-        setLastError('Saved login token expired. Please click to reconnect.');
+        setLastError('Saved login token expired. Please reconnect.');
       } else {
         setAccessToken(null);
         setIsTokenExpired(false);
@@ -203,9 +203,9 @@ export function useGoogleDriveSync({
         unsubscribe();
       }
     };
-  }, [checkAndLoadCloudBackup]);
+  }, [executeSynchronization, setWords]);
 
-  // Sign In / Re-authenticate Handler
+  // Sign In Handler
   const handleSignIn = async () => {
     setIsSigningIn(true);
     setLastError(null);
@@ -216,7 +216,7 @@ export function useGoogleDriveSync({
         setAccessToken(result.accessToken);
         setIsTokenExpired(false);
         addToast(`Signed in as ${result.user.displayName || result.user.email}`, 'success');
-        await checkAndLoadCloudBackup(result.accessToken, true);
+        await executeSynchronization(result.accessToken);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Sign in failed';
@@ -238,96 +238,94 @@ export function useGoogleDriveSync({
       setCloudFileInfo(null);
       setCloudWordCount(null);
       setSyncStatus('idle');
+      clearLocalDatabase();
       setWords([]);
-      isInitialLoadDoneRef.current = false;
+      isInitialSyncDoneRef.current = false;
       addToast('Signed out.', 'info');
     } catch (err) {
       console.error('Sign out error:', err);
     }
   };
 
-  // Real-time Automatic Debounced Cloud Save on any word change
+  /**
+   * Watch changes in words:
+   * 1. Immediately store into local temporary database with new timestamp.
+   * 2. Immediately switch sync status to 'unsaved' (yellow indicator).
+   * 3. Automatically sync to cloud after 600ms debounce.
+   */
   useEffect(() => {
-    // Only auto-save once initial load has completed
-    if (!isInitialLoadDoneRef.current || !user || !accessToken || isTokenExpired) {
+    // If words changed, immediately save to local temporary database
+    const now = Date.now();
+    saveLocalDatabase(words, now);
+
+    // If initial startup sync hasn't run yet, don't trigger cloud save
+    if (!isInitialSyncDoneRef.current) {
       return;
     }
 
-    // Update session timestamp
-    const now = Date.now();
-    sessionTimestampRef.current = now;
+    // Set indicator to yellow (unsaved / syncing pending)
     setSyncStatus('unsaved');
+
+    if (!user || isTokenExpired) {
+      return;
+    }
 
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Auto-save after 800ms of idle
-    debounceTimerRef.current = setTimeout(() => {
-      executeAutoSave(words, now);
-    }, 800);
+    debounceTimerRef.current = setTimeout(async () => {
+      const token = await getValidToken();
+      if (token) {
+        await executeSynchronization(token);
+      } else {
+        setSyncStatus('error');
+      }
+    }, 600);
 
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [words, user, accessToken, isTokenExpired, executeAutoSave]);
+  }, [words, user, isTokenExpired, getValidToken, executeSynchronization]);
 
-  // Force Manual Sync Now (in case user wants an immediate refresh)
-  const syncNow = useCallback(async () => {
-    const token = await getValidToken();
-    if (!token || !user || isTokenExpired) {
-      await handleSignIn();
-      return;
-    }
-
-    try {
-      setIsOperating(true);
-      setSyncStatus('syncing');
-      await checkAndLoadCloudBackup(token, false);
-      const clean = deduplicateWords(wordsRef.current);
-      const now = Date.now();
-      sessionTimestampRef.current = now;
-      const updatedInfo = await uploadBackupToDrive(token, clean, now);
-      setCloudFileInfo(updatedInfo);
-      setCloudWordCount(clean.length);
-      setLastSyncedAt(new Date(now));
-      setSyncStatus('synced');
-      const pairsCount = extractAllPairs(clean).length;
-      addToast(`Synchronized: ${clean.length} words (${pairsCount} pairs) saved to Drive.`, 'success');
-    } catch (err: unknown) {
-      console.error('Manual sync failed:', err);
-      setSyncStatus('error');
-      if (err instanceof DriveApiError && err.status === 401) {
-        setIsTokenExpired(true);
-        clearCachedToken();
-        addToast('Session expired. Please reconnect.', 'error');
-      } else {
-        const msg = err instanceof Error ? err.message : 'Sync failed';
-        setLastError(msg);
-        addToast(`Sync error: ${msg}`, 'error');
+  // Periodic and on-focus auto-sync check
+  useEffect(() => {
+    const handleFocus = async () => {
+      if (user && !isTokenExpired && isInitialSyncDoneRef.current) {
+        const token = await getValidToken();
+        if (token) {
+          executeSynchronization(token);
+        }
       }
-    } finally {
-      setIsOperating(false);
-    }
-  }, [getValidToken, user, isTokenExpired, checkAndLoadCloudBackup, addToast]);
+    };
 
-  // Reset Cloud Database to Empty (0 words)
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('online', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('online', handleFocus);
+    };
+  }, [user, isTokenExpired, getValidToken, executeSynchronization]);
+
+  // Reset Cloud Database & Local Database to Empty
   const clearCloudDatabase = useCallback(async () => {
+    clearLocalDatabase();
+    setWords([]);
+
     const token = await getValidToken();
     if (!token || !user) {
-      setWords([]);
       addToast('Dictionary cleared.', 'info');
+      setSyncStatus('synced');
       return;
     }
 
     try {
       setIsOperating(true);
       setSyncStatus('syncing');
-      setWords([]);
       const now = Date.now();
-      sessionTimestampRef.current = now;
+      saveLocalDatabase([], now);
       const info = await uploadBackupToDrive(token, [], now);
       setCloudFileInfo(info);
       setCloudWordCount(0);
@@ -344,6 +342,16 @@ export function useGoogleDriveSync({
     }
   }, [addToast, getValidToken, setWords, user]);
 
+  // Manual retry trigger in case user wants to re-attempt after an error
+  const retrySync = useCallback(async () => {
+    const token = await getValidToken();
+    if (!token || !user || isTokenExpired) {
+      await handleSignIn();
+      return;
+    }
+    await executeSynchronization(token);
+  }, [getValidToken, user, isTokenExpired, executeSynchronization]);
+
   return {
     user,
     accessToken,
@@ -358,9 +366,10 @@ export function useGoogleDriveSync({
     lastError,
     signIn: handleSignIn,
     signOut: handleSignOut,
-    syncNow,
+    retrySync,
     clearCloudDatabase,
   };
 }
+
 
 
