@@ -1,7 +1,7 @@
 import React from 'react';
 import { User } from 'firebase/auth';
 import { SyncStatus } from '../types';
-import { RefreshCw, Check, AlertTriangle, Cloud } from 'lucide-react';
+import { RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
 import appLogo from '../assets/logo.jpg';
 
 interface HeaderProps {
@@ -11,6 +11,7 @@ interface HeaderProps {
   isSigningIn: boolean;
   lastSyncedAt: Date | null;
   onSignIn: () => void;
+  onSync: () => void;
   onGoToSettings?: () => void;
 }
 
@@ -21,43 +22,34 @@ export const Header: React.FC<HeaderProps> = ({
   isSigningIn,
   lastSyncedAt,
   onSignIn,
+  onSync,
   onGoToSettings,
 }) => {
-  // Color-coded automatic sync status:
-  // Yellow: changes happened, syncing in progress or pending
-  // Green: successfully synchronized
-  // Red: failed (error)
-  // White: neutral / idle
-  const getIndicatorColorClasses = () => {
-    if (isOperating || syncStatus === 'syncing' || syncStatus === 'unsaved') {
-      return 'bg-amber-500/20 border-amber-400/60 text-amber-400 shadow-sm shadow-amber-950/60 ring-1 ring-amber-500/30';
+  // Format last synced label
+  const getSyncText = () => {
+    if (isOperating || syncStatus === 'syncing') {
+      return 'Syncing to Drive...';
     }
-    if (syncStatus === 'synced') {
-      return 'bg-emerald-500/20 border-emerald-400/60 text-emerald-400 shadow-sm shadow-emerald-950/60 ring-1 ring-emerald-500/30';
-    }
-    if (syncStatus === 'error') {
-      return 'bg-rose-500/20 border-rose-400/60 text-rose-400 shadow-sm shadow-rose-950/60 ring-1 ring-rose-500/30';
-    }
-    return 'bg-white/10 border-white/30 text-white shadow-xs';
-  };
-
-  const getSyncTooltip = () => {
-    if (isOperating || syncStatus === 'syncing' || syncStatus === 'unsaved') {
-      return 'Changes detected — Synchronizing automatically with Google Drive... (Yellow)';
+    if (!user) {
+      return 'Online Sync Off';
     }
     if (syncStatus === 'synced') {
       if (lastSyncedAt) {
-        const diffMins = Math.floor((Date.now() - lastSyncedAt.getTime()) / 60000);
-        return diffMins < 1
-          ? 'Synchronized with Google Drive just now (Green)'
-          : `Synchronized with Google Drive ${diffMins}m ago (Green)`;
+        const diffMs = Date.now() - lastSyncedAt.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 1) return 'Cloud Synced (Just now)';
+        if (diffMins === 1) return 'Cloud Synced (1m ago)';
+        return `Cloud Synced (${diffMins}m ago)`;
       }
-      return 'Synchronized with Google Drive (Green)';
+      return 'Cloud Synced';
+    }
+    if (syncStatus === 'unsaved') {
+      return 'Syncing changes...';
     }
     if (syncStatus === 'error') {
-      return 'Synchronization failed — All changes are preserved in local database (Red)';
+      return 'Sync Issue';
     }
-    return 'Automatic cloud synchronization ready (Neutral)';
+    return 'Drive Connected';
   };
 
   return (
@@ -79,36 +71,52 @@ export const Header: React.FC<HeaderProps> = ({
           </h1>
         </div>
 
-        {/* Right Section: Automatic Sync Status Indicator & Auth */}
+        {/* Right Section: Sync Status & Auth Controls */}
         <div className="flex items-center gap-2">
           {user ? (
-            /* Logged in state: Automatic sync indicator + Avatar */
-            <div className="flex items-center gap-1.5 bg-[#1E293B] border border-[#334155] rounded-lg p-1">
-              {/* Automatic Synchronization Status Indicator (Replacing manual button) */}
-              <div
-                id="header-sync-indicator"
-                role="status"
-                title={getSyncTooltip()}
-                aria-label={getSyncTooltip()}
-                className={`h-7 w-7 flex items-center justify-center rounded-md border transition-all duration-300 ${getIndicatorColorClasses()}`}
+            /* Logged in state with Sync Pill & Sync Button */
+            <div className="flex items-center gap-1.5 bg-[#1E293B] border border-[#334155] rounded-lg p-1 pr-2">
+              {/* Sync Status Button / Pill */}
+              <button
+                type="button"
+                id="btn-header-sync-status"
+                onClick={onSync}
+                disabled={isOperating}
+                title="Click to sync now with Google Drive"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium text-slate-300 hover:text-sky-200 hover:bg-slate-700/50 transition-colors cursor-pointer disabled:opacity-50"
               >
-                {isOperating || syncStatus === 'syncing' || syncStatus === 'unsaved' ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                {syncStatus === 'syncing' || isOperating ? (
+                  <RefreshCw className="w-3 h-3 text-sky-400 animate-spin" />
                 ) : syncStatus === 'synced' ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                ) : syncStatus === 'error' ? (
-                  <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                ) : syncStatus === 'unsaved' ? (
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                 ) : (
-                  <Cloud className="w-3.5 h-3.5 text-slate-300" />
+                  <AlertTriangle className="w-3 h-3 text-rose-400" />
                 )}
-              </div>
+                <span className="hidden xs:inline-block">{getSyncText()}</span>
+              </button>
+
+              {/* Instant Manual Sync Action */}
+              <button
+                type="button"
+                id="btn-header-instant-sync"
+                onClick={onSync}
+                disabled={isOperating}
+                className="p-1 text-slate-400 hover:text-sky-300 hover:bg-slate-700 rounded transition-colors cursor-pointer disabled:opacity-40"
+                title="Sync now with Google Drive"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 ${isOperating ? 'animate-spin text-sky-400' : ''}`}
+                />
+              </button>
 
               {/* User Avatar / Settings Trigger */}
               <button
                 type="button"
                 id="btn-header-user-avatar"
                 onClick={onGoToSettings}
-                className="flex items-center rounded-full border border-slate-600/80 p-0.5 hover:border-sky-400 transition-colors cursor-pointer"
+                className="flex items-center ml-0.5 rounded-full border border-slate-600/80 p-0.5 hover:border-sky-400 transition-colors cursor-pointer"
                 title={`Signed in as ${user.displayName || user.email}. Click to manage settings.`}
               >
                 {user.photoURL ? (
