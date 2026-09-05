@@ -30,7 +30,7 @@ import { RawImportModal } from './components/RawImportModal';
 import { MemoryGameModal } from './components/MemoryGameModal';
 import { AntiCensorModal } from './components/AntiCensorModal';
 import { ToastContainer } from './components/Toast';
-import { Plus, Settings as SettingsIcon, Link2, FileUp, ChevronDown, VenetianMask } from 'lucide-react';
+import { Plus, Settings as SettingsIcon, Link2, FileUp, ChevronDown, VenetianMask, ScanSearch } from 'lucide-react';
 
 const INITIAL_PAGE_SIZE = 40;
 const PAGE_INCREMENT = 40;
@@ -58,6 +58,7 @@ export default function App() {
   const [isMemoryGameOpen, setIsMemoryGameOpen] = useState(false);
   const [isAntiCensorOpen, setIsAntiCensorOpen] = useState(false);
   const [antiCensorWord, setAntiCensorWord] = useState('');
+  const [antiCensorInitialTab, setAntiCensorInitialTab] = useState<'analyze' | 'escape'>('analyze');
   const [activeWordForRelation, setActiveWordForRelation] = useState<Word | null>(null);
   const [wordToEdit, setWordToEdit] = useState<Word | null>(null);
   const [relationToEdit, setRelationToEdit] = useState<{
@@ -245,8 +246,9 @@ export default function App() {
     [addToast]
   );
 
-  const handleOpenAntiCensor = useCallback((word?: string) => {
+  const handleOpenAntiCensor = useCallback((word?: string, tab: 'analyze' | 'escape' = 'analyze') => {
     setAntiCensorWord(word || '');
+    setAntiCensorInitialTab(tab);
     setIsAntiCensorOpen(true);
   }, []);
 
@@ -394,7 +396,7 @@ export default function App() {
         onSignIn={driveSync.signIn}
         onSync={driveSync.syncNow}
         onGoToSettings={() => setActiveTab('settings')}
-        onOpenAntiCensor={() => handleOpenAntiCensor()}
+        onOpenAntiCensor={(tab) => handleOpenAntiCensor('', tab || 'analyze')}
       />
 
       {/* Main Content Area */}
@@ -406,11 +408,22 @@ export default function App() {
             onTabChange={setActiveTab}
           />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <button
+              id="btn-open-analyzer-top"
+              type="button"
+              onClick={() => handleOpenAntiCensor('', 'analyze')}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+              title="Analisis Karakter Non-Latin, Homoglif, dan Kode Unicode"
+            >
+              <ScanSearch className="w-3.5 h-3.5 text-sky-400" />
+              <span>Analisis Kata</span>
+            </button>
+
             <button
               id="btn-open-anticensor-top"
               type="button"
-              onClick={() => handleOpenAntiCensor()}
+              onClick={() => handleOpenAntiCensor('', 'escape')}
               className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
               title="Buka Alat Anti-Sensor Homoglif (Sirilik Rusia)"
             >
@@ -459,7 +472,7 @@ export default function App() {
             onSyncNow={driveSync.syncNow}
             onClearCloudDatabase={driveSync.clearCloudDatabase}
             onOpenRawImport={() => setIsRawImportOpen(true)}
-            onOpenAntiCensor={() => handleOpenAntiCensor()}
+            onOpenAntiCensor={(tab) => handleOpenAntiCensor('', tab || 'analyze')}
           />
         ) : (
           <>
@@ -470,6 +483,7 @@ export default function App() {
               selectedTag={selectedTag}
               onTagSelect={setSelectedTag}
               activeTab={activeTab}
+              onOpenAnalyzer={(term) => handleOpenAntiCensor(term, 'analyze')}
             />
 
             {/* State Renderers */}
@@ -591,6 +605,7 @@ export default function App() {
                         onUnlinkRelation={handleUnlinkRelation}
                         onCopyText={handleCopyToast}
                         onCopyAntiCensor={handleCopyAntiCensorToast}
+                        onOpenAntiCensor={handleOpenAntiCensor}
                       />
                     ))}
                   </div>
@@ -784,11 +799,12 @@ export default function App() {
         words={words}
       />
 
-      {/* Anti-Censor Homoglyph Modal */}
+      {/* Anti-Censor Homoglyph & Character Analyzer Modal */}
       <AntiCensorModal
         isOpen={isAntiCensorOpen}
         onClose={() => setIsAntiCensorOpen(false)}
         initialWord={antiCensorWord}
+        initialTab={antiCensorInitialTab}
         words={words}
         onNotify={addToast}
       />

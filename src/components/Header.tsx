@@ -1,7 +1,7 @@
 import React from 'react';
 import { User } from 'firebase/auth';
 import { SyncStatus } from '../types';
-import { Cloud, RefreshCw, CheckCircle2, AlertTriangle, CloudOff, VenetianMask } from 'lucide-react';
+import { Cloud, RefreshCw, CheckCircle2, AlertTriangle, CloudOff, VenetianMask, ScanSearch } from 'lucide-react';
 
 interface HeaderProps {
   user: User | null;
@@ -12,7 +12,7 @@ interface HeaderProps {
   onSignIn: () => void;
   onSync: () => void;
   onGoToSettings?: () => void;
-  onOpenAntiCensor?: () => void;
+  onOpenAntiCensor?: (tab?: 'analyze' | 'escape') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -69,16 +69,29 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {onOpenAntiCensor && (
-            <button
-              type="button"
-              id="btn-header-anticensor-tool"
-              onClick={onOpenAntiCensor}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-colors cursor-pointer"
-              title="Buka Alat Anti-Sensor Homoglif (Sirilik Rusia)"
-            >
-              <VenetianMask className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Anti-Sensor</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                id="btn-header-analyzer-tool"
+                onClick={() => onOpenAntiCensor('analyze')}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 text-xs font-semibold transition-colors cursor-pointer"
+                title="Analisis Karakter Non-Latin, Homoglif, dan Kode Unicode"
+              >
+                <ScanSearch className="w-3.5 h-3.5 text-sky-400" />
+                <span className="hidden sm:inline">Analisis Kata</span>
+              </button>
+
+              <button
+                type="button"
+                id="btn-header-anticensor-tool"
+                onClick={() => onOpenAntiCensor('escape')}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-colors cursor-pointer"
+                title="Buka Alat Anti-Sensor Homoglif (Sirilik Rusia)"
+              >
+                <VenetianMask className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Anti-Sensor</span>
+              </button>
+            </div>
           )}
         </div>
 

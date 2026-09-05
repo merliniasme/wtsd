@@ -14,6 +14,7 @@ import {
   ArrowRight,
   VenetianMask,
   Sparkles,
+  ScanSearch,
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -32,7 +33,7 @@ interface SettingsViewProps {
   onSyncNow: () => void;
   onClearCloudDatabase: () => void;
   onOpenRawImport: () => void;
-  onOpenAntiCensor?: () => void;
+  onOpenAntiCensor?: (tab?: 'analyze' | 'escape') => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -135,34 +136,46 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         onSyncNow={onSyncNow}
       />
 
-      {/* Anti-Censor & Homoglyph Feature Section */}
+      {/* Anti-Censor & Character Analyzer Feature Section */}
       {onOpenAntiCensor && (
         <section
           id="section-anticensor-settings"
           className="bg-[#1E293B] border border-amber-500/30 rounded-xl p-4 space-y-3 shadow-sm"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="space-y-1">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="space-y-1.5 max-w-xl">
               <div className="flex items-center gap-2 text-amber-400">
                 <VenetianMask className="w-4 h-4" />
                 <h3 className="text-sm font-semibold text-slate-100">
-                  Anti-Sensor & Penyamaran Homoglif (Sirilik Rusia)
+                  Anti-Sensor & Analisis Karakter Non-Latin (Homoglif & Unicode)
                 </h3>
               </div>
-              <p className="text-xs text-slate-400">
-                Ubah huruf Latin ke karakter Sirilik Rusia yang serupa (seperti huruf <code className="text-amber-300 font-mono text-[11px] bg-slate-900 px-1 py-0.5 rounded border border-slate-800">a</code> ke Sirilik <code className="text-amber-300 font-mono text-[11px] bg-slate-900 px-1 py-0.5 rounded border border-slate-800">а</code>) untuk mengelabui filter kata otomatis, sensor chat game, dan regex blacklist.
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Bedah kata asing atau mencurigakan untuk mendeteksi karakter non-Latin, huruf Sirilik Rusia/Yunani penyamar, dan karakter tak terlihat (Zero-Width). Anda juga dapat mengubah huruf biasa menjadi homoglif untuk lolos dari sensor chat dan filter kata otomatis.
               </p>
             </div>
 
-            <button
-              id="btn-open-anticensor-settings"
-              type="button"
-              onClick={onOpenAntiCensor}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-lg transition-transform active:scale-95 cursor-pointer shrink-0 shadow-sm"
-            >
-              <VenetianMask className="w-3.5 h-3.5" />
-              <span>Buka Alat Anti-Sensor</span>
-            </button>
+            <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+              <button
+                id="btn-open-analyzer-settings"
+                type="button"
+                onClick={() => onOpenAntiCensor('analyze')}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold rounded-lg transition-transform active:scale-95 cursor-pointer shrink-0 shadow-sm"
+              >
+                <ScanSearch className="w-3.5 h-3.5" />
+                <span>Analisis Non-Latin</span>
+              </button>
+
+              <button
+                id="btn-open-anticensor-settings"
+                type="button"
+                onClick={() => onOpenAntiCensor('escape')}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-lg transition-transform active:scale-95 cursor-pointer shrink-0 shadow-sm"
+              >
+                <VenetianMask className="w-3.5 h-3.5" />
+                <span>Alat Anti-Sensor</span>
+              </button>
+            </div>
           </div>
         </section>
       )}

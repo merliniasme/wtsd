@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Word, RelationTag, TAG_METADATA } from '../types';
-import { Trash2, Edit2, X, Copy, Check, Link2, VenetianMask } from 'lucide-react';
+import { Trash2, Edit2, X, Copy, Check, Link2, VenetianMask, ScanSearch, ShieldAlert } from 'lucide-react';
 import { escapeCensoredWord, copyToClipboard } from '../utils/homoglyph';
+import { containsNonLatinChars, containsSuspiciousCamouflage } from '../utils/charAnalyzer';
 
 interface WordCardProps {
   word: Word;
@@ -14,7 +15,7 @@ interface WordCardProps {
   onUnlinkRelation: (wordAId: string, wordBId: string, tag: RelationTag) => void;
   onCopyTerm: (term: string) => void;
   onCopyAntiCensor?: (term: string, transformed: string) => void;
-  onOpenAntiCensor?: (term: string) => void;
+  onOpenAntiCensor?: (term: string, tab?: 'analyze' | 'escape') => void;
   highlightTerm?: string;
 }
 
@@ -53,6 +54,9 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
     setTimeout(() => setCopiedAntiCensor(false), 1200);
   };
 
+  const hasCamouflage = containsSuspiciousCamouflage(word.term);
+  const hasNonLatin = containsNonLatinChars(word.term);
+
   return (
     <article
       id={`word-card-${word.id}`}
@@ -64,6 +68,29 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
           <h3 className="text-base font-semibold text-slate-100 tracking-tight">
             {word.term}
           </h3>
+
+          {/* Non-Latin or Camouflage Detection Badge */}
+          {hasCamouflage ? (
+            <button
+              type="button"
+              onClick={() => onOpenAntiCensor?.(word.term, 'analyze')}
+              className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition-colors cursor-pointer"
+              title="Peringatan: Terdeteksi kamuflase homoglif / karakter tersembunyi! Klik untuk analisis karakter."
+            >
+              <ShieldAlert className="w-3 h-3 text-rose-400 animate-pulse" />
+              <span>Homoglif</span>
+            </button>
+          ) : hasNonLatin ? (
+            <button
+              type="button"
+              onClick={() => onOpenAntiCensor?.(word.term, 'analyze')}
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-colors cursor-pointer"
+              title="Kata ini mengandung karakter non-Latin. Klik untuk analisis."
+            >
+              <ScanSearch className="w-3 h-3 text-amber-400" />
+              <span>Non-Latin</span>
+            </button>
+          ) : null}
 
           {/* Regular Copy */}
           <button
@@ -172,19 +199,32 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
         )}
       </div>
 
-      {/* Card Footer: Add Relation Action */}
+      {/* Card Footer: Actions */}
       <div className="pt-2 border-t border-[#334155]/50 flex items-center justify-between">
         {onOpenAntiCensor ? (
-          <button
-            id={`btn-open-anticensor-${word.id}`}
-            type="button"
-            onClick={() => onOpenAntiCensor(word.term)}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-400/80 hover:text-amber-300 transition-colors cursor-pointer py-1 px-1 rounded hover:bg-slate-800/50"
-            title="Buka kata ini di Alat Anti-Sensor Homoglif"
-          >
-            <VenetianMask className="w-3.5 h-3.5 text-amber-400" />
-            <span>Anti-Sensor</span>
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              id={`btn-open-anticensor-${word.id}`}
+              type="button"
+              onClick={() => onOpenAntiCensor(word.term, 'escape')}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-400/80 hover:text-amber-300 transition-colors cursor-pointer py-1 px-1.5 rounded hover:bg-slate-800/50"
+              title="Buka kata ini di Alat Anti-Sensor Homoglif"
+            >
+              <VenetianMask className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Anti-Sensor</span>
+            </button>
+
+            <button
+              id={`btn-open-analyzer-${word.id}`}
+              type="button"
+              onClick={() => onOpenAntiCensor(word.term, 'analyze')}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-sky-400/80 hover:text-sky-300 transition-colors cursor-pointer py-1 px-1.5 rounded hover:bg-slate-800/50"
+              title="Analisis karakter non-Latin, homoglif, dan kode Unicode"
+            >
+              <ScanSearch className="w-3.5 h-3.5 text-sky-400" />
+              <span>Analisis</span>
+            </button>
+          </div>
         ) : <div />}
 
         <button
