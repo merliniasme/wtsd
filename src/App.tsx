@@ -30,7 +30,7 @@ import { RawImportModal } from './components/RawImportModal';
 import { MemoryGameModal } from './components/MemoryGameModal';
 import { AntiCensorModal } from './components/AntiCensorModal';
 import { ToastContainer } from './components/Toast';
-import { Plus, Settings as SettingsIcon, Link2, FileUp, ChevronDown, VenetianMask, ScanSearch } from 'lucide-react';
+import { Plus, Settings as SettingsIcon, Link2, ChevronDown } from 'lucide-react';
 
 const INITIAL_PAGE_SIZE = 40;
 const PAGE_INCREMENT = 40;
@@ -396,61 +396,21 @@ export default function App() {
         onSignIn={driveSync.signIn}
         onSync={driveSync.syncNow}
         onGoToSettings={() => setActiveTab('settings')}
-        onOpenAntiCensor={(tab) => handleOpenAntiCensor('', tab || 'analyze')}
       />
 
       {/* Main Content Area */}
       <main id="app-main-content" className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-5 space-y-4">
-        {/* Navigation Tabs Bar & Action Buttons */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Navigation Tabs Bar */}
+        <div className="flex items-center justify-between gap-3">
           <TabsNav
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
 
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <button
-              id="btn-open-analyzer-top"
-              type="button"
-              onClick={() => handleOpenAntiCensor('', 'analyze')}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
-              title="Analisis Karakter Non-Latin, Homoglif, dan Kode Unicode"
-            >
-              <ScanSearch className="w-3.5 h-3.5 text-sky-400" />
-              <span>Analisis Kata</span>
-            </button>
-
-            <button
-              id="btn-open-anticensor-top"
-              type="button"
-              onClick={() => handleOpenAntiCensor('', 'escape')}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
-              title="Buka Alat Anti-Sensor Homoglif (Sirilik Rusia)"
-            >
-              <VenetianMask className="w-3.5 h-3.5 text-amber-400" />
-              <span>Anti-Sensor</span>
-            </button>
-
-            <button
-              id="btn-open-raw-import-top"
-              type="button"
-              onClick={() => setIsRawImportOpen(true)}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#1E293B] hover:bg-slate-700 text-slate-300 hover:text-white border border-[#334155] text-xs font-medium rounded-lg transition-colors cursor-pointer"
-              title="Import plain text dictionary rules ([Word1] # [Word2] & [Word3])"
-            >
-              <FileUp className="w-3.5 h-3.5 text-sky-400" />
-              <span>Raw Import</span>
-            </button>
-
-            <button
-              id="btn-open-add-word-top"
-              type="button"
-              onClick={() => setIsAddWordOpen(true)}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Word</span>
-            </button>
+          <div className="text-xs text-slate-400 font-medium hidden sm:flex items-center gap-2">
+            <span>{words.length} kata</span>
+            <span className="text-slate-600">•</span>
+            <span>{allPairs.length} pasangan</span>
           </div>
         </div>
 
@@ -503,26 +463,18 @@ export default function App() {
                   <button
                     id="btn-empty-state-add-word"
                     onClick={() => setIsAddWordOpen(true)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-xs"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Word</span>
-                  </button>
-                  <button
-                    id="btn-empty-state-raw-import"
-                    onClick={() => setIsRawImportOpen(true)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#1E293B] hover:bg-slate-700 text-slate-200 border border-[#334155] text-xs font-medium rounded-md transition-colors cursor-pointer"
-                  >
-                    <FileUp className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Raw Import</span>
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Tambah Kata</span>
                   </button>
                   <button
                     id="btn-empty-state-go-settings"
                     onClick={() => setActiveTab('settings')}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-[#334155] text-xs font-medium rounded-md transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1E293B] hover:bg-slate-700 text-slate-300 hover:text-white border border-[#334155] text-xs font-medium rounded-lg transition-colors cursor-pointer"
                   >
                     <SettingsIcon className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Drive & Settings</span>
+                    <span>Pengaturan & Raw Import</span>
                   </button>
                 </div>
               </div>
@@ -731,10 +683,14 @@ export default function App() {
         )}
       </main>
 
-      {/* Floating Action Buttons (Puzzle Game & Add Word) */}
+      {/* Single Main Floating Action Button with Features Popup */}
       <FloatingAddButton
         onAddWord={() => setIsAddWordOpen(true)}
+        onCreateRelation={() => setIsCreateRelationOpen(true)}
+        onOpenAnalyzer={() => handleOpenAntiCensor('', 'analyze')}
+        onOpenAntiCensor={() => handleOpenAntiCensor('', 'escape')}
         onOpenPuzzle={() => setIsMemoryGameOpen(true)}
+        onGoToSettings={() => setActiveTab('settings')}
       />
 
       {/* Add Word Modal */}
