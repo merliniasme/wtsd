@@ -1,5 +1,6 @@
 import React from 'react';
-import { ShieldCheck, Cloud, AlertCircle, Loader2, Sparkles, VenetianMask } from 'lucide-react';
+import { ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import appLogo from '../assets/logo.jpg';
 
 interface LandingViewProps {
   onSignIn: () => void;
@@ -24,15 +25,20 @@ export const LandingView: React.FC<LandingViewProps> = ({
       <div className="w-full max-w-sm mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200">
         {/* Brand Icon & Heading */}
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/25 text-sky-400 mx-auto flex items-center justify-center text-3xl shadow-lg shadow-sky-950/40">
-            🕵️
+          <div className="relative mx-auto w-24 h-24 rounded-2xl p-1 bg-gradient-to-br from-cyan-500/30 via-slate-800 to-purple-500/30 border border-cyan-500/40 shadow-xl shadow-cyan-950/60 overflow-hidden flex items-center justify-center">
+            <img
+              src={appLogo}
+              alt="Who Is The Spy Manual Icon"
+              className="w-full h-full object-cover rounded-xl"
+              referrerPolicy="no-referrer"
+            />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-100">
-              Spy Dictionary
+              Who Is The Spy Manual
             </h1>
             <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-              Kamus pasangan kata rahasia undercover dengan sinkronisasi Google Drive.
+              Everything About Who Is The Spy
             </p>
           </div>
         </div>
@@ -58,7 +64,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
           {isAuthLoading ? (
             <div className="flex items-center justify-center gap-2.5 py-3.5 text-slate-400 text-xs font-medium bg-slate-900/60 border border-[#334155] rounded-xl">
               <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
-              <span>Memeriksa sesi Google...</span>
+              <span>Memeriksa sesi...</span>
             </div>
           ) : (
             <button
@@ -70,7 +76,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               {isSigningIn ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-slate-700" />
-                  <span>Menghubungkan Google Drive...</span>
+                  <span>Connecting...</span>
                 </>
               ) : (
                 <>
@@ -92,33 +98,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
                       d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
                     />
                   </svg>
-                  <span>Masuk dengan Google</span>
+                  <span>Sign In</span>
                 </>
               )}
             </button>
           )}
-
-          {/* Clean 3 Minimal Feature Chips */}
-          <div className="pt-2 flex items-center justify-center gap-1.5 flex-wrap text-[11px] text-slate-400">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-900/60 border border-slate-700/60 text-slate-300">
-              <Cloud className="w-3 h-3 text-sky-400" />
-              <span>Auto-Sync</span>
-            </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-900/60 border border-slate-700/60 text-slate-300">
-              <Sparkles className="w-3 h-3 text-purple-400" />
-              <span>Memory Game</span>
-            </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-900/60 border border-slate-700/60 text-slate-300">
-              <VenetianMask className="w-3 h-3 text-amber-400" />
-              <span>Anti-Sensor</span>
-            </span>
-          </div>
         </div>
 
         {/* Minimal Footer Note */}
         <p className="text-[11px] text-center text-slate-500 flex items-center justify-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span>Database kamus tersimpan privat di Google Drive akun Anda.</span>
+          <span>We value your privacy</span>
         </p>
       </div>
     </div>

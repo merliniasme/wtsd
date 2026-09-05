@@ -1,6 +1,6 @@
 {
   "name": "Who's the Spy? Dictionary",
-  "description": "A single-page dictionary for 'Who is the Undercover' game word pairs, mutual relation tracking, non-Latin character analyzer & homoglyph anti-censor tools, and Google Drive cloud backup & sync.",
+  "description": "Everything About Who Is The Spy - A single-page dictionary for 'Who is the Undercover' game word pairs, mutual relation tracking, non-Latin character analyzer & homoglyph anti-censor tools, and Google Drive cloud backup & sync.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

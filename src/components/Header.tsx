@@ -2,6 +2,7 @@ import React from 'react';
 import { User } from 'firebase/auth';
 import { SyncStatus } from '../types';
 import { RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
+import appLogo from '../assets/logo.jpg';
 
 interface HeaderProps {
   user: User | null;
@@ -59,9 +60,14 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
         {/* Brand */}
         <div className="flex items-center gap-2.5">
-          <span className="text-base">🕵️</span>
+          <img
+            src={appLogo}
+            alt="Who Is The Spy Manual Logo"
+            className="w-7 h-7 rounded-lg object-cover border border-cyan-500/30 shadow-xs shadow-cyan-950"
+            referrerPolicy="no-referrer"
+          />
           <h1 className="text-sm font-semibold tracking-tight text-slate-100">
-            Spy Dictionary
+            Who Is The Spy Manual
           </h1>
         </div>
 
