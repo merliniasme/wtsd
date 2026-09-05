@@ -11,7 +11,6 @@ import {
   fastStringCompare,
 } from './utils/wordGraph';
 import { useGoogleDriveSync } from './hooks/useGoogleDriveSync';
-import { getLocalDatabase } from './utils/localDb';
 
 import { Header } from './components/Header';
 import { LandingView } from './components/LandingView';
@@ -37,11 +36,8 @@ const INITIAL_PAGE_SIZE = 40;
 const PAGE_INCREMENT = 40;
 
 export default function App() {
-  // In-memory words state backed by local database & auto-synced with Google Drive
-  const [words, setWords] = useState<Word[]>(() => {
-    const local = getLocalDatabase();
-    return local ? local.words : [];
-  });
+  // In-memory words state (synced with Google Drive)
+  const [words, setWords] = useState<Word[]>([]);
 
   // Active Tab: 'pairs' | 'words' | 'settings'
   const [activeTab, setActiveTab] = useState<ActiveTab>('pairs');
@@ -398,6 +394,7 @@ export default function App() {
         isSigningIn={driveSync.isSigningIn}
         lastSyncedAt={driveSync.lastSyncedAt}
         onSignIn={driveSync.signIn}
+        onSync={driveSync.syncNow}
         onGoToSettings={() => setActiveTab('settings')}
       />
 
@@ -432,7 +429,7 @@ export default function App() {
             isOperating={driveSync.isOperating}
             onSignIn={driveSync.signIn}
             onSignOut={driveSync.signOut}
-            onSyncNow={driveSync.retrySync}
+            onSyncNow={driveSync.syncNow}
             onClearCloudDatabase={driveSync.clearCloudDatabase}
             onOpenRawImport={() => setIsRawImportOpen(true)}
             onOpenAntiCensor={(tab) => handleOpenAntiCensor('', tab || 'analyze')}
