@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Word, RelationTag, TAG_METADATA } from '../types';
-import { Trash2, Edit2, X, Copy, Check, Link2 } from 'lucide-react';
+import { Trash2, Edit2, X, Copy, Check, Link2, VenetianMask } from 'lucide-react';
+import { escapeCensoredWord, copyToClipboard } from '../utils/homoglyph';
 
 interface WordCardProps {
   word: Word;
@@ -12,6 +13,8 @@ interface WordCardProps {
   onEditRelationTag: (word: Word, targetWord: Word, currentTag: RelationTag) => void;
   onUnlinkRelation: (wordAId: string, wordBId: string, tag: RelationTag) => void;
   onCopyTerm: (term: string) => void;
+  onCopyAntiCensor?: (term: string, transformed: string) => void;
+  onOpenAntiCensor?: (term: string) => void;
   highlightTerm?: string;
 }
 
@@ -25,13 +28,29 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
   onEditRelationTag,
   onUnlinkRelation,
   onCopyTerm,
+  onCopyAntiCensor,
+  onOpenAntiCensor,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [copiedAntiCensor, setCopiedAntiCensor] = useState(false);
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
+    await copyToClipboard(word.term);
     onCopyTerm(word.term);
     setCopied(true);
     setTimeout(() => setCopied(false), 1200);
+  };
+
+  const handleCopyAntiCensor = async () => {
+    const transformed = escapeCensoredWord(word.term, 'cyrillic');
+    await copyToClipboard(transformed);
+    if (onCopyAntiCensor) {
+      onCopyAntiCensor(word.term, transformed);
+    } else {
+      onCopyTerm(transformed);
+    }
+    setCopiedAntiCensor(true);
+    setTimeout(() => setCopiedAntiCensor(false), 1200);
   };
 
   return (
@@ -41,19 +60,39 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
     >
       {/* Header with Word & Quick Actions */}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <h3 className="text-base font-semibold text-slate-100 tracking-tight">
             {word.term}
           </h3>
+
+          {/* Regular Copy */}
           <button
             onClick={handleCopy}
-            className="text-slate-500 hover:text-slate-300 transition-colors p-0.5 cursor-pointer text-xs"
-            title="Copy word"
+            className="text-slate-500 hover:text-slate-300 transition-colors p-1 cursor-pointer rounded hover:bg-slate-800"
+            title="Salin kata biasa"
           >
             {copied ? (
               <Check className="w-3.5 h-3.5 text-emerald-400" />
             ) : (
               <Copy className="w-3.5 h-3.5" />
+            )}
+          </button>
+
+          {/* Anti-Censor Homoglyph Copy */}
+          <button
+            id={`btn-anticensor-copy-${word.id}`}
+            onClick={handleCopyAntiCensor}
+            className={`p-1 transition-colors cursor-pointer rounded hover:bg-slate-800 ${
+              copiedAntiCensor
+                ? 'text-amber-400 bg-amber-500/15'
+                : 'text-slate-500 hover:text-amber-400'
+            }`}
+            title="Salin Anti-Sensor (Homoglif Sirilik Rusia)"
+          >
+            {copiedAntiCensor ? (
+              <Check className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <VenetianMask className="w-3.5 h-3.5" />
             )}
           </button>
         </div>
@@ -134,7 +173,20 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
       </div>
 
       {/* Card Footer: Add Relation Action */}
-      <div className="pt-2 border-t border-[#334155]/50 flex items-center justify-end">
+      <div className="pt-2 border-t border-[#334155]/50 flex items-center justify-between">
+        {onOpenAntiCensor ? (
+          <button
+            id={`btn-open-anticensor-${word.id}`}
+            type="button"
+            onClick={() => onOpenAntiCensor(word.term)}
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-400/80 hover:text-amber-300 transition-colors cursor-pointer py-1 px-1 rounded hover:bg-slate-800/50"
+            title="Buka kata ini di Alat Anti-Sensor Homoglif"
+          >
+            <VenetianMask className="w-3.5 h-3.5 text-amber-400" />
+            <span>Anti-Sensor</span>
+          </button>
+        ) : <div />}
+
         <button
           id={`btn-add-rel-${word.id}`}
           onClick={() => onAddRelationToWord(word)}

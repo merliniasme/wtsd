@@ -12,6 +12,8 @@ import {
   Cloud,
   FileUp,
   ArrowRight,
+  VenetianMask,
+  Sparkles,
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -30,6 +32,7 @@ interface SettingsViewProps {
   onSyncNow: () => void;
   onClearCloudDatabase: () => void;
   onOpenRawImport: () => void;
+  onOpenAntiCensor?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -48,6 +51,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSyncNow,
   onClearCloudDatabase,
   onOpenRawImport,
+  onOpenAntiCensor,
 }) => {
   // State for Delete Confirmation Modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -130,6 +134,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         onSignOut={onSignOut}
         onSyncNow={onSyncNow}
       />
+
+      {/* Anti-Censor & Homoglyph Feature Section */}
+      {onOpenAntiCensor && (
+        <section
+          id="section-anticensor-settings"
+          className="bg-[#1E293B] border border-amber-500/30 rounded-xl p-4 space-y-3 shadow-sm"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-amber-400">
+                <VenetianMask className="w-4 h-4" />
+                <h3 className="text-sm font-semibold text-slate-100">
+                  Anti-Sensor & Penyamaran Homoglif (Sirilik Rusia)
+                </h3>
+              </div>
+              <p className="text-xs text-slate-400">
+                Ubah huruf Latin ke karakter Sirilik Rusia yang serupa (seperti huruf <code className="text-amber-300 font-mono text-[11px] bg-slate-900 px-1 py-0.5 rounded border border-slate-800">a</code> ke Sirilik <code className="text-amber-300 font-mono text-[11px] bg-slate-900 px-1 py-0.5 rounded border border-slate-800">а</code>) untuk mengelabui filter kata otomatis, sensor chat game, dan regex blacklist.
+              </p>
+            </div>
+
+            <button
+              id="btn-open-anticensor-settings"
+              type="button"
+              onClick={onOpenAntiCensor}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-lg transition-transform active:scale-95 cursor-pointer shrink-0 shadow-sm"
+            >
+              <VenetianMask className="w-3.5 h-3.5" />
+              <span>Buka Alat Anti-Sensor</span>
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* Raw Plain Text Import Section */}
       <section

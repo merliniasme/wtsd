@@ -28,8 +28,9 @@ import { EditRelationModal } from './components/EditRelationModal';
 import { EditWordModal } from './components/EditWordModal';
 import { RawImportModal } from './components/RawImportModal';
 import { MemoryGameModal } from './components/MemoryGameModal';
+import { AntiCensorModal } from './components/AntiCensorModal';
 import { ToastContainer } from './components/Toast';
-import { Plus, Settings as SettingsIcon, Link2, FileUp, ChevronDown } from 'lucide-react';
+import { Plus, Settings as SettingsIcon, Link2, FileUp, ChevronDown, VenetianMask } from 'lucide-react';
 
 const INITIAL_PAGE_SIZE = 40;
 const PAGE_INCREMENT = 40;
@@ -55,6 +56,8 @@ export default function App() {
   const [isCreateRelationOpen, setIsCreateRelationOpen] = useState(false);
   const [isRawImportOpen, setIsRawImportOpen] = useState(false);
   const [isMemoryGameOpen, setIsMemoryGameOpen] = useState(false);
+  const [isAntiCensorOpen, setIsAntiCensorOpen] = useState(false);
+  const [antiCensorWord, setAntiCensorWord] = useState('');
   const [activeWordForRelation, setActiveWordForRelation] = useState<Word | null>(null);
   const [wordToEdit, setWordToEdit] = useState<Word | null>(null);
   const [relationToEdit, setRelationToEdit] = useState<{
@@ -235,6 +238,18 @@ export default function App() {
     [addToast]
   );
 
+  const handleCopyAntiCensorToast = useCallback(
+    (original: string, transformed: string) => {
+      addToast(`Disalin Anti-Sensor (Sirilik): "${transformed}"`, 'success');
+    },
+    [addToast]
+  );
+
+  const handleOpenAntiCensor = useCallback((word?: string) => {
+    setAntiCensorWord(word || '');
+    setIsAntiCensorOpen(true);
+  }, []);
+
   // Handler: Add Standalone Word
   const handleAddSingleWord = useCallback(
     (term: string) => {
@@ -379,6 +394,7 @@ export default function App() {
         onSignIn={driveSync.signIn}
         onSync={driveSync.syncNow}
         onGoToSettings={() => setActiveTab('settings')}
+        onOpenAntiCensor={() => handleOpenAntiCensor()}
       />
 
       {/* Main Content Area */}
@@ -391,6 +407,17 @@ export default function App() {
           />
 
           <div className="flex items-center gap-2">
+            <button
+              id="btn-open-anticensor-top"
+              type="button"
+              onClick={() => handleOpenAntiCensor()}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+              title="Buka Alat Anti-Sensor Homoglif (Sirilik Rusia)"
+            >
+              <VenetianMask className="w-3.5 h-3.5 text-amber-400" />
+              <span>Anti-Sensor</span>
+            </button>
+
             <button
               id="btn-open-raw-import-top"
               type="button"
@@ -432,6 +459,7 @@ export default function App() {
             onSyncNow={driveSync.syncNow}
             onClearCloudDatabase={driveSync.clearCloudDatabase}
             onOpenRawImport={() => setIsRawImportOpen(true)}
+            onOpenAntiCensor={() => handleOpenAntiCensor()}
           />
         ) : (
           <>
@@ -562,6 +590,7 @@ export default function App() {
                         onEditRelationTag={handleEditPairRelationTag}
                         onUnlinkRelation={handleUnlinkRelation}
                         onCopyText={handleCopyToast}
+                        onCopyAntiCensor={handleCopyAntiCensorToast}
                       />
                     ))}
                   </div>
@@ -649,6 +678,8 @@ export default function App() {
                         onEditRelationTag={handleEditWordRelationTag}
                         onUnlinkRelation={handleUnlinkRelation}
                         onCopyTerm={handleCopyToast}
+                        onCopyAntiCensor={handleCopyAntiCensorToast}
+                        onOpenAntiCensor={handleOpenAntiCensor}
                         highlightTerm={searchTerm}
                       />
                     ))}
@@ -751,6 +782,15 @@ export default function App() {
         isOpen={isMemoryGameOpen}
         onClose={() => setIsMemoryGameOpen(false)}
         words={words}
+      />
+
+      {/* Anti-Censor Homoglyph Modal */}
+      <AntiCensorModal
+        isOpen={isAntiCensorOpen}
+        onClose={() => setIsAntiCensorOpen(false)}
+        initialWord={antiCensorWord}
+        words={words}
+        onNotify={addToast}
       />
 
       {/* Minimal Toast Feedback Alerts */}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { User } from 'firebase/auth';
 import { SyncStatus } from '../types';
-import { Cloud, RefreshCw, CheckCircle2, AlertTriangle, CloudOff } from 'lucide-react';
+import { Cloud, RefreshCw, CheckCircle2, AlertTriangle, CloudOff, VenetianMask } from 'lucide-react';
 
 interface HeaderProps {
   user: User | null;
@@ -12,6 +12,7 @@ interface HeaderProps {
   onSignIn: () => void;
   onSync: () => void;
   onGoToSettings?: () => void;
+  onOpenAntiCensor?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,6 +24,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSignIn,
   onSync,
   onGoToSettings,
+  onOpenAntiCensor,
 }) => {
   // Format last synced label
   const getSyncText = () => {
@@ -57,12 +59,27 @@ export const Header: React.FC<HeaderProps> = ({
       className="bg-[#0F172A] border-b border-[#334155]/60 sticky top-0 z-30 shadow-xs"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-        {/* Brand */}
-        <div className="flex items-center gap-2.5">
-          <span className="text-base">🕵️</span>
-          <h1 className="text-sm font-semibold tracking-tight text-slate-100">
-            Spy Dictionary
-          </h1>
+        {/* Brand & Quick Tools */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-base">🕵️</span>
+            <h1 className="text-sm font-semibold tracking-tight text-slate-100">
+              Spy Dictionary
+            </h1>
+          </div>
+
+          {onOpenAntiCensor && (
+            <button
+              type="button"
+              id="btn-header-anticensor-tool"
+              onClick={onOpenAntiCensor}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-colors cursor-pointer"
+              title="Buka Alat Anti-Sensor Homoglif (Sirilik Rusia)"
+            >
+              <VenetianMask className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Anti-Sensor</span>
+            </button>
+          )}
         </div>
 
         {/* Right Section: Sync Status & Auth Controls */}
