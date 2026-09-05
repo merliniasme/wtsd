@@ -298,6 +298,7 @@ export function useGoogleDriveSync({
       addToast(`Synchronized: ${clean.length} words (${pairsCount} pairs) saved to Drive.`, 'success');
     } catch (err: unknown) {
       console.error('Manual sync failed:', err);
+      setSyncStatus('error');
       if (err instanceof DriveApiError && err.status === 401) {
         setIsTokenExpired(true);
         clearCachedToken();
