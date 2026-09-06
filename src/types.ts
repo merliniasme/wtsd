@@ -142,3 +142,27 @@ export interface DriveSyncState {
   errorMessage?: string | null;
   isSyncing: boolean;
 }
+
+export type GeminiModelId =
+  | 'gemini-3.8-flash'
+  | 'gemini-flash-latest'
+  | 'gemini-3.1-flash-lite'
+  | 'gemini-3.1-pro-preview';
+
+export type GeminiClueStyle = 'balanced' | 'bluffing' | 'poetic' | 'conversational';
+
+export interface GeminiModelOption {
+  id: GeminiModelId;
+  name: string;
+  badge?: string;
+  description: string;
+}
+
+export interface GeminiSettings {
+  customApiKey: string;
+  selectedModel: GeminiModelId;
+  temperature: number;
+  clueStyle: GeminiClueStyle;
+  clueCount: number;
+  promptTemplate: string;
+}

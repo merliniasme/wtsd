@@ -14,15 +14,15 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Lazy-initialized Gemini client
-let aiClient: GoogleGenAI | null = null;
-function getGenAI(): GoogleGenAI | null {
+// Lazy-initialized default Gemini client for environment key
+let defaultAiClient: GoogleGenAI | null = null;
+function getDefaultGenAI(): GoogleGenAI | null {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return null;
   }
-  if (!aiClient) {
-    aiClient = new GoogleGenAI({
+  if (!defaultAiClient) {
+    defaultAiClient = new GoogleGenAI({
       apiKey,
       httpOptions: {
         headers: {
@@ -31,7 +31,29 @@ function getGenAI(): GoogleGenAI | null {
       },
     });
   }
-  return aiClient;
+  return defaultAiClient;
+}
+
+// Resolve Gemini client from either client-provided key or environment key
+function resolveGenAI(clientKey?: string): { ai: GoogleGenAI | null; isCustomKey: boolean } {
+  const trimmed = typeof clientKey === 'string' ? clientKey.trim() : '';
+  if (trimmed) {
+    return {
+      ai: new GoogleGenAI({
+        apiKey: trimmed,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          },
+        },
+      }),
+      isCustomKey: true,
+    };
+  }
+  return {
+    ai: getDefaultGenAI(),
+    isCustomKey: false,
+  };
 }
 
 // Clean error extractor from Gemini SDK
@@ -47,81 +69,188 @@ function parseGeminiErrorMessage(raw: string): string {
   return raw;
 }
 
-const CANDIDATE_MODELS = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+const SUPPORTED_MODELS = [
+  'gemini-3.8-flash',
+  'gemini-flash-latest',
+  'gemini-3.1-flash-lite',
+  'gemini-3.1-pro-preview',
+];
 
-// Quick test endpoint for Gemini AI
-app.get('/api/ai/test', async (_req, res) => {
-  const ai = getGenAI();
+// Configuration status endpoint
+app.get('/api/ai/config', (_req, res) => {
+  const serverKeyConfigured = Boolean(process.env.GEMINI_API_KEY);
+  res.json({
+    serverKeyConfigured,
+    defaultModel: 'gemini-3.8-flash',
+    supportedModels: [
+      {
+        id: 'gemini-3.8-flash',
+        name: 'Gemini 3.8 Flash',
+        badge: 'Recommended',
+        description: 'Optimal balance of reasoning, nuance & speed for word clues.',
+      },
+      {
+        id: 'gemini-flash-latest',
+        name: 'Gemini Flash (Latest)',
+        badge: 'General',
+        description: 'Auto-updating latest Flash release for fast text generation.',
+      },
+      {
+        id: 'gemini-3.1-flash-lite',
+        name: 'Gemini 3.1 Flash Lite',
+        badge: 'Fastest',
+        description: 'Lightweight and ultra-low latency with high availability.',
+      },
+      {
+        id: 'gemini-3.1-pro-preview',
+        name: 'Gemini 3.1 Pro Preview',
+        badge: 'Deep Reasoning',
+        description: 'Advanced reasoning for subtle deception and complex word strategies.',
+      },
+    ],
+  });
+});
+
+// Test endpoint for Gemini AI (supports GET and POST with custom key/model)
+const handleAiTest = async (req: express.Request, res: express.Response) => {
+  const customKey =
+    (req.body && req.body.apiKey) ||
+    (typeof req.headers['x-gemini-api-key'] === 'string' ? req.headers['x-gemini-api-key'] : undefined);
+  const requestedModel =
+    (req.body && req.body.model) || (typeof req.query.model === 'string' ? req.query.model : undefined);
+
+  const { ai, isCustomKey } = resolveGenAI(customKey);
+  const serverKeyConfigured = Boolean(process.env.GEMINI_API_KEY);
+
   if (!ai) {
-    res.status(503).json({
+    res.status(400).json({
       status: 'error',
-      message: 'GEMINI_API_KEY is not configured in server environment secrets.',
+      serverKeyConfigured,
+      isCustomKey,
+      message:
+        'No Gemini API Key found. Please provide a key in Settings or configure GEMINI_API_KEY in server environment secrets.',
     });
     return;
   }
 
-  for (const model of CANDIDATE_MODELS) {
+  // Determine models to test (prioritize requested model if provided)
+  const modelsToTest: string[] = [];
+  if (requestedModel && typeof requestedModel === 'string' && requestedModel.trim()) {
+    modelsToTest.push(requestedModel.trim());
+  }
+  for (const m of SUPPORTED_MODELS) {
+    if (!modelsToTest.includes(m)) {
+      modelsToTest.push(m);
+    }
+  }
+
+  const startTime = Date.now();
+  let lastErrMessage = '';
+
+  for (const model of modelsToTest) {
     try {
       const resp = await ai.models.generateContent({
         model,
-        contents: 'Ping test. Reply with exactly: PONG',
+        contents: 'Quick connection test. Reply with: PONG',
       });
+      const latencyMs = Date.now() - startTime;
       res.json({
         status: 'ok',
         activeModel: model,
-        response: resp.text?.trim(),
+        response: resp.text?.trim() || 'PONG',
+        latencyMs,
+        isCustomKey,
+        serverKeyConfigured,
       });
       return;
     } catch (err: unknown) {
-      console.warn(`Test route model ${model} failed, trying next...`);
+      const raw = err instanceof Error ? err.message : String(err);
+      lastErrMessage = parseGeminiErrorMessage(raw);
+      console.warn(`Test model ${model} failed: ${lastErrMessage}`);
+      // If error is clearly an invalid API key (400 or 403 API_KEY_INVALID), don't keep trying all models
+      if (lastErrMessage.toLowerCase().includes('api_key_invalid') || lastErrMessage.toLowerCase().includes('api key not valid')) {
+        break;
+      }
     }
   }
 
   res.status(500).json({
     status: 'error',
-    message: 'All candidate Gemini models failed test request.',
+    serverKeyConfigured,
+    isCustomKey,
+    message: lastErrMessage || 'Failed to connect to Gemini API across candidate models.',
   });
-});
+};
 
-// Generate Clue API Endpoint using Gemini API with model fallback
+app.get('/api/ai/test', handleAiTest);
+app.post('/api/ai/test', handleAiTest);
+
+// Generate Clue API Endpoint using Gemini API with configurable key, model, & temperature
 app.post('/api/ai/generate-clue', async (req, res) => {
   try {
-    const { prompt, word } = req.body || {};
+    const { prompt, word, apiKey, model, temperature } = req.body || {};
+    const headerKey =
+      typeof req.headers['x-gemini-api-key'] === 'string' ? req.headers['x-gemini-api-key'] : undefined;
+    const effectiveCustomKey = apiKey || headerKey;
+
     if (!prompt || typeof prompt !== 'string') {
       res.status(400).json({ error: 'Missing or invalid prompt string in request body.' });
       return;
     }
 
-    const ai = getGenAI();
+    const { ai, isCustomKey } = resolveGenAI(effectiveCustomKey);
     if (!ai) {
-      res.status(503).json({
-        error: 'GEMINI_API_KEY is not configured in server environment secrets. Please configure it in Settings > Secrets.',
+      res.status(400).json({
+        error:
+          'Gemini API key is not configured. Please set your personal Gemini API key in Settings > Gemini AI Configuration, or configure GEMINI_API_KEY in server secrets.',
       });
       return;
     }
 
+    // Build model prioritization list
+    const candidateModels: string[] = [];
+    if (model && typeof model === 'string' && model.trim()) {
+      candidateModels.push(model.trim());
+    }
+    for (const m of SUPPORTED_MODELS) {
+      if (!candidateModels.includes(m)) {
+        candidateModels.push(m);
+      }
+    }
+
+    // Parse and constrain temperature
+    const parsedTemp =
+      typeof temperature === 'number' && !isNaN(temperature)
+        ? Math.max(0.1, Math.min(1.0, temperature))
+        : 0.75;
+
     let lastError: Error | null = null;
     let successfulText: string | null = null;
-    let usedModel: string = '';
+    let usedModel = '';
 
-    // Attempt generation across candidate models if one experiences high demand
-    for (const model of CANDIDATE_MODELS) {
+    for (const targetModel of candidateModels) {
       try {
         const response = await ai.models.generateContent({
-          model,
+          model: targetModel,
           contents: prompt,
           config: {
-            temperature: 0.75,
+            temperature: parsedTemp,
           },
         });
 
         successfulText = response.text || '';
-        usedModel = model;
+        usedModel = targetModel;
         break;
       } catch (err: unknown) {
         lastError = err instanceof Error ? err : new Error(String(err));
         const rawMsg = lastError.message;
-        console.warn(`Model ${model} request failed (${rawMsg.slice(0, 100)}). Falling back if available...`);
+        console.warn(`Model ${targetModel} request failed (${rawMsg.slice(0, 120)}).`);
+        // If invalid API key, fail immediately without exhausting models
+        const friendly = parseGeminiErrorMessage(rawMsg);
+        if (friendly.toLowerCase().includes('api_key_invalid') || friendly.toLowerCase().includes('api key not valid')) {
+          res.status(401).json({ error: friendly });
+          return;
+        }
       }
     }
 
@@ -132,6 +261,7 @@ app.post('/api/ai/generate-clue', async (req, res) => {
         modelUsed: usedModel,
         promptSent: prompt,
         word: word || '',
+        isCustomKey,
       });
       return;
     }

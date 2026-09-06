@@ -18,6 +18,11 @@ import {
   getCustomCluePrompt,
   buildCluePrompt,
   generateAiClueApi,
+  getSelectedGeminiModel,
+  getGeminiTemperature,
+  getGeminiClueStyle,
+  getGeminiClueCount,
+  GEMINI_STYLE_PRESETS,
 } from '../utils/aiClue';
 import { copyToClipboard } from '../utils/homoglyph';
 
@@ -61,17 +66,25 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
     async (customPromptToUse?: string) => {
       if (!word) return;
 
+      const style = getGeminiClueStyle();
+      const count = getGeminiClueCount();
+      const model = getSelectedGeminiModel();
+      const temperature = getGeminiTemperature();
+
       const activePrompt =
         customPromptToUse !== undefined
           ? customPromptToUse
-          : buildCluePrompt(getCustomCluePrompt(), word.term, relatedWordNames);
+          : buildCluePrompt(getCustomCluePrompt(), word.term, relatedWordNames, style, count);
 
       setPromptText(activePrompt);
       setIsLoading(true);
       setErrorMessage(null);
 
       try {
-        const result = await generateAiClueApi(activePrompt, word.term);
+        const result = await generateAiClueApi(activePrompt, word.term, {
+          model,
+          temperature,
+        });
         setResponseContent(result.text);
         if (result.modelUsed) {
           setActiveModelName(result.modelUsed);
@@ -95,10 +108,14 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
       setResponseContent('');
       setErrorMessage(null);
       setIsEditingPrompt(false);
+      const style = getGeminiClueStyle();
+      const count = getGeminiClueCount();
       const initialPrompt = buildCluePrompt(
         getCustomCluePrompt(),
         word.term,
-        relatedWordNames
+        relatedWordNames,
+        style,
+        count
       );
       setPromptText(initialPrompt);
       handleGenerate(initialPrompt);
@@ -205,11 +222,11 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
                   onClose();
                   onOpenSettingsPrompt();
                 }}
-                className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-violet-300 transition-colors cursor-pointer py-1 px-2 rounded hover:bg-slate-800"
-                title="Edit default prompt template in Settings"
+                className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-300 hover:text-violet-300 transition-colors cursor-pointer py-1 px-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60"
+                title="Configure Gemini API Key, model, temperature, and prompt template"
               >
                 <Sliders className="w-3.5 h-3.5 text-violet-400" />
-                <span>Settings Template</span>
+                <span>Gemini Settings</span>
               </button>
             )}
           </div>
