@@ -12,18 +12,12 @@ import {
   Link2,
   ChevronDown,
   ChevronUp,
-  Terminal,
-  Cpu,
-  Info,
 } from 'lucide-react';
 import { Word } from '../types';
 import {
   getCustomCluePrompt,
   buildCluePrompt,
   generateAiClueApi,
-  AiClueError,
-  safeFormatErrorMessage,
-  type TechnicalErrorDetails,
 } from '../utils/aiClue';
 import { copyToClipboard } from '../utils/homoglyph';
 
@@ -49,9 +43,6 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
   const [activeModelName, setActiveModelName] = useState<string>('Gemini AI');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [technicalDetails, setTechnicalDetails] = useState<TechnicalErrorDetails | null>(null);
-  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState<boolean>(true);
-  const [copiedDiagnostics, setCopiedDiagnostics] = useState<boolean>(false);
   const [copiedResponse, setCopiedResponse] = useState<boolean>(false);
   const [copiedPrompt, setCopiedPrompt] = useState<boolean>(false);
   const [isPromptExpanded, setIsPromptExpanded] = useState<boolean>(true);
@@ -78,7 +69,6 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
       setPromptText(activePrompt);
       setIsLoading(true);
       setErrorMessage(null);
-      setTechnicalDetails(null);
 
       try {
         const result = await generateAiClueApi(activePrompt, word.term);
@@ -86,22 +76,12 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
         if (result.modelUsed) {
           setActiveModelName(result.modelUsed);
         }
-        if (result.technicalDetails) {
-          setTechnicalDetails(result.technicalDetails);
-        }
       } catch (err: unknown) {
-        if (err instanceof AiClueError) {
-          setErrorMessage(err.message);
-          setTechnicalDetails(err.technicalDetails || null);
-        } else {
-          const msg = safeFormatErrorMessage(err);
-          setErrorMessage(msg);
-          setTechnicalDetails({
-            message: msg,
-            errorCode: 'UNKNOWN_CLIENT_EXCEPTION',
-            timestamp: new Date().toISOString(),
-          });
-        }
+        const msg =
+          err instanceof Error
+            ? err.message
+            : 'An unexpected error occurred while communicating with Gemini AI.';
+        setErrorMessage(msg);
       } finally {
         setIsLoading(false);
       }
@@ -114,7 +94,6 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
     if (isOpen && word) {
       setResponseContent('');
       setErrorMessage(null);
-      setTechnicalDetails(null);
       setIsEditingPrompt(false);
       const initialPrompt = buildCluePrompt(
         getCustomCluePrompt(),
@@ -142,22 +121,6 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
     setCopiedPrompt(true);
     onToast('Prompt copied to clipboard!', 'info');
     setTimeout(() => setCopiedPrompt(false), 1500);
-  };
-
-  // Copy technical diagnostics payload
-  const handleCopyDiagnostics = async () => {
-    const payload = {
-      errorMessage,
-      activeModelName,
-      technicalDetails,
-      promptText,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-    };
-    await copyToClipboard(JSON.stringify(payload, null, 2));
-    setCopiedDiagnostics(true);
-    onToast('Technical diagnostics copied to clipboard!', 'info');
-    setTimeout(() => setCopiedDiagnostics(false), 1800);
   };
 
   if (!isOpen || !word) return null;
@@ -305,66 +268,29 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
             ) : errorMessage ? (
               <div
                 id="ai-clue-error-state"
-                className="bg-rose-950/25 border border-rose-800/50 rounded-xl p-4 text-xs space-y-3 text-rose-200"
+                className="bg-rose-950/30 border border-rose-800/50 rounded-xl p-4 text-xs space-y-2.5 text-rose-200"
               >
-                <div className="flex items-start gap-2.5">
+                <div className="flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                   <div className="space-y-1 flex-1">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <p className="font-semibold text-rose-300 text-sm">
-                        AI Clue Generation Failed
-                      </p>
-                      {technicalDetails?.httpStatus && (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-900/60 text-rose-200 border border-rose-700/60 font-semibold">
-                            HTTP {technicalDetails.httpStatus}
-                          </span>
-                          {technicalDetails.errorCode && (
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900/80 text-rose-300 border border-slate-700">
-                              {technicalDetails.errorCode}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-rose-200/90 text-xs leading-relaxed">
+                    <p className="font-semibold text-rose-300">
+                      Failed to generate clue
+                    </p>
+                    <p className="text-rose-200/90 leading-relaxed">
                       {errorMessage}
                     </p>
                   </div>
                 </div>
 
-                {/* Primary Action Buttons */}
-                <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+                <div className="flex items-center gap-2 pt-1">
                   <button
                     type="button"
-                    id="btn-retry-ai-clue"
                     onClick={() => handleGenerate(promptText)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-500 hover:bg-rose-400 text-slate-950 font-semibold rounded-lg transition-colors cursor-pointer text-xs"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-500 hover:bg-rose-400 text-slate-950 font-semibold rounded-lg transition-colors cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>Try Again</span>
                   </button>
-
-                  <button
-                    type="button"
-                    id="btn-copy-technical-diagnostics"
-                    onClick={handleCopyDiagnostics}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded-lg border border-slate-700 transition-colors cursor-pointer text-xs"
-                    title="Copy full technical diagnostics JSON to clipboard"
-                  >
-                    {copiedDiagnostics ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-emerald-300">Copied Diagnostics</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Copy Diagnostics</span>
-                      </>
-                    )}
-                  </button>
-
                   {onOpenSettingsPrompt && (
                     <button
                       type="button"
@@ -372,125 +298,10 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
                         onClose();
                         onOpenSettingsPrompt();
                       }}
-                      className="px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700/60 transition-colors cursor-pointer text-xs"
+                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors cursor-pointer"
                     >
-                      API Settings
+                      Check API Settings
                     </button>
-                  )}
-                </div>
-
-                {/* Expandable Technical Diagnostics Details */}
-                <div
-                  id="technical-diagnostics-drawer"
-                  className="mt-2 border border-slate-800 bg-slate-950/70 rounded-lg overflow-hidden"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setIsDiagnosticsOpen(!isDiagnosticsOpen)}
-                    className="w-full px-3 py-2 flex items-center justify-between text-[11px] font-mono font-semibold text-slate-300 hover:bg-slate-900/80 transition-colors cursor-pointer border-b border-slate-800/60"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <Terminal className="w-3.5 h-3.5 text-violet-400" />
-                      <span>Technical Diagnostics & Model Fallback Trail</span>
-                    </div>
-                    {isDiagnosticsOpen ? (
-                      <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
-                    ) : (
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                    )}
-                  </button>
-
-                  {isDiagnosticsOpen && (
-                    <div className="p-3 space-y-3 text-[11px] font-mono text-slate-300">
-                      {/* Model Attempts Trail */}
-                      {technicalDetails?.modelsAttempted && technicalDetails.modelsAttempted.length > 0 && (
-                        <div className="space-y-1.5">
-                          <p className="text-[10px] uppercase font-sans font-bold tracking-wider text-slate-400">
-                            Model Execution Attempts:
-                          </p>
-                          <div className="space-y-1">
-                            {technicalDetails.modelsAttempted.map((att, idx) => (
-                              <div
-                                key={idx}
-                                className="flex items-start justify-between gap-2 p-1.5 rounded bg-slate-900/90 border border-slate-800/80 text-[10px]"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <Cpu className="w-3 h-3 text-slate-400 shrink-0" />
-                                  <span className="font-semibold text-sky-300">{att.model}</span>
-                                  <span className="text-slate-500">({att.durationMs}ms)</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 text-right">
-                                  <span
-                                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                      att.status === 'success'
-                                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                                        : 'bg-rose-950 text-rose-300 border border-rose-800'
-                                    }`}
-                                  >
-                                    {att.status.toUpperCase()}
-                                  </span>
-                                  {att.errorCode && (
-                                    <span className="text-slate-400 font-mono text-[9px]">
-                                      [{att.errorCode}]
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Technical Details Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-sans">
-                        <div className="p-2 rounded bg-slate-900/60 border border-slate-800/60 space-y-0.5">
-                          <span className="text-slate-400 block font-semibold">Diagnostic Code</span>
-                          <span className="text-rose-300 font-mono">
-                            {technicalDetails?.errorCode || 'NO_CODE'}
-                          </span>
-                        </div>
-                        <div className="p-2 rounded bg-slate-900/60 border border-slate-800/60 space-y-0.5">
-                          <span className="text-slate-400 block font-semibold">API Key Configured</span>
-                          <span
-                            className={`font-mono ${
-                              technicalDetails?.apiKeyConfigured !== false
-                                ? 'text-emerald-400'
-                                : 'text-rose-400 font-bold'
-                            }`}
-                          >
-                            {technicalDetails?.apiKeyConfigured !== false ? 'Yes (Present in backend)' : 'No (Missing)'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Common Causes & Remediation Advice */}
-                      <div className="p-2 rounded bg-amber-950/20 border border-amber-900/40 text-amber-200/90 text-[10px] font-sans leading-relaxed flex items-start gap-2">
-                        <Info className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                        <div>
-                          <strong className="text-amber-300 font-semibold">Root Cause Guide:</strong>
-                          <ul className="list-disc list-inside mt-0.5 space-y-0.5 text-amber-200/80">
-                            <li>
-                              <strong>503 Unavailable / High Demand:</strong> Google's cloud server is experiencing high regional traffic. The system has automatically reordered candidate models to use faster lite models (<code className="font-mono text-amber-100">gemini-3.5-flash-lite</code>).
-                            </li>
-                            <li>
-                              <strong>Missing API Key:</strong> Make sure <code className="font-mono text-amber-100">GEMINI_API_KEY</code> is set in the environment Settings &gt; Secrets.
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-
-                      {/* Raw Payload Preview */}
-                      {technicalDetails?.rawError && (
-                        <div className="space-y-1">
-                          <span className="text-[10px] uppercase font-sans font-bold tracking-wider text-slate-400 block">
-                            Raw Backend Trace:
-                          </span>
-                          <pre className="p-2 bg-black/60 rounded border border-slate-800/80 text-[9px] text-slate-300 overflow-x-auto max-h-28 whitespace-pre-wrap break-all">
-                            {technicalDetails.rawError}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
                   )}
                 </div>
               </div>

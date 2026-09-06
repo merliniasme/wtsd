@@ -10,8 +10,6 @@ import {
   saveCustomCluePrompt,
   resetCustomCluePrompt,
   testAiHealthApi,
-  safeFormatErrorMessage,
-  type TechnicalErrorDetails,
 } from '../utils/aiClue';
 import {
   Trash2,
@@ -27,9 +25,6 @@ import {
   Check,
   RefreshCw,
   Cpu,
-  Terminal,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -82,11 +77,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [aiTestResult, setAiTestResult] = useState<{
     status: 'ok' | 'error' | null;
     model?: string;
-    durationMs?: number;
     message?: string;
-    technicalDetails?: TechnicalErrorDetails;
   }>({ status: null });
-  const [isTestDetailsExpanded, setIsTestDetailsExpanded] = useState(false);
 
   const allPairs = extractAllPairs(words);
   const relationsByTag = calculateRelationsByTag(words);
@@ -96,31 +88,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setAiTestResult({ status: null });
     try {
       const res = await testAiHealthApi();
-      const safeMsg = safeFormatErrorMessage(res.message);
       if (res.status === 'ok') {
         setAiTestResult({
           status: 'ok',
           model: res.activeModel,
-          durationMs: res.durationMs,
-          message: `Connected! Active model: ${res.activeModel}${res.durationMs ? ` (${res.durationMs}ms)` : ''}`,
-          technicalDetails: res.technicalDetails,
+          message: `Connected! Active model: ${res.activeModel}`,
         });
         onToast(`AI connection confirmed (${res.activeModel})!`, 'success');
       } else {
         setAiTestResult({
           status: 'error',
-          message: safeMsg || 'AI test request failed',
-          technicalDetails: res.technicalDetails,
+          message: res.message || 'AI test request failed',
         });
-        onToast(safeMsg || 'AI test request failed', 'error');
+        onToast(res.message || 'AI test request failed', 'error');
       }
     } catch (err: unknown) {
-      const safeMsg = safeFormatErrorMessage(err);
+      const msg = err instanceof Error ? err.message : String(err);
       setAiTestResult({
         status: 'error',
-        message: safeMsg,
+        message: msg,
       });
-      onToast(safeMsg, 'error');
+      onToast(msg, 'error');
     } finally {
       setIsTestingAi(false);
     }
@@ -319,81 +307,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {aiTestResult.status && (
           <div
             id="ai-test-status-banner"
-            className={`rounded-lg text-xs overflow-hidden border ${
+            className={`px-3 py-2 rounded-lg text-xs flex items-center justify-between border ${
               aiTestResult.status === 'ok'
                 ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
                 : 'bg-rose-950/40 border-rose-500/40 text-rose-200'
             }`}
           >
-            <div className="px-3 py-2 flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                {aiTestResult.status === 'ok' ? (
-                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                )}
-                <span className="font-medium">{aiTestResult.message}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {aiTestResult.model && (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-300 border border-emerald-700/60">
-                    {aiTestResult.model}
-                  </span>
-                )}
-                {aiTestResult.technicalDetails && (
-                  <button
-                    type="button"
-                    onClick={() => setIsTestDetailsExpanded(!isTestDetailsExpanded)}
-                    className="inline-flex items-center gap-1 text-[10px] font-mono text-slate-400 hover:text-slate-200 bg-slate-900/70 px-2 py-0.5 rounded border border-slate-800 transition-colors cursor-pointer"
-                  >
-                    <Terminal className="w-3 h-3" />
-                    <span>Telemetry</span>
-                    {isTestDetailsExpanded ? (
-                      <ChevronUp className="w-3 h-3" />
-                    ) : (
-                      <ChevronDown className="w-3 h-3" />
-                    )}
-                  </button>
-                )}
-              </div>
+            <div className="flex items-center gap-2">
+              {aiTestResult.status === 'ok' ? (
+                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              )}
+              <span className="font-medium">{aiTestResult.message}</span>
             </div>
-
-            {/* Expandable Technical Telemetry */}
-            {isTestDetailsExpanded && aiTestResult.technicalDetails && (
-              <div className="p-3 border-t border-slate-800/60 bg-slate-950/80 font-mono text-[11px] text-slate-300 space-y-2">
-                {aiTestResult.technicalDetails.modelsAttempted && (
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-sans font-bold text-slate-400 uppercase">
-                      Tested Models:
-                    </p>
-                    {aiTestResult.technicalDetails.modelsAttempted.map((m, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between p-1.5 rounded bg-slate-900 border border-slate-800 text-[10px]"
-                      >
-                        <span className="text-sky-300">{m.model}</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-slate-500">({m.durationMs}ms)</span>
-                          <span
-                            className={`px-1 rounded text-[9px] font-bold ${
-                              m.status === 'success'
-                                ? 'bg-emerald-950 text-emerald-300'
-                                : 'bg-rose-950 text-rose-300'
-                            }`}
-                          >
-                            {m.status.toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {aiTestResult.technicalDetails.rawError && (
-                  <pre className="p-2 bg-black/60 rounded border border-slate-800 text-[9px] text-rose-300 max-h-24 overflow-x-auto whitespace-pre-wrap">
-                    {aiTestResult.technicalDetails.rawError}
-                  </pre>
-                )}
-              </div>
+            {aiTestResult.model && (
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-300 border border-emerald-700/60">
+                {aiTestResult.model}
+              </span>
             )}
           </div>
         )}
