@@ -87,19 +87,104 @@ export function buildCluePrompt(
     .replace(/\{related\}/g, relatedString);
 }
 
+export interface ModelAttemptInfo {
+  model: string;
+  status: 'success' | 'failed';
+  durationMs: number;
+  httpStatus?: number;
+  errorCode?: string | number;
+  error?: string;
+}
+
+export interface TechnicalErrorDetails {
+  httpStatus?: number;
+  errorCode?: string | number;
+  message: string;
+  rawError?: string;
+  modelsAttempted?: ModelAttemptInfo[];
+  timestamp?: string;
+  apiKeyConfigured?: boolean;
+}
+
+export class AiClueError extends Error {
+  technicalDetails?: TechnicalErrorDetails;
+  httpStatus?: number;
+  rawResponse?: string;
+
+  constructor(
+    message: string,
+    technicalDetails?: TechnicalErrorDetails,
+    httpStatus?: number,
+    rawResponse?: string
+  ) {
+    super(message);
+    this.name = 'AiClueError';
+    this.technicalDetails = technicalDetails;
+    this.httpStatus = httpStatus;
+    this.rawResponse = rawResponse;
+  }
+}
+
+/**
+ * Safely extracts a clean string from any error object, JSON, or exception,
+ * ensuring [object Object] is never shown to the user.
+ */
+export function safeFormatErrorMessage(val: unknown): string {
+  if (!val) return 'An unknown error occurred.';
+  if (typeof val === 'string') {
+    if (val === '[object Object]' || val.includes('[object Object]')) {
+      return 'Unexpected error object returned by the server.';
+    }
+    // Try checking if it's a JSON string
+    try {
+      const parsed = JSON.parse(val);
+      if (parsed && typeof parsed === 'object') {
+        return safeFormatErrorMessage(parsed);
+      }
+    } catch {
+      // not JSON string
+    }
+    return val;
+  }
+  if (typeof val === 'object') {
+    const obj = val as Record<string, any>;
+    if (typeof obj.message === 'string' && obj.message !== '[object Object]') {
+      return obj.message;
+    }
+    if (typeof obj.error === 'string' && obj.error !== '[object Object]') {
+      return obj.error;
+    }
+    if (obj.error && typeof obj.error === 'object') {
+      return safeFormatErrorMessage(obj.error);
+    }
+    if (obj.technicalDetails && typeof obj.technicalDetails.message === 'string') {
+      return obj.technicalDetails.message;
+    }
+    try {
+      return JSON.stringify(val, null, 2);
+    } catch {
+      return 'Unstringifiable error object.';
+    }
+  }
+  return String(val);
+}
+
 export interface GenerateClueResponse {
   success: boolean;
   text: string;
   promptSent: string;
   word: string;
   modelUsed?: string;
+  technicalDetails?: TechnicalErrorDetails;
 }
 
 export interface AiHealthResponse {
   status: 'ok' | 'error';
   activeModel?: string;
+  durationMs?: number;
   response?: string;
   message?: string;
+  technicalDetails?: TechnicalErrorDetails;
 }
 
 /**
@@ -116,14 +201,35 @@ export async function testAiHealthApi(): Promise<AiHealthResponse> {
       return {
         status: 'error',
         message: `Server returned non-JSON response (${res.status}): ${rawText.slice(0, 100)}`,
+        technicalDetails: {
+          httpStatus: res.status,
+          errorCode: 'NON_JSON_GATEWAY_RESPONSE',
+          message: 'Server returned HTML or raw text instead of JSON.',
+          rawError: rawText.slice(0, 500),
+          timestamp: new Date().toISOString(),
+        },
       };
     }
-    return data as AiHealthResponse;
+
+    return {
+      status: data.status || (res.ok ? 'ok' : 'error'),
+      activeModel: data.activeModel,
+      durationMs: data.durationMs,
+      response: data.response,
+      message: safeFormatErrorMessage(data.message || data.error),
+      technicalDetails: data.technicalDetails,
+    };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = safeFormatErrorMessage(err);
     return {
       status: 'error',
       message: msg,
+      technicalDetails: {
+        errorCode: 'FETCH_NETWORK_ERROR',
+        message: msg,
+        rawError: err instanceof Error ? err.stack : String(err),
+        timestamp: new Date().toISOString(),
+      },
     };
   }
 }
@@ -139,6 +245,7 @@ export async function generateAiClueApi(
 ): Promise<GenerateClueResponse> {
   let attempt = 0;
   let lastErrorMsg = 'Failed to communicate with AI server.';
+  let lastTechnicalDetails: TechnicalErrorDetails | undefined;
 
   while (attempt <= maxRetries) {
     attempt++;
@@ -165,34 +272,66 @@ export async function generateAiClueApi(
           lastErrorMsg = `Unexpected non-JSON response from server (${response.status}): ${rawText.slice(0, 120)}`;
         }
 
+        lastTechnicalDetails = {
+          httpStatus: response.status,
+          errorCode: 'PROXY_HTML_RESPONSE',
+          message: lastErrorMsg,
+          rawError: rawText.slice(0, 500),
+          timestamp: new Date().toISOString(),
+        };
+
         // If retries left and it was likely a temporary proxy hiccup, wait briefly and retry
         if (attempt <= maxRetries) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
-        throw new Error(lastErrorMsg);
+        throw new AiClueError(lastErrorMsg, lastTechnicalDetails, response.status, rawText);
       }
 
       if (!response.ok || !data?.success) {
-        const errorMsg = data?.error || `Server responded with status ${response.status}`;
+        const errorMsg = safeFormatErrorMessage(data?.error || `Server responded with status ${response.status}`);
+        lastErrorMsg = errorMsg;
+        lastTechnicalDetails = data?.technicalDetails || {
+          httpStatus: response.status,
+          errorCode: response.status === 503 ? 'SERVICE_UNAVAILABLE' : `HTTP_${response.status}`,
+          message: errorMsg,
+          timestamp: new Date().toISOString(),
+        };
+
         // If 503 high demand or temporary server hiccup, allow 1 retry
         if (response.status === 503 && attempt <= maxRetries) {
           await new Promise((resolve) => setTimeout(resolve, 1200));
           continue;
         }
-        throw new Error(errorMsg);
+        throw new AiClueError(errorMsg, lastTechnicalDetails, response.status, rawText);
       }
 
       return data as GenerateClueResponse;
     } catch (err: unknown) {
-      if (attempt <= maxRetries && !(err instanceof Error && err.message.includes('GEMINI_API_KEY'))) {
+      if (err instanceof AiClueError) {
+        if (attempt <= maxRetries && err.httpStatus === 503) {
+          await new Promise((resolve) => setTimeout(resolve, 1200));
+          continue;
+        }
+        throw err;
+      }
+
+      const msg = safeFormatErrorMessage(err);
+      if (attempt <= maxRetries && !msg.includes('GEMINI_API_KEY')) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         continue;
       }
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(msg);
+
+      throw new AiClueError(
+        msg,
+        lastTechnicalDetails || {
+          errorCode: 'CLIENT_REQUEST_EXCEPTION',
+          message: msg,
+          timestamp: new Date().toISOString(),
+        }
+      );
     }
   }
 
-  throw new Error(lastErrorMsg);
+  throw new AiClueError(lastErrorMsg, lastTechnicalDetails);
 }
