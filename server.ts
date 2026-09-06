@@ -34,10 +34,59 @@ function getGenAI(): GoogleGenAI | null {
   return aiClient;
 }
 
-// Generate Clue API Endpoint using Gemini API
+// Clean error extractor from Gemini SDK
+function parseGeminiErrorMessage(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed?.error?.message) {
+      return parsed.error.message;
+    }
+  } catch {
+    // raw is not a JSON string
+  }
+  return raw;
+}
+
+const CANDIDATE_MODELS = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+
+// Quick test endpoint for Gemini AI
+app.get('/api/ai/test', async (_req, res) => {
+  const ai = getGenAI();
+  if (!ai) {
+    res.status(503).json({
+      status: 'error',
+      message: 'GEMINI_API_KEY is not configured in server environment secrets.',
+    });
+    return;
+  }
+
+  for (const model of CANDIDATE_MODELS) {
+    try {
+      const resp = await ai.models.generateContent({
+        model,
+        contents: 'Ping test. Reply with exactly: PONG',
+      });
+      res.json({
+        status: 'ok',
+        activeModel: model,
+        response: resp.text?.trim(),
+      });
+      return;
+    } catch (err: unknown) {
+      console.warn(`Test route model ${model} failed, trying next...`);
+    }
+  }
+
+  res.status(500).json({
+    status: 'error',
+    message: 'All candidate Gemini models failed test request.',
+  });
+});
+
+// Generate Clue API Endpoint using Gemini API with model fallback
 app.post('/api/ai/generate-clue', async (req, res) => {
   try {
-    const { prompt, word } = req.body;
+    const { prompt, word } = req.body || {};
     if (!prompt || typeof prompt !== 'string') {
       res.status(400).json({ error: 'Missing or invalid prompt string in request body.' });
       return;
@@ -51,27 +100,53 @@ app.post('/api/ai/generate-clue', async (req, res) => {
       return;
     }
 
-    // Call Gemini API using gemini-3.8-flash for text task
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        temperature: 0.75,
-      },
-    });
+    let lastError: Error | null = null;
+    let successfulText: string | null = null;
+    let usedModel: string = '';
 
-    const responseText = response.text || '';
-    res.json({
-      success: true,
-      text: responseText,
-      promptSent: prompt,
-      word: word || '',
+    // Attempt generation across candidate models if one experiences high demand
+    for (const model of CANDIDATE_MODELS) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            temperature: 0.75,
+          },
+        });
+
+        successfulText = response.text || '';
+        usedModel = model;
+        break;
+      } catch (err: unknown) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        const rawMsg = lastError.message;
+        console.warn(`Model ${model} request failed (${rawMsg.slice(0, 100)}). Falling back if available...`);
+      }
+    }
+
+    if (successfulText !== null) {
+      res.json({
+        success: true,
+        text: successfulText,
+        modelUsed: usedModel,
+        promptSent: prompt,
+        word: word || '',
+      });
+      return;
+    }
+
+    const rawError = lastError ? lastError.message : 'Unknown Gemini error';
+    const friendlyError = parseGeminiErrorMessage(rawError);
+    console.error('All Gemini models failed. Error:', friendlyError);
+    res.status(503).json({
+      error: friendlyError,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to generate clue from Gemini API.';
-    console.error('Gemini generate clue error:', error);
+    console.error('Gemini generate clue route error:', error);
     res.status(500).json({
-      error: message,
+      error: parseGeminiErrorMessage(message),
     });
   }
 });

@@ -92,29 +92,107 @@ export interface GenerateClueResponse {
   text: string;
   promptSent: string;
   word: string;
+  modelUsed?: string;
+}
+
+export interface AiHealthResponse {
+  status: 'ok' | 'error';
+  activeModel?: string;
+  response?: string;
+  message?: string;
+}
+
+/**
+ * Quick diagnostic test verifying that Gemini AI is responding properly.
+ */
+export async function testAiHealthApi(): Promise<AiHealthResponse> {
+  try {
+    const res = await fetch('/api/ai/test');
+    const rawText = await res.text();
+    let data: any = {};
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      return {
+        status: 'error',
+        message: `Server returned non-JSON response (${res.status}): ${rawText.slice(0, 100)}`,
+      };
+    }
+    return data as AiHealthResponse;
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      status: 'error',
+      message: msg,
+    };
+  }
 }
 
 /**
  * Calls the backend Gemini endpoint to generate clues for a given prompt and word.
+ * Safely handles non-JSON HTML gateway responses and automatically retries transient errors.
  */
 export async function generateAiClueApi(
   prompt: string,
-  word: string
+  word: string,
+  maxRetries = 1
 ): Promise<GenerateClueResponse> {
-  const response = await fetch('/api/ai/generate-clue', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ prompt, word }),
-  });
+  let attempt = 0;
+  let lastErrorMsg = 'Failed to communicate with AI server.';
 
-  const data = await response.json();
+  while (attempt <= maxRetries) {
+    attempt++;
+    try {
+      const response = await fetch('/api/ai/generate-clue', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ prompt, word }),
+      });
 
-  if (!response.ok || !data.success) {
-    const errorMsg = data?.error || `Server responded with status ${response.status}`;
-    throw new Error(errorMsg);
+      const rawText = await response.text();
+      let data: any = null;
+
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        // Response was not JSON (e.g., HTML error from reverse proxy like "The page cannot be displayed")
+        if (rawText.includes('The page') || rawText.includes('<html') || rawText.includes('<!DOCTYPE')) {
+          lastErrorMsg = `The server or proxy returned an HTML page (${response.status} ${response.statusText}). The application container might be warming up or restarting.`;
+        } else {
+          lastErrorMsg = `Unexpected non-JSON response from server (${response.status}): ${rawText.slice(0, 120)}`;
+        }
+
+        // If retries left and it was likely a temporary proxy hiccup, wait briefly and retry
+        if (attempt <= maxRetries) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          continue;
+        }
+        throw new Error(lastErrorMsg);
+      }
+
+      if (!response.ok || !data?.success) {
+        const errorMsg = data?.error || `Server responded with status ${response.status}`;
+        // If 503 high demand or temporary server hiccup, allow 1 retry
+        if (response.status === 503 && attempt <= maxRetries) {
+          await new Promise((resolve) => setTimeout(resolve, 1200));
+          continue;
+        }
+        throw new Error(errorMsg);
+      }
+
+      return data as GenerateClueResponse;
+    } catch (err: unknown) {
+      if (attempt <= maxRetries && !(err instanceof Error && err.message.includes('GEMINI_API_KEY'))) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        continue;
+      }
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(msg);
+    }
   }
 
-  return data as GenerateClueResponse;
+  throw new Error(lastErrorMsg);
 }

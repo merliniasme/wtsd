@@ -40,6 +40,7 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
 }) => {
   const [promptText, setPromptText] = useState<string>('');
   const [responseContent, setResponseContent] = useState<string>('');
+  const [activeModelName, setActiveModelName] = useState<string>('Gemini AI');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copiedResponse, setCopiedResponse] = useState<boolean>(false);
@@ -72,6 +73,9 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
       try {
         const result = await generateAiClueApi(activePrompt, word.term);
         setResponseContent(result.text);
+        if (result.modelUsed) {
+          setActiveModelName(result.modelUsed);
+        }
       } catch (err: unknown) {
         const msg =
           err instanceof Error
@@ -147,7 +151,7 @@ export const AiClueModal: React.FC<AiClueModalProps> = ({
                   AI Clue Generator
                 </h2>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                  Gemini 3.8 Flash
+                  {activeModelName}
                 </span>
               </div>
               <p className="text-xs text-slate-400">

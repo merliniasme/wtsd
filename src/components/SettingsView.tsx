@@ -9,6 +9,7 @@ import {
   getCustomCluePrompt,
   saveCustomCluePrompt,
   resetCustomCluePrompt,
+  testAiHealthApi,
 } from '../utils/aiClue';
 import {
   Trash2,
@@ -22,6 +23,8 @@ import {
   ScanSearch,
   Save,
   Check,
+  RefreshCw,
+  Cpu,
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -70,9 +73,46 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   // State for Customizable AI Clue Prompt
   const [cluePrompt, setCluePrompt] = useState<string>(() => getCustomCluePrompt());
   const [isPromptSaved, setIsPromptSaved] = useState<boolean>(false);
+  const [isTestingAi, setIsTestingAi] = useState<boolean>(false);
+  const [aiTestResult, setAiTestResult] = useState<{
+    status: 'ok' | 'error' | null;
+    model?: string;
+    message?: string;
+  }>({ status: null });
 
   const allPairs = extractAllPairs(words);
   const relationsByTag = calculateRelationsByTag(words);
+
+  const handleTestAi = async () => {
+    setIsTestingAi(true);
+    setAiTestResult({ status: null });
+    try {
+      const res = await testAiHealthApi();
+      if (res.status === 'ok') {
+        setAiTestResult({
+          status: 'ok',
+          model: res.activeModel,
+          message: `Connected! Active model: ${res.activeModel}`,
+        });
+        onToast(`AI connection confirmed (${res.activeModel})!`, 'success');
+      } else {
+        setAiTestResult({
+          status: 'error',
+          message: res.message || 'AI test request failed',
+        });
+        onToast(res.message || 'AI test request failed', 'error');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setAiTestResult({
+        status: 'error',
+        message: msg,
+      });
+      onToast(msg, 'error');
+    } finally {
+      setIsTestingAi(false);
+    }
+  };
 
   const handleSavePrompt = () => {
     saveCustomCluePrompt(cluePrompt);
@@ -222,7 +262,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               Customizable
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              id="btn-test-ai-status"
+              onClick={handleTestAi}
+              disabled={isTestingAi}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-violet-300 hover:text-white bg-violet-950/60 hover:bg-violet-900/80 border border-violet-700/60 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+              title="Test Gemini API connectivity and model response"
+            >
+              <Cpu className={`w-3.5 h-3.5 ${isTestingAi ? 'animate-spin' : ''}`} />
+              <span>{isTestingAi ? 'Testing...' : 'Test AI Connection'}</span>
+            </button>
             <button
               type="button"
               id="btn-reset-ai-prompt"
@@ -251,6 +302,32 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </button>
           </div>
         </div>
+
+        {/* AI Health Test Status Badge */}
+        {aiTestResult.status && (
+          <div
+            id="ai-test-status-banner"
+            className={`px-3 py-2 rounded-lg text-xs flex items-center justify-between border ${
+              aiTestResult.status === 'ok'
+                ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
+                : 'bg-rose-950/40 border-rose-500/40 text-rose-200'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {aiTestResult.status === 'ok' ? (
+                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              )}
+              <span className="font-medium">{aiTestResult.message}</span>
+            </div>
+            {aiTestResult.model && (
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-300 border border-emerald-700/60">
+                {aiTestResult.model}
+              </span>
+            )}
+          </div>
+        )}
 
         <p className="text-xs text-slate-400 leading-relaxed">
           Customize the prompt sent to Gemini AI when generating strategic game clues from the Words tab.
