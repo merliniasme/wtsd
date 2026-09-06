@@ -16,7 +16,7 @@ import {
   DriveFileInfo,
   DriveApiError,
 } from '../utils/googleDrive';
-import { deduplicateWords, cleanupLegacyLocalStorage } from '../utils/storage';
+import { deduplicateWords, saveActiveWordsToLocal, loadActiveWordsFromLocal } from '../utils/storage';
 import { extractAllPairs } from '../utils/wordGraph';
 
 interface UseGoogleDriveSyncProps {
@@ -54,14 +54,15 @@ export function useGoogleDriveSync({
   const isInitialLoadDoneRef = useRef(false);
   const isSavingRef = useRef(false);
 
-  // Helper to get valid access token
-  const getValidToken = useCallback(async (): Promise<string | null> => {
+  // Helper to get valid access token (with optional force silent-refresh)
+  const getValidToken = useCallback(async (forceRefresh = false): Promise<string | null> => {
     let token = accessToken;
-    if (!token) {
-      token = await getAccessToken();
+    if (!token || forceRefresh) {
+      token = await getAccessToken(forceRefresh);
     }
     if (token) {
       setAccessToken(token);
+      setIsTokenExpired(false);
       return token;
     }
     return null;
@@ -70,6 +71,10 @@ export function useGoogleDriveSync({
   // Execute Automatic Save to Drive with Session Timestamp
   const executeAutoSave = useCallback(
     async (targetWords: Word[], sessionTimestamp: number) => {
+      const clean = deduplicateWords(targetWords);
+      // Always guarantee local persistence first so no edits are lost
+      saveActiveWordsToLocal(clean);
+
       const token = await getValidToken();
       if (!token || !user) {
         setSyncStatus('unsaved');
@@ -79,8 +84,26 @@ export function useGoogleDriveSync({
       try {
         isSavingRef.current = true;
         setSyncStatus('syncing');
-        const clean = deduplicateWords(targetWords);
-        const info = await uploadBackupToDrive(token, clean, sessionTimestamp);
+
+        let activeToken = token;
+        let info: DriveFileInfo;
+        try {
+          info = await uploadBackupToDrive(activeToken, clean, sessionTimestamp);
+        } catch (uploadErr) {
+          if (uploadErr instanceof DriveApiError && uploadErr.status === 401) {
+            // Attempt automatic silent refresh before failing
+            const refreshed = await getValidToken(true);
+            if (refreshed) {
+              activeToken = refreshed;
+              info = await uploadBackupToDrive(activeToken, clean, sessionTimestamp);
+            } else {
+              throw uploadErr;
+            }
+          } else {
+            throw uploadErr;
+          }
+        }
+
         setCloudFileInfo(info);
         setCloudWordCount(clean.length);
         setLastSyncedAt(new Date(sessionTimestamp));
@@ -93,7 +116,7 @@ export function useGoogleDriveSync({
           setIsTokenExpired(true);
           clearCachedToken();
           setSyncStatus('error');
-          setLastError('Google session expired. Please sign in again.');
+          setLastError('Google Drive session expired. Click to reconnect.');
         } else {
           const msg = err instanceof Error ? err.message : 'Save error';
           setLastError(msg);
@@ -111,28 +134,50 @@ export function useGoogleDriveSync({
     async (token: string, isStartup = false) => {
       try {
         setSyncStatus('syncing');
-        const fileInfo = await findDriveBackupFile(token);
+        let activeToken = token;
+        let fileInfo: DriveFileInfo | null = null;
+        try {
+          fileInfo = await findDriveBackupFile(activeToken);
+        } catch (searchErr) {
+          if (searchErr instanceof DriveApiError && searchErr.status === 401) {
+            const refreshed = await getValidToken(true);
+            if (refreshed) {
+              activeToken = refreshed;
+              fileInfo = await findDriveBackupFile(activeToken);
+            } else {
+              throw searchErr;
+            }
+          } else {
+            throw searchErr;
+          }
+        }
         setCloudFileInfo(fileInfo);
 
         if (fileInfo?.id) {
-          const download = await downloadBackupFromDrive(token, fileInfo.id);
+          const download = await downloadBackupFromDrive(activeToken, fileInfo.id);
           const cleanCloudWords = deduplicateWords(download.words);
           setCloudWordCount(cleanCloudWords.length);
           const cloudTimestamp = download.lastModified || new Date(fileInfo.modifiedTime).getTime() || Date.now();
           setLastSyncedAt(new Date(cloudTimestamp));
 
           if (isStartup) {
-            // Initial load from cloud
-            setWords(cleanCloudWords);
+            // Initial startup load: merge with local cached words so nothing is ever overwritten
+            const localCached = loadActiveWordsFromLocal();
+            const combined = localCached.length > 0
+              ? deduplicateWords([...cleanCloudWords, ...localCached])
+              : cleanCloudWords;
+
+            setWords(combined);
+            saveActiveWordsToLocal(combined);
             sessionTimestampRef.current = cloudTimestamp;
             isInitialLoadDoneRef.current = true;
           } else {
             // Periodic / manual sync: merge with local changes based on timestamps
             setWords((current) => {
-              if (current.length === 0) {
-                return cleanCloudWords;
-              }
-              const merged = deduplicateWords([...cleanCloudWords, ...current]);
+              const merged = current.length > 0
+                ? deduplicateWords([...cleanCloudWords, ...current])
+                : cleanCloudWords;
+              saveActiveWordsToLocal(merged);
               return merged;
             });
           }
@@ -142,13 +187,15 @@ export function useGoogleDriveSync({
         } else {
           // File does not exist yet on user's Drive
           setCloudWordCount(0);
-          if (wordsRef.current.length > 0) {
+          const currentWords = wordsRef.current.length > 0 ? wordsRef.current : loadActiveWordsFromLocal();
+          if (currentWords.length > 0) {
             const now = Date.now();
             sessionTimestampRef.current = now;
-            const newFile = await uploadBackupToDrive(token, wordsRef.current, now);
+            const newFile = await uploadBackupToDrive(activeToken, currentWords, now);
             setCloudFileInfo(newFile);
-            setCloudWordCount(wordsRef.current.length);
+            setCloudWordCount(currentWords.length);
             setLastSyncedAt(new Date(now));
+            saveActiveWordsToLocal(currentWords);
           }
           isInitialLoadDoneRef.current = true;
           setSyncStatus('synced');
@@ -160,7 +207,7 @@ export function useGoogleDriveSync({
           setIsTokenExpired(true);
           clearCachedToken();
           setSyncStatus('error');
-          setLastError('Session expired. Please reconnect Google account.');
+          setLastError('Google Drive session expired. Click to reconnect.');
         } else {
           const msg = err instanceof Error ? err.message : 'Sync check failed';
           setLastError(msg);
@@ -169,12 +216,17 @@ export function useGoogleDriveSync({
         isInitialLoadDoneRef.current = true;
       }
     },
-    [setWords]
+    [setWords, getValidToken]
   );
 
   // Initialize Auth state on mount
   useEffect(() => {
-    cleanupLegacyLocalStorage();
+    // 1. Instantly hydrate words from local persistent cache so user NEVER experiences blank screen
+    const localCached = loadActiveWordsFromLocal();
+    if (localCached.length > 0 && wordsRef.current.length === 0) {
+      setWords(localCached);
+      isInitialLoadDoneRef.current = true;
+    }
 
     const unsubscribe = initAuth((state: AuthListenerState) => {
       setIsAuthLoading(state.isLoading);
@@ -188,7 +240,7 @@ export function useGoogleDriveSync({
         setAccessToken(null);
         setIsTokenExpired(true);
         setSyncStatus('error');
-        setLastError('Saved login token expired. Please click to reconnect.');
+        setLastError('Google Drive session expired. Click to reconnect.');
       } else {
         setAccessToken(null);
         setIsTokenExpired(false);
@@ -203,7 +255,7 @@ export function useGoogleDriveSync({
         unsubscribe();
       }
     };
-  }, [checkAndLoadCloudBackup]);
+  }, [checkAndLoadCloudBackup, setWords]);
 
   // Sign In / Re-authenticate Handler
   const handleSignIn = async () => {
@@ -239,6 +291,7 @@ export function useGoogleDriveSync({
       setCloudWordCount(null);
       setSyncStatus('idle');
       setWords([]);
+      saveActiveWordsToLocal([]);
       isInitialLoadDoneRef.current = false;
       addToast('Signed out.', 'info');
     } catch (err) {
@@ -248,6 +301,11 @@ export function useGoogleDriveSync({
 
   // Real-time Automatic Debounced Cloud Save on any word change
   useEffect(() => {
+    // Keep local persistent storage updated synchronously
+    if (words.length > 0) {
+      saveActiveWordsToLocal(words);
+    }
+
     // Only auto-save once initial load has completed
     if (!isInitialLoadDoneRef.current || !user || !accessToken || isTokenExpired) {
       return;

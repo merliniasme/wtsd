@@ -338,11 +338,51 @@ export function sanitizeWords(rawList: unknown[]): Word[] {
   return deduplicateWords(result);
 }
 
+export const ACTIVE_DICTIONARY_STORAGE_KEY = 'whos_the_spy_active_dictionary_v4';
+
 /**
- * Resets the active dictionary words state.
+ * Saves words to local persistent storage for instant loading on app open.
+ */
+export function saveActiveWordsToLocal(words: Word[]): void {
+  try {
+    if (!words || words.length === 0) {
+      localStorage.removeItem(ACTIVE_DICTIONARY_STORAGE_KEY);
+      return;
+    }
+    const clean = deduplicateWords(words);
+    localStorage.setItem(ACTIVE_DICTIONARY_STORAGE_KEY, JSON.stringify(clean));
+  } catch (err) {
+    console.warn('Could not save dictionary to local cache:', err);
+  }
+}
+
+/**
+ * Loads words from local persistent storage.
+ */
+export function loadActiveWordsFromLocal(): Word[] {
+  try {
+    const raw = localStorage.getItem(ACTIVE_DICTIONARY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return sanitizeWords(parsed);
+    }
+  } catch (err) {
+    console.warn('Could not load dictionary from local cache:', err);
+  }
+  return [];
+}
+
+/**
+ * Resets the active dictionary words state and purges local active cache.
  */
 export function clearAllWords(): Word[] {
   cleanupLegacyLocalStorage();
+  try {
+    localStorage.removeItem(ACTIVE_DICTIONARY_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
   return [];
 }
 

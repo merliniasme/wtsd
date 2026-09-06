@@ -11,6 +11,7 @@ import {
   fastStringCompare,
 } from './utils/wordGraph';
 import { useGoogleDriveSync } from './hooks/useGoogleDriveSync';
+import { loadActiveWordsFromLocal } from './utils/storage';
 
 import { Header } from './components/Header';
 import { LandingView } from './components/LandingView';
@@ -36,8 +37,8 @@ const INITIAL_PAGE_SIZE = 40;
 const PAGE_INCREMENT = 40;
 
 export default function App() {
-  // In-memory words state (synced with Google Drive)
-  const [words, setWords] = useState<Word[]>([]);
+  // In-memory words state (hydrated instantly from local storage & synced with Google Drive)
+  const [words, setWords] = useState<Word[]>(() => loadActiveWordsFromLocal());
 
   // Active Tab: 'pairs' | 'words' | 'settings'
   const [activeTab, setActiveTab] = useState<ActiveTab>('pairs');
@@ -368,8 +369,9 @@ export default function App() {
 
   const isSearchEmpty = !searchTerm.trim();
 
-  // If user is not signed in, show the forced sign-in landing page
-  if (!driveSync.user) {
+  // If user is not signed in and dictionary is empty, show the forced sign-in landing page
+  // If words are already cached locally, immediately enter the app while auth verifies in background!
+  if (!driveSync.user && words.length === 0) {
     return (
       <LandingView
         onSignIn={driveSync.signIn}
@@ -390,6 +392,7 @@ export default function App() {
       <Header
         user={driveSync.user}
         syncStatus={driveSync.syncStatus}
+        isTokenExpired={driveSync.isTokenExpired}
         isOperating={driveSync.isOperating}
         isSigningIn={driveSync.isSigningIn}
         lastSyncedAt={driveSync.lastSyncedAt}
@@ -397,6 +400,29 @@ export default function App() {
         onSync={driveSync.syncNow}
         onGoToSettings={() => setActiveTab('settings')}
       />
+
+      {/* Session Expired Reconnect Banner */}
+      {driveSync.isTokenExpired && driveSync.user && (
+        <div
+          id="session-expired-alert-banner"
+          className="bg-amber-500/15 border-b border-amber-500/30 text-amber-200 px-4 sm:px-6 py-2.5 text-xs flex items-center justify-between gap-3 sticky top-14 z-20 backdrop-blur-md"
+        >
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+            <span className="font-medium text-amber-300">Google Drive sync paused (session expired).</span>
+            <span className="text-amber-200/80 hidden sm:inline">Your dictionary is safely saved locally. Click to reconnect.</span>
+          </div>
+          <button
+            type="button"
+            id="btn-banner-reconnect-drive"
+            onClick={driveSync.signIn}
+            disabled={driveSync.isSigningIn}
+            className="px-3 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold rounded-md text-xs transition-colors cursor-pointer shrink-0 shadow-xs"
+          >
+            {driveSync.isSigningIn ? 'Reconnecting...' : 'Reconnect Drive'}
+          </button>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <main id="app-main-content" className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-5 space-y-4">
@@ -422,6 +448,7 @@ export default function App() {
             onToast={addToast}
             user={driveSync.user}
             syncStatus={driveSync.syncStatus}
+            isTokenExpired={driveSync.isTokenExpired}
             lastSyncedAt={driveSync.lastSyncedAt}
             cloudFileInfo={driveSync.cloudFileInfo}
             cloudWordCount={driveSync.cloudWordCount}

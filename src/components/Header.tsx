@@ -9,6 +9,7 @@ interface HeaderProps {
   syncStatus: SyncStatus;
   isOperating: boolean;
   isSigningIn: boolean;
+  isTokenExpired?: boolean;
   lastSyncedAt: Date | null;
   onSignIn: () => void;
   onSync: () => void;
@@ -20,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   syncStatus,
   isOperating,
   isSigningIn,
+  isTokenExpired,
   lastSyncedAt,
   onSignIn,
   onSync,
@@ -32,6 +34,9 @@ export const Header: React.FC<HeaderProps> = ({
     }
     if (!user) {
       return 'Online Sync Off';
+    }
+    if (isTokenExpired) {
+      return 'Session Expired (Reconnect)';
     }
     if (syncStatus === 'synced') {
       if (lastSyncedAt) {
@@ -80,13 +85,21 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 id="btn-header-sync-status"
-                onClick={onSync}
-                disabled={isOperating}
-                title="Click to sync now with Google Drive"
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium text-slate-300 hover:text-sky-200 hover:bg-slate-700/50 transition-colors cursor-pointer disabled:opacity-50"
+                onClick={isTokenExpired ? onSignIn : onSync}
+                disabled={isOperating || isSigningIn}
+                title={isTokenExpired ? 'Click to reconnect your Google account' : 'Click to sync now with Google Drive'}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer disabled:opacity-50 ${
+                  isTokenExpired
+                    ? 'text-amber-300 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40'
+                    : 'text-slate-300 hover:text-sky-200 hover:bg-slate-700/50'
+                }`}
               >
-                {syncStatus === 'syncing' || isOperating ? (
+                {isSigningIn ? (
+                  <RefreshCw className="w-3 h-3 text-amber-400 animate-spin" />
+                ) : syncStatus === 'syncing' || isOperating ? (
                   <RefreshCw className="w-3 h-3 text-sky-400 animate-spin" />
+                ) : isTokenExpired ? (
+                  <AlertTriangle className="w-3 h-3 text-amber-400" />
                 ) : syncStatus === 'synced' ? (
                   <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                 ) : syncStatus === 'unsaved' ? (

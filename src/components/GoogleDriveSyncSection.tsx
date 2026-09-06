@@ -16,6 +16,7 @@ import {
 interface GoogleDriveSyncSectionProps {
   user: User | null;
   syncStatus: SyncStatus;
+  isTokenExpired?: boolean;
   lastSyncedAt: Date | null;
   cloudFileInfo: DriveFileInfo | null;
   cloudWordCount: number | null;
@@ -29,6 +30,7 @@ interface GoogleDriveSyncSectionProps {
 export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
   user,
   syncStatus,
+  isTokenExpired,
   lastSyncedAt,
   cloudWordCount,
   isSigningIn,
@@ -41,6 +43,9 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
   const getSyncText = () => {
     if (isOperating || syncStatus === 'syncing') {
       return 'Saving to Google Drive...';
+    }
+    if (isTokenExpired) {
+      return 'Session expired — Click Reconnect to resume sync';
     }
     if (syncStatus === 'synced') {
       if (lastSyncedAt) {
@@ -172,18 +177,33 @@ export const GoogleDriveSyncSection: React.FC<GoogleDriveSyncSectionProps> = ({
               </div>
             </div>
 
-            <button
-              type="button"
-              id="btn-sync-with-drive"
-              onClick={onSyncNow}
-              disabled={isOperating}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-800 bg-sky-950/40 hover:border-sky-400 text-xs font-semibold text-sky-200 transition-all cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 text-sky-400 ${isOperating ? 'animate-spin' : ''}`}
-              />
-              <span>Sync Now</span>
-            </button>
+            <div className="flex items-center gap-2">
+              {isTokenExpired && (
+                <button
+                  type="button"
+                  id="btn-reconnect-drive-settings"
+                  onClick={onSignIn}
+                  disabled={isSigningIn}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-600 bg-amber-500/20 hover:bg-amber-500/30 text-xs font-semibold text-amber-200 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-amber-400 ${isSigningIn ? 'animate-spin' : ''}`} />
+                  <span>{isSigningIn ? 'Reconnecting...' : 'Reconnect Drive'}</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                id="btn-sync-with-drive"
+                onClick={onSyncNow}
+                disabled={isOperating || isTokenExpired}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-800 bg-sky-950/40 hover:border-sky-400 text-xs font-semibold text-sky-200 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 text-sky-400 ${isOperating ? 'animate-spin' : ''}`}
+                />
+                <span>Sync Now</span>
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 text-[11px] text-slate-400">

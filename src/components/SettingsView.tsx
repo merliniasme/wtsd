@@ -23,6 +23,7 @@ interface SettingsViewProps {
   onToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
   user: User | null;
   syncStatus: SyncStatus;
+  isTokenExpired?: boolean;
   lastSyncedAt: Date | null;
   cloudFileInfo: DriveFileInfo | null;
   cloudWordCount: number | null;
@@ -42,6 +43,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onToast,
   user,
   syncStatus,
+  isTokenExpired,
   lastSyncedAt,
   cloudFileInfo,
   cloudWordCount,
@@ -126,6 +128,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <GoogleDriveSyncSection
         user={user}
         syncStatus={syncStatus}
+        isTokenExpired={isTokenExpired}
         lastSyncedAt={lastSyncedAt}
         cloudFileInfo={cloudFileInfo}
         cloudWordCount={cloudWordCount}
