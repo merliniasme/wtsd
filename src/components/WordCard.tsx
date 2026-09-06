@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 import { Word, RelationTag, TAG_METADATA } from '../types';
-import { Trash2, Edit2, X, Copy, Check, Link2, VenetianMask, ScanSearch, ShieldAlert } from 'lucide-react';
+import {
+  Trash2,
+  Edit2,
+  X,
+  Copy,
+  Check,
+  Link2,
+  VenetianMask,
+  ScanSearch,
+  ShieldAlert,
+  Sparkles,
+} from 'lucide-react';
 import { escapeCensoredWord, copyToClipboard } from '../utils/homoglyph';
 import { containsNonLatinChars, containsSuspiciousCamouflage } from '../utils/charAnalyzer';
 
@@ -16,6 +27,7 @@ interface WordCardProps {
   onCopyTerm: (term: string) => void;
   onCopyAntiCensor?: (term: string, transformed: string) => void;
   onOpenAntiCensor?: (term: string, tab?: 'analyze' | 'escape') => void;
+  onGenerateAiClue?: (word: Word) => void;
   highlightTerm?: string;
 }
 
@@ -31,6 +43,7 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
   onCopyTerm,
   onCopyAntiCensor,
   onOpenAntiCensor,
+  onGenerateAiClue,
 }) => {
   const [copied, setCopied] = useState(false);
   const [copiedAntiCensor, setCopiedAntiCensor] = useState(false);
@@ -200,32 +213,48 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
       </div>
 
       {/* Card Footer: Actions */}
-      <div className="pt-2 border-t border-[#334155]/50 flex items-center justify-between">
-        {onOpenAntiCensor ? (
-          <div className="flex items-center gap-1">
+      <div className="pt-2 border-t border-[#334155]/50 flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* AI Clue Button (Words Only) */}
+          {onGenerateAiClue && (
             <button
-              id={`btn-open-anticensor-${word.id}`}
+              id={`btn-ai-clue-${word.id}`}
               type="button"
-              onClick={() => onOpenAntiCensor(word.term, 'escape')}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-400/80 hover:text-amber-300 transition-colors cursor-pointer py-1 px-1.5 rounded hover:bg-slate-800/50"
-              title="Buka kata ini di Alat Anti-Sensor Homoglif"
+              onClick={() => onGenerateAiClue(word)}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-violet-300 hover:text-white bg-violet-950/60 hover:bg-violet-900/80 border border-violet-700/60 hover:border-violet-500 transition-all cursor-pointer py-1 px-2 rounded-md shadow-2xs"
+              title="Generate AI clue for this word"
             >
-              <VenetianMask className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Anti-Sensor</span>
+              <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+              <span>AI Clue</span>
             </button>
+          )}
 
-            <button
-              id={`btn-open-analyzer-${word.id}`}
-              type="button"
-              onClick={() => onOpenAntiCensor(word.term, 'analyze')}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-sky-400/80 hover:text-sky-300 transition-colors cursor-pointer py-1 px-1.5 rounded hover:bg-slate-800/50"
-              title="Analisis karakter non-Latin, homoglif, dan kode Unicode"
-            >
-              <ScanSearch className="w-3.5 h-3.5 text-sky-400" />
-              <span>Analisis</span>
-            </button>
-          </div>
-        ) : <div />}
+          {onOpenAntiCensor && (
+            <>
+              <button
+                id={`btn-open-anticensor-${word.id}`}
+                type="button"
+                onClick={() => onOpenAntiCensor(word.term, 'escape')}
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-400/80 hover:text-amber-300 transition-colors cursor-pointer py-1 px-1.5 rounded hover:bg-slate-800/50"
+                title="Buka kata ini di Alat Anti-Sensor Homoglif"
+              >
+                <VenetianMask className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Anti-Sensor</span>
+              </button>
+
+              <button
+                id={`btn-open-analyzer-${word.id}`}
+                type="button"
+                onClick={() => onOpenAntiCensor(word.term, 'analyze')}
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-sky-400/80 hover:text-sky-300 transition-colors cursor-pointer py-1 px-1.5 rounded hover:bg-slate-800/50"
+                title="Analisis karakter non-Latin, homoglif, dan kode Unicode"
+              >
+                <ScanSearch className="w-3.5 h-3.5 text-sky-400" />
+                <span>Analisis</span>
+              </button>
+            </>
+          )}
+        </div>
 
         <button
           id={`btn-add-rel-${word.id}`}

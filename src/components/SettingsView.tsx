@@ -6,6 +6,11 @@ import { GoogleDriveSyncSection } from './GoogleDriveSyncSection';
 import { DriveFileInfo } from '../utils/googleDrive';
 import { User } from 'firebase/auth';
 import {
+  getCustomCluePrompt,
+  saveCustomCluePrompt,
+  resetCustomCluePrompt,
+} from '../utils/aiClue';
+import {
   Trash2,
   AlertTriangle,
   Database,
@@ -15,6 +20,8 @@ import {
   VenetianMask,
   Sparkles,
   ScanSearch,
+  Save,
+  Check,
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -60,8 +67,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [confirmInput, setConfirmInput] = useState('');
 
+  // State for Customizable AI Clue Prompt
+  const [cluePrompt, setCluePrompt] = useState<string>(() => getCustomCluePrompt());
+  const [isPromptSaved, setIsPromptSaved] = useState<boolean>(false);
+
   const allPairs = extractAllPairs(words);
   const relationsByTag = calculateRelationsByTag(words);
+
+  const handleSavePrompt = () => {
+    saveCustomCluePrompt(cluePrompt);
+    setIsPromptSaved(true);
+    onToast('AI Clue prompt template saved successfully!', 'success');
+    setTimeout(() => setIsPromptSaved(false), 2000);
+  };
+
+  const handleResetPrompt = () => {
+    const def = resetCustomCluePrompt();
+    setCluePrompt(def);
+    onToast('AI Clue prompt reset to default template.', 'info');
+  };
 
   // Handle Clear Database
   const handleConfirmDeleteAll = () => {
@@ -182,6 +206,94 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </section>
       )}
+
+      {/* AI Clue Prompt Template Configuration Section */}
+      <section
+        id="section-ai-clue-prompt-settings"
+        className="bg-[#1E293B] border border-violet-500/30 rounded-xl p-4 space-y-3.5 shadow-sm"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-violet-400">
+            <Sparkles className="w-4 h-4" />
+            <h3 className="text-sm font-semibold text-slate-100">
+              AI Clue Prompt Template
+            </h3>
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">
+              Customizable
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              id="btn-reset-ai-prompt"
+              onClick={handleResetPrompt}
+              className="text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer px-2 py-1 rounded hover:bg-slate-800"
+            >
+              Reset to Default
+            </button>
+            <button
+              type="button"
+              id="btn-save-ai-prompt"
+              onClick={handleSavePrompt}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
+            >
+              {isPromptSaved ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>Saved</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save Template</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-400 leading-relaxed">
+          Customize the prompt sent to Gemini AI when generating strategic game clues from the Words tab.
+          Use <code className="text-sky-300 font-mono text-[11px] bg-slate-900 px-1 py-0.5 rounded border border-slate-800">{"{word}"}</code> to inject the target word and <code className="text-sky-300 font-mono text-[11px] bg-slate-900 px-1 py-0.5 rounded border border-slate-800">{"{related}"}</code> to inject opposing or linked words.
+        </p>
+
+        <div className="relative">
+          <textarea
+            id="textarea-custom-clue-prompt"
+            value={cluePrompt}
+            onChange={(e) => {
+              setCluePrompt(e.target.value);
+              setIsPromptSaved(false);
+            }}
+            rows={7}
+            className="w-full bg-[#0F172A] border border-[#334155] focus:border-violet-500 rounded-lg p-3 text-xs text-slate-200 font-mono leading-relaxed focus:outline-none focus:ring-1 focus:ring-violet-500 resize-y transition-colors"
+            placeholder="Enter custom prompt template..."
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-0.5">
+          <div className="flex items-center gap-2">
+            <span>Available variables:</span>
+            <button
+              type="button"
+              onClick={() => setCluePrompt((prev) => prev + ' {word}')}
+              className="px-1.5 py-0.5 rounded bg-slate-800 text-sky-300 hover:bg-slate-700 font-mono cursor-pointer border border-slate-700"
+              title="Click to append {word}"
+            >
+              {"{word}"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCluePrompt((prev) => prev + ' {related}')}
+              className="px-1.5 py-0.5 rounded bg-slate-800 text-sky-300 hover:bg-slate-700 font-mono cursor-pointer border border-slate-700"
+              title="Click to append {related}"
+            >
+              {"{related}"}
+            </button>
+          </div>
+          <span>Length: {cluePrompt.length} chars</span>
+        </div>
+      </section>
 
       {/* Raw Plain Text Import Section */}
       <section

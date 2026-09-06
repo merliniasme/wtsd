@@ -30,6 +30,7 @@ import { EditWordModal } from './components/EditWordModal';
 import { RawImportModal } from './components/RawImportModal';
 import { MemoryGameModal } from './components/MemoryGameModal';
 import { AntiCensorModal } from './components/AntiCensorModal';
+import { AiClueModal } from './components/AiClueModal';
 import { ToastContainer } from './components/Toast';
 import { Plus, Settings as SettingsIcon, Link2, ChevronDown } from 'lucide-react';
 
@@ -60,6 +61,8 @@ export default function App() {
   const [isAntiCensorOpen, setIsAntiCensorOpen] = useState(false);
   const [antiCensorWord, setAntiCensorWord] = useState('');
   const [antiCensorInitialTab, setAntiCensorInitialTab] = useState<'analyze' | 'escape'>('analyze');
+  const [isAiClueOpen, setIsAiClueOpen] = useState(false);
+  const [aiClueWord, setAiClueWord] = useState<Word | null>(null);
   const [activeWordForRelation, setActiveWordForRelation] = useState<Word | null>(null);
   const [wordToEdit, setWordToEdit] = useState<Word | null>(null);
   const [relationToEdit, setRelationToEdit] = useState<{
@@ -366,6 +369,12 @@ export default function App() {
     },
     [words, addToast]
   );
+
+  // Handler: Open AI Clue Modal for Word
+  const handleOpenAiClue = useCallback((word: Word) => {
+    setAiClueWord(word);
+    setIsAiClueOpen(true);
+  }, []);
 
   const isSearchEmpty = !searchTerm.trim();
 
@@ -674,6 +683,7 @@ export default function App() {
                         onCopyTerm={handleCopyToast}
                         onCopyAntiCensor={handleCopyAntiCensorToast}
                         onOpenAntiCensor={handleOpenAntiCensor}
+                        onGenerateAiClue={handleOpenAiClue}
                         highlightTerm={searchTerm}
                       />
                     ))}
@@ -790,6 +800,16 @@ export default function App() {
         initialTab={antiCensorInitialTab}
         words={words}
         onNotify={addToast}
+      />
+
+      {/* AI Clue Generator Modal (Words Only) */}
+      <AiClueModal
+        isOpen={isAiClueOpen}
+        word={aiClueWord}
+        allWordsMap={wordsMap}
+        onClose={() => setIsAiClueOpen(false)}
+        onOpenSettingsPrompt={() => setActiveTab('settings')}
+        onToast={addToast}
       />
 
       {/* Minimal Toast Feedback Alerts */}
