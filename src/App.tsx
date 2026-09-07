@@ -31,8 +31,9 @@ import { RawImportModal } from './components/RawImportModal';
 import { MemoryGameModal } from './components/MemoryGameModal';
 import { AntiCensorModal } from './components/AntiCensorModal';
 import { AiClueModal } from './components/AiClueModal';
+import { WePlayPhotoEditorModal } from './components/WePlayPhotoEditorModal';
 import { ToastContainer } from './components/Toast';
-import { Plus, Settings as SettingsIcon, Link2, ChevronDown } from 'lucide-react';
+import { Plus, Settings as SettingsIcon, Link2, ChevronDown, Sparkles, Image as ImageIcon } from 'lucide-react';
 
 const INITIAL_PAGE_SIZE = 40;
 const PAGE_INCREMENT = 40;
@@ -63,6 +64,8 @@ export default function App() {
   const [antiCensorInitialTab, setAntiCensorInitialTab] = useState<'analyze' | 'escape'>('analyze');
   const [isAiClueOpen, setIsAiClueOpen] = useState(false);
   const [aiClueWord, setAiClueWord] = useState<Word | null>(null);
+  const [isWePlayEditorOpen, setIsWePlayEditorOpen] = useState(false);
+  const [wePlayEditorInitialWord, setWePlayEditorInitialWord] = useState('');
   const [activeWordForRelation, setActiveWordForRelation] = useState<Word | null>(null);
   const [wordToEdit, setWordToEdit] = useState<Word | null>(null);
   const [relationToEdit, setRelationToEdit] = useState<{
@@ -254,6 +257,11 @@ export default function App() {
     setAntiCensorWord(word || '');
     setAntiCensorInitialTab(tab);
     setIsAntiCensorOpen(true);
+  }, []);
+
+  const handleOpenWePlayEditor = useCallback((word?: string) => {
+    setWePlayEditorInitialWord(word || '');
+    setIsWePlayEditorOpen(true);
   }, []);
 
   // Handler: Add Standalone Word
@@ -727,6 +735,7 @@ export default function App() {
         onOpenAnalyzer={() => handleOpenAntiCensor('', 'analyze')}
         onOpenAntiCensor={() => handleOpenAntiCensor('', 'escape')}
         onOpenPuzzle={() => setIsMemoryGameOpen(true)}
+        onOpenWePlayEditor={() => handleOpenWePlayEditor('')}
         onGoToSettings={() => setActiveTab('settings')}
       />
 

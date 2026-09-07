@@ -166,3 +166,41 @@ export interface GeminiSettings {
   clueCount: number;
   promptTemplate: string;
 }
+
+export interface WePlayAnalysisResult {
+  isWePlayOrSpyGame: boolean;
+  detectedWord: string;
+  confidence: number;
+  roleType?: 'civilian' | 'undercover' | 'mr_white' | 'unknown' | string;
+  screenType?: 'role_card' | 'gameplay_table' | 'voting' | 'unknown' | string;
+  box2d: [number, number, number, number]; // [ymin, xmin, ymax, xmax] 0-1000
+  cardBox2d?: [number, number, number, number]; // [ymin, xmin, ymax, xmax] 0-1000
+  textColor?: string;
+  cardBgColor?: string;
+  isGradient?: boolean;
+  gradientColors?: [string, string];
+  fontWeight?: string;
+  hasOutlineOrStroke?: boolean;
+  strokeColor?: string;
+  hasShadow?: boolean;
+  textTransform?: string;
+  explanation?: string;
+}
+
+export interface WePlayEditorOptions {
+  replacementWord: string;
+  box2d: [number, number, number, number]; // [ymin, xmin, ymax, xmax] 0-1000
+  textColor: string;
+  cardBgColor: string;
+  blendMode: 'auto_sample' | 'solid_color' | 'linear_gradient';
+  fontSizeScale: number; // 0.5 to 2.5
+  fontWeight: string;
+  hasOutline: boolean;
+  strokeColor: string;
+  hasShadow: boolean;
+  textTransform: 'uppercase' | 'capitalize' | 'lowercase' | 'none';
+  featherRadius: number; // 0 to 20 px
+  xOffset: number; // -100 to 100 px
+  yOffset: number; // -100 to 100 px
+  useHomoglyph: boolean; // Anti-censor mode
+}

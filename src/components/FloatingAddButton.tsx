@@ -8,6 +8,7 @@ import {
   Brain,
   Settings,
   Sparkles,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 interface FloatingAddButtonProps {
@@ -16,6 +17,7 @@ interface FloatingAddButtonProps {
   onOpenAnalyzer: () => void;
   onOpenAntiCensor: () => void;
   onOpenPuzzle: () => void;
+  onOpenWePlayEditor: () => void;
   onGoToSettings?: () => void;
 }
 
@@ -25,6 +27,7 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
   onOpenAnalyzer,
   onOpenAntiCensor,
   onOpenPuzzle,
+  onOpenWePlayEditor,
   onGoToSettings,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -157,7 +160,32 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
             </div>
           </button>
 
-          {/* Action 5: Memory Puzzle Game */}
+          {/* Action 5: AI WePlay Screenshot Photo Editor */}
+          <button
+            type="button"
+            id="fab-action-weplay-editor"
+            onClick={() => handleAction(onOpenWePlayEditor)}
+            className="w-full flex items-center gap-3 p-2 rounded-xl text-left hover:bg-slate-800/80 active:bg-slate-800 transition-colors cursor-pointer group bg-sky-500/5 border border-sky-500/20"
+          >
+            <div className="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-sky-500/30 transition-all">
+              <ImageIcon className="w-4 h-4 stroke-[2.2]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-slate-100 group-hover:text-sky-300 transition-colors">
+                  Edit Foto WePlay (AI)
+                </span>
+                <span className="text-[9px] px-1 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold uppercase">
+                  Baru
+                </span>
+              </div>
+              <div className="text-[11px] text-slate-400 truncate">
+                Ganti kata rahasia screenshot WePlay
+              </div>
+            </div>
+          </button>
+
+          {/* Action 6: Memory Puzzle Game */}
           <button
             type="button"
             id="fab-action-puzzle"
