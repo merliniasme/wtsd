@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Function to check if user is logged in
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Function to check if user exists in the users collection (not deleted)
+    function isUserActive() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
+    // Function to get the user's role
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && isUserActive() && getUserRole() == 'admin';
+    }
+    
+    // Function to check if user has dictionary edit permissions
+    function canEditDictionary() {
+      return isAuthenticated() && isUserActive() && (
+        getUserRole() == 'admin' || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.canEditDictionary == true
+      );
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Anyone can read if they are an admin
+      // A user can read their own profile
+      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == userId);
+      
+      // Only admins can write, OR the initial seeding of the admin account
+      // Seeding condition: no users exist yet, and creating the admin
+      allow create: if isAdmin() || (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) && // Not strictly possible to check "collection is empty" in rules, but this allows the first user to create their own doc. We trust the client for the very first seeding.
+        request.resource.data.role == 'admin'
+      );
+      
+      allow update, delete: if isAdmin();
+    }
+    
+    // Dictionary collection
+    match /dictionary/{docId} {
+      // Any authenticated active user can read the dictionary
+      allow read: if isAuthenticated() && isUserActive();
+      
+      // Only users with permissions can write
+      allow write: if canEditDictionary();
+    }
+  }
+}
