@@ -9,9 +9,9 @@ import {
 } from '../types';
 import { clearAllWords } from '../utils/storage';
 import { calculateRelationsByTag, extractAllPairs } from '../utils/wordGraph';
-import { GoogleDriveSyncSection } from './GoogleDriveSyncSection';
-import { DriveFileInfo } from '../utils/googleDrive';
-import { User } from 'firebase/auth';
+import { AdminDashboard } from './AdminDashboard';
+
+import { UserAccount } from '../utils/api';
 import {
   getCustomCluePrompt,
   saveCustomCluePrompt,
@@ -63,18 +63,11 @@ interface SettingsViewProps {
   words: Word[];
   onUpdateWords: (newWords: Word[]) => void;
   onToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
-  user: User | null;
   syncStatus: SyncStatus;
-  isTokenExpired?: boolean;
   lastSyncedAt: Date | null;
-  cloudFileInfo: DriveFileInfo | null;
-  cloudWordCount: number | null;
-  isSigningIn: boolean;
   isOperating: boolean;
-  onSignIn: () => void;
   onSignOut: () => void;
   onSyncNow: () => void;
-  onClearCloudDatabase: () => void;
   onOpenRawImport: () => void;
   onOpenAntiCensor?: (tab?: 'analyze' | 'escape') => void;
 }
@@ -83,18 +76,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   words,
   onUpdateWords,
   onToast,
-  user,
   syncStatus,
-  isTokenExpired,
   lastSyncedAt,
-  cloudFileInfo,
-  cloudWordCount,
-  isSigningIn,
   isOperating,
-  onSignIn,
   onSignOut,
   onSyncNow,
-  onClearCloudDatabase,
   onOpenRawImport,
   onOpenAntiCensor,
 }) => {
@@ -213,14 +199,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     onToast('AI Clue prompt reset to default template.', 'info');
   };
 
-  // Handle Clear Database
   const handleConfirmDeleteAll = () => {
-    onClearCloudDatabase();
     const cleared = clearAllWords();
     onUpdateWords(cleared);
     setIsDeleteModalOpen(false);
     setConfirmInput('');
-    onToast('Active dictionary cleared.', 'info');
+    onToast('Active dictionary cleared locally.', 'info');
   };
 
   return (
@@ -233,17 +217,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <h2 className="text-sm font-semibold text-slate-100">Dictionary Overview</h2>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            {user ? (
-              <span className="flex items-center gap-1 text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded">
-                <Cloud className="w-3 h-3" />
-                <span>Auto-Sync Active</span>
-              </span>
-            ) : (
-              <span className="flex items-center gap-1 text-slate-400 font-mono bg-slate-900 border border-slate-700 px-2 py-0.5 rounded">
-                <Cloud className="w-3 h-3 text-slate-500" />
-                <span>Offline</span>
-              </span>
-            )}
+            <span className="flex items-center gap-1 text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded">
+              <Cloud className="w-3 h-3" />
+              <span>Auto-Sync Active</span>
+            </span>
           </div>
         </div>
 
@@ -274,20 +251,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* Google Drive Primary Store & Auto-Sync Section */}
-      <GoogleDriveSyncSection
-        user={user}
-        syncStatus={syncStatus}
-        isTokenExpired={isTokenExpired}
-        lastSyncedAt={lastSyncedAt}
-        cloudFileInfo={cloudFileInfo}
-        cloudWordCount={cloudWordCount}
-        isSigningIn={isSigningIn}
-        isOperating={isOperating}
-        onSignIn={onSignIn}
-        onSignOut={onSignOut}
-        onSyncNow={onSyncNow}
-      />
+      {/* Admin Dashboard & Backup Section */}
+      <AdminDashboard onToast={onToast} words={words} onWordsRestored={onUpdateWords} />
 
       {/* Anti-Censor & Character Analyzer Feature Section */}
       {onOpenAntiCensor && (
