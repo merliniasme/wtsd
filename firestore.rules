@@ -14,7 +14,7 @@ service cloud.firestore {
     
     // Function to get the user's role
     function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return isUserActive() ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : 'none';
     }
     
     // Function to check if user is admin
@@ -39,7 +39,9 @@ service cloud.firestore {
       // Only admins can write, OR the initial seeding of the admin account
       // Seeding condition: no users exist yet, and creating the admin
       allow create: if isAdmin() || (
-        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) && // Not strictly possible to check "collection is empty" in rules, but this allows the first user to create their own doc. We trust the client for the very first seeding.
+        isAuthenticated() && 
+        request.auth.uid == userId && 
+        request.auth.token.email == 'admin@spy.local' && 
         request.resource.data.role == 'admin'
       );
       

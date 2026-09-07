@@ -26,8 +26,12 @@ export function useServerSync({ words, setWords, addToast }: UseServerSyncOption
       setIsTokenExpired(false);
       setSyncStatus('synced');
     } catch (err: any) {
-      if (err.message.includes('token') || err.message.includes('Token')) {
+      if (err.message.includes('token') || err.message.includes('Token') || err.message.includes('Missing or insufficient permissions')) {
         setIsTokenExpired(true);
+        if (err.message.includes('Missing or insufficient permissions')) {
+            ApiClient.logout();
+            window.location.reload();
+        }
       }
       setSyncStatus('error');
       if (!silent) addToast(err.message, 'error');
@@ -43,8 +47,12 @@ export function useServerSync({ words, setWords, addToast }: UseServerSyncOption
       setSyncStatus('synced');
       saveActiveWordsToLocal(newWords);
     } catch (err: any) {
-      if (err.message.includes('token') || err.message.includes('Token')) {
+      if (err.message.includes('token') || err.message.includes('Token') || err.message.includes('Missing or insufficient permissions')) {
         setIsTokenExpired(true);
+        if (err.message.includes('Missing or insufficient permissions')) {
+            ApiClient.logout();
+            window.location.reload();
+        }
       }
       setSyncStatus('error');
       addToast(err.message, 'error');

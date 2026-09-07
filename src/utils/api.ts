@@ -62,10 +62,14 @@ export class ApiClient {
     } catch (err: any) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.code === 'auth/invalid-login-credentials') {
         // Auto-seed admin if no users exist
-        if (username === 'admin' && password === 'admin') {
-          const usersSnapshot = await getDocs(collection(db, 'users'));
-          if (usersSnapshot.empty) {
+        if (username === 'admin' && password === 'admin123') {
+          try {
             return await this.seedAdmin();
+          } catch (seedErr: any) {
+            if (seedErr.message.includes('auth/email-already-in-use')) {
+              throw new Error('Invalid nickname or password');
+            }
+            throw seedErr;
           }
         }
         throw new Error('Invalid nickname or password');
@@ -77,7 +81,7 @@ export class ApiClient {
   private static async seedAdmin(): Promise<AuthResponse> {
     const email = 'admin' + this.emailSuffix;
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, 'admin');
+      const userCredential = await createUserWithEmailAndPassword(auth, email, 'admin123');
       const adminData: UserAccount = {
         id: userCredential.user.uid,
         username: 'admin',
