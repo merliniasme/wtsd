@@ -23,6 +23,7 @@ import { PairCard } from './components/PairCard';
 import { WordCard } from './components/WordCard';
 import { NoResultsState } from './components/NoResultsState';
 import { SettingsView } from './components/SettingsView';
+import { AntiCensorModal } from "./components/AntiCensorModal";
 import { FloatingAddButton } from './components/FloatingAddButton';
 import { AddWordModal } from './components/AddWordModal';
 import { CreateRelationModal } from './components/CreateRelationModal';
@@ -56,6 +57,8 @@ export default function App() {
   const [visibleWordsCount, setVisibleWordsCount] = useState<number>(INITIAL_PAGE_SIZE);
 
   // Modal States
+  const [isAntiCensorOpen, setIsAntiCensorOpen] = useState(false);
+
   const [isAddWordOpen, setIsAddWordOpen] = useState(false);
   const [isCreateRelationOpen, setIsCreateRelationOpen] = useState(false);
   const [isRawImportOpen, setIsRawImportOpen] = useState(false);
@@ -693,6 +696,7 @@ export default function App() {
         onOpenPuzzle={() => setIsMemoryGameOpen(true)}
         onOpenWePlayEditor={() => handleOpenWePlayEditor('')}
         onGoToSettings={() => setActiveTab('settings')}
+        onOpenAntiCensor={() => setIsAntiCensorOpen(true)}
       />
 
       {/* Add Word Modal */}

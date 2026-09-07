@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Link2, Puzzle, Image as ImageIcon, Settings } from 'lucide-react';
+import { Plus, Link2, Puzzle, Image as ImageIcon, Settings, ShieldAlert } from 'lucide-react';
 
 interface FloatingAddButtonProps {
+  onOpenAntiCensor: () => void;
   onAddWord: () => void;
   onCreateRelation: () => void;
   onOpenPuzzle: () => void;
@@ -9,7 +10,7 @@ interface FloatingAddButtonProps {
   onGoToSettings?: () => void;
 }
 
-export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
+export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({ onOpenAntiCensor,
   onAddWord,
   onCreateRelation,
   onOpenPuzzle,

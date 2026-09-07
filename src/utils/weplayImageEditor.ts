@@ -366,7 +366,7 @@ export function renderEditedWePlayCanvas(
 
   // Apply Homoglyph if enabled
   if (options.useHomoglyph && displayText) {
-    displayText = escapeCensoredWord(displayText, 'cyrillic');
+    displayText = escapeCensoredWord(displayText);
   }
 
   // Text Transform Casing

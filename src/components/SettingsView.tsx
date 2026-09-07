@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Word } from '../types';
 import {
+  Settings,
   Trash2,
   AlertTriangle,
   RotateCcw,
@@ -11,13 +12,13 @@ import {
 } from 'lucide-react';
 import { ApiClient } from '../utils/api';
 import { AdminDashboard } from './AdminDashboard';
-import { getAiPromptTemplate, setAiPromptTemplate, DEFAULT_AI_PROMPT } from '../utils/aiClue';
+import { getCustomCluePrompt, saveCustomCluePrompt, DEFAULT_CLUE_PROMPT_TEMPLATE } from '../utils/aiClue';
 
 interface SettingsViewProps {
   words: Word[];
   onUpdateWords: (words: Word[]) => void;
   onToast: (msg: string, type: 'success' | 'error' | 'info') => void;
-  syncStatus: 'idle' | 'syncing' | 'error';
+  syncStatus: any;
   lastSyncedAt: Date | null;
   isOperating: boolean;
   onSignOut: () => void;
@@ -41,12 +42,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [confirmInput, setConfirmInput] = useState('');
   
   // State for AI Prompt configuration
-  const [cluePrompt, setCluePrompt] = useState(DEFAULT_AI_PROMPT);
+  const [cluePrompt, setCluePrompt] = useState(DEFAULT_CLUE_PROMPT_TEMPLATE);
   const [isPromptSaved, setIsPromptSaved] = useState(true);
 
   // Load saved prompt on mount
   useEffect(() => {
-    setCluePrompt(getAiPromptTemplate());
+    setCluePrompt(getCustomCluePrompt());
   }, []);
 
   const handleConfirmDeleteAll = async () => {
@@ -64,15 +65,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   const handleSavePrompt = () => {
-    setAiPromptTemplate(cluePrompt);
+    saveCustomCluePrompt(cluePrompt);
     setIsPromptSaved(true);
     onToast('Template AI berhasil disimpan', 'success');
     setTimeout(() => setIsPromptSaved(false), 2000);
   };
 
   const handleResetPrompt = () => {
-    setCluePrompt(DEFAULT_AI_PROMPT);
-    setAiPromptTemplate(DEFAULT_AI_PROMPT);
+    setCluePrompt(DEFAULT_CLUE_PROMPT_TEMPLATE);
+    saveCustomCluePrompt(DEFAULT_CLUE_PROMPT_TEMPLATE);
     setIsPromptSaved(true);
     onToast('Template di-reset ke bawaan', 'info');
     setTimeout(() => setIsPromptSaved(false), 2000);
