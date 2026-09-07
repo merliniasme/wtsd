@@ -31,7 +31,6 @@ import { EditRelationModal } from './components/EditRelationModal';
 import { EditWordModal } from './components/EditWordModal';
 import { RawImportModal } from './components/RawImportModal';
 import { MemoryGameModal } from './components/MemoryGameModal';
-import { AntiCensorModal } from './components/AntiCensorModal';
 import { AiClueModal } from './components/AiClueModal';
 import { WePlayPhotoEditorModal } from './components/WePlayPhotoEditorModal';
 import { ToastContainer } from './components/Toast';
@@ -61,9 +60,6 @@ export default function App() {
   const [isCreateRelationOpen, setIsCreateRelationOpen] = useState(false);
   const [isRawImportOpen, setIsRawImportOpen] = useState(false);
   const [isMemoryGameOpen, setIsMemoryGameOpen] = useState(false);
-  const [isAntiCensorOpen, setIsAntiCensorOpen] = useState(false);
-  const [antiCensorWord, setAntiCensorWord] = useState('');
-  const [antiCensorInitialTab, setAntiCensorInitialTab] = useState<'analyze' | 'escape'>('analyze');
   const [isAiClueOpen, setIsAiClueOpen] = useState(false);
   const [aiClueWord, setAiClueWord] = useState<Word | null>(null);
   const [isWePlayEditorOpen, setIsWePlayEditorOpen] = useState(false);
@@ -267,11 +263,6 @@ export default function App() {
     [addToast]
   );
 
-  const handleOpenAntiCensor = useCallback((word?: string, tab: 'analyze' | 'escape' = 'analyze') => {
-    setAntiCensorWord(word || '');
-    setAntiCensorInitialTab(tab);
-    setIsAntiCensorOpen(true);
-  }, []);
 
   const handleOpenWePlayEditor = useCallback((word?: string) => {
     setWePlayEditorInitialWord(word || '');
@@ -447,7 +438,6 @@ export default function App() {
             onSignOut={handleLogout}
             onSyncNow={serverSync.fetchWords}
             onOpenRawImport={() => setIsRawImportOpen(true)}
-            onOpenAntiCensor={(tab) => handleOpenAntiCensor('', tab || 'analyze')}
           />
         ) : (
           <>
@@ -458,7 +448,6 @@ export default function App() {
               selectedTag={selectedTag}
               onTagSelect={setSelectedTag}
               activeTab={activeTab}
-              onOpenAnalyzer={(term) => handleOpenAntiCensor(term, 'analyze')}
             />
 
             {/* State Renderers */}
@@ -572,7 +561,6 @@ export default function App() {
                         onUnlinkRelation={handleUnlinkRelation}
                         onCopyText={handleCopyToast}
                         onCopyAntiCensor={handleCopyAntiCensorToast}
-                        onOpenAntiCensor={handleOpenAntiCensor}
                       />
                     ))}
                   </div>
@@ -661,7 +649,6 @@ export default function App() {
                         onUnlinkRelation={handleUnlinkRelation}
                         onCopyTerm={handleCopyToast}
                         onCopyAntiCensor={handleCopyAntiCensorToast}
-                        onOpenAntiCensor={handleOpenAntiCensor}
                         onGenerateAiClue={handleOpenAiClue}
                         highlightTerm={searchTerm}
                       />
@@ -703,8 +690,6 @@ export default function App() {
       <FloatingAddButton
         onAddWord={() => setIsAddWordOpen(true)}
         onCreateRelation={() => setIsCreateRelationOpen(true)}
-        onOpenAnalyzer={() => handleOpenAntiCensor('', 'analyze')}
-        onOpenAntiCensor={() => handleOpenAntiCensor('', 'escape')}
         onOpenPuzzle={() => setIsMemoryGameOpen(true)}
         onOpenWePlayEditor={() => handleOpenWePlayEditor('')}
         onGoToSettings={() => setActiveTab('settings')}
@@ -773,14 +758,6 @@ export default function App() {
       />
 
       {/* Anti-Censor Homoglyph & Character Analyzer Modal */}
-      <AntiCensorModal
-        isOpen={isAntiCensorOpen}
-        onClose={() => setIsAntiCensorOpen(false)}
-        initialWord={antiCensorWord}
-        initialTab={antiCensorInitialTab}
-        words={words}
-        onNotify={addToast}
-      />
 
       {/* AI Clue Generator Modal (Words Only) */}
       <AiClueModal

@@ -93,55 +93,14 @@ export const ESCAPE_MODES: EscapeModeInfo[] = [
 /**
  * Transforms input text to escape censorship based on selected mode.
  */
-export function escapeCensoredWord(text: string, mode: EscapeMode = 'cyrillic'): string {
-  if (!text) return '';
+export function insertZWSInMiddle(text: string): string {
+  if (!text || text.length < 2) return text;
+  const mid = Math.floor(text.length / 2);
+  return text.substring(0, mid) + '\u200B' + text.substring(mid);
+}
 
-  switch (mode) {
-    case 'cyrillic': {
-      return text
-        .split('')
-        .map((char) => CYRILLIC_HOMOGLYPH_MAP[char] || char)
-        .join('');
-    }
-    case 'vowels': {
-      return text
-        .split('')
-        .map((char) => CYRILLIC_VOWELS_MAP[char] || char)
-        .join('');
-    }
-    case 'invisible': {
-      // Insert ZWNJ between consecutive alphanumeric characters
-      const chars = text.split('');
-      const result: string[] = [];
-      for (let i = 0; i < chars.length; i++) {
-        result.push(chars[i]);
-        if (
-          i < chars.length - 1 &&
-          /\w/.test(chars[i]) &&
-          /\w/.test(chars[i + 1])
-        ) {
-          result.push(ZWNJ);
-        }
-      }
-      return result.join('');
-    }
-    case 'maximum': {
-      // Replace with Cyrillic AND insert ZWNJ
-      const cyrillic = text
-        .split('')
-        .map((char) => CYRILLIC_HOMOGLYPH_MAP[char] || char);
-      const result: string[] = [];
-      for (let i = 0; i < cyrillic.length; i++) {
-        result.push(cyrillic[i]);
-        if (i < cyrillic.length - 1 && cyrillic[i].trim() && cyrillic[i + 1].trim()) {
-          result.push(ZWNJ);
-        }
-      }
-      return result.join('');
-    }
-    default:
-      return escapeCensoredWord(text, 'cyrillic');
-  }
+export function escapeCensoredWord(text: string): string {
+  return insertZWSInMiddle(text);
 }
 
 /**

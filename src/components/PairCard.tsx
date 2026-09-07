@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { PairItem, RelationTag, TAG_METADATA } from '../types';
-import { Copy, Check, Tag, Unlink, VenetianMask, ScanSearch, ShieldAlert } from 'lucide-react';
+import { Copy, Check, Tag, Unlink, VenetianMask } from 'lucide-react';
 import { escapeCensoredWord, copyToClipboard } from '../utils/homoglyph';
-import { containsNonLatinChars, containsSuspiciousCamouflage } from '../utils/charAnalyzer';
 
 interface PairCardProps {
   pair: PairItem;
@@ -11,7 +10,6 @@ interface PairCardProps {
   onUnlinkRelation: (wordAId: string, wordBId: string, tag: RelationTag) => void;
   onCopyText: (text: string) => void;
   onCopyAntiCensor?: (text: string, transformed: string) => void;
-  onOpenAntiCensor?: (term: string, tab?: 'analyze' | 'escape') => void;
 }
 
 export const PairCard: React.FC<PairCardProps> = React.memo(({
@@ -21,18 +19,11 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
   onUnlinkRelation,
   onCopyText,
   onCopyAntiCensor,
-  onOpenAntiCensor,
 }) => {
   const [copied, setCopied] = useState(false);
   const [copiedAntiCensor, setCopiedAntiCensor] = useState(false);
+  
   const meta = TAG_METADATA[pair.tag] || TAG_METADATA.others;
-
-  const hasCamouflageA = containsSuspiciousCamouflage(pair.wordA.term);
-  const hasCamouflageB = containsSuspiciousCamouflage(pair.wordB.term);
-  const hasNonLatinA = containsNonLatinChars(pair.wordA.term);
-  const hasNonLatinB = containsNonLatinChars(pair.wordB.term);
-  const hasAnyCamouflage = hasCamouflageA || hasCamouflageB;
-  const hasAnyNonLatin = hasNonLatinA || hasNonLatinB;
 
   const handleCopyPair = async () => {
     const text = `${pair.wordA.term} / ${pair.wordB.term}`;
@@ -43,16 +34,19 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
   };
 
   const handleCopyPairAntiCensor = async () => {
-    const wordAEscaped = escapeCensoredWord(pair.wordA.term, 'cyrillic');
-    const wordBEscaped = escapeCensoredWord(pair.wordB.term, 'cyrillic');
+    const wordAEscaped = escapeCensoredWord(pair.wordA.term);
+    const wordBEscaped = escapeCensoredWord(pair.wordB.term);
     const transformed = `${wordAEscaped} / ${wordBEscaped}`;
     const raw = `${pair.wordA.term} / ${pair.wordB.term}`;
+    
     await copyToClipboard(transformed);
+    
     if (onCopyAntiCensor) {
       onCopyAntiCensor(raw, transformed);
     } else {
       onCopyText(transformed);
     }
+    
     setCopiedAntiCensor(true);
     setTimeout(() => setCopiedAntiCensor(false), 1200);
   };
@@ -72,10 +66,8 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
         >
           {pair.wordA.term}
         </button>
-
         {/* Connection Arrow */}
         <span className="text-slate-500 text-xs font-mono select-none">⇄</span>
-
         {/* Word B */}
         <button
           onClick={() => onSelectWord(pair.wordB.term)}
@@ -84,7 +76,7 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
         >
           {pair.wordB.term}
         </button>
-
+        
         {/* Tag Type Badge */}
         <button
           onClick={() => onEditRelationTag(pair.wordA, pair.wordB, pair.tag)}
@@ -94,29 +86,6 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
           <span className="font-bold">{meta.shortCode}</span>
           <span className="opacity-80 hidden sm:inline">• {meta.label}</span>
         </button>
-
-        {/* Non-Latin or Camouflage Detection Badge */}
-        {hasAnyCamouflage ? (
-          <button
-            type="button"
-            onClick={() => onOpenAntiCensor?.(hasCamouflageA ? pair.wordA.term : pair.wordB.term, 'analyze')}
-            className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition-colors cursor-pointer"
-            title="Peringatan: Terdeteksi kamuflase homoglif / karakter tersembunyi! Klik untuk analisis."
-          >
-            <ShieldAlert className="w-3 h-3 text-rose-400 animate-pulse" />
-            <span>Homoglif</span>
-          </button>
-        ) : hasAnyNonLatin ? (
-          <button
-            type="button"
-            onClick={() => onOpenAntiCensor?.(hasNonLatinA ? pair.wordA.term : pair.wordB.term, 'analyze')}
-            className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-colors cursor-pointer"
-            title="Pasangan ini mengandung karakter non-Latin. Klik untuk analisis."
-          >
-            <ScanSearch className="w-3 h-3 text-amber-400" />
-            <span>Non-Latin</span>
-          </button>
-        ) : null}
       </div>
 
       {/* Action Controls */}
@@ -133,7 +102,7 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
             <Copy className="w-3.5 h-3.5" />
           )}
         </button>
-
+        
         {/* Anti-Censor Copy Pair (Cyrillic) */}
         <button
           onClick={handleCopyPairAntiCensor}
@@ -142,7 +111,7 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
               ? 'text-amber-400 bg-amber-500/15'
               : 'text-slate-400 hover:text-amber-400'
           }`}
-          title="Salin Anti-Sensor (Homoglif Sirilik Rusia)"
+          title="Salin Anti-Sensor (Sisipkan spasi kosong)"
         >
           {copiedAntiCensor ? (
             <Check className="w-3.5 h-3.5 text-amber-400" />
@@ -150,17 +119,6 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
             <VenetianMask className="w-3.5 h-3.5" />
           )}
         </button>
-
-        {/* Analyze Non-Latin */}
-        {onOpenAntiCensor && (
-          <button
-            onClick={() => onOpenAntiCensor(pair.wordA.term, 'analyze')}
-            className="p-1.5 text-slate-400 hover:text-sky-400 transition-colors cursor-pointer rounded hover:bg-slate-800"
-            title="Analisis kata untuk karakter non-Latin / homoglif"
-          >
-            <ScanSearch className="w-3.5 h-3.5" />
-          </button>
-        )}
 
         {/* Change Tag Type */}
         <button
@@ -170,7 +128,7 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
         >
           <Tag className="w-3.5 h-3.5" />
         </button>
-
+        
         {/* Unlink Pair */}
         <button
           onClick={() => onUnlinkRelation(pair.wordA.id, pair.wordB.id, pair.tag)}
