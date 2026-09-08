@@ -285,7 +285,7 @@ export default function App() {
         return { success: true, word: res.word };
       }
 
-      setWords(res.updatedWords);
+      setWords(res.updatedWords); serverSync.pushWords(res.updatedWords);
       addToast(`Added "${clean}".`, 'success');
       return { success: true, word: res.word };
     },
@@ -300,7 +300,7 @@ export default function App() {
         return { success: false, duplicate: true };
       }
 
-      setWords(res.updatedWords);
+      setWords(res.updatedWords); serverSync.pushWords(res.updatedWords);
       addToast(`Connected "${res.wordA.term}" ⇄ "${res.wordB.term}".`, 'success');
       return { success: true };
     },
@@ -318,7 +318,7 @@ export default function App() {
         return { success: false, duplicate: true };
       }
 
-      setWords(res.updatedWords);
+      setWords(res.updatedWords); serverSync.pushWords(res.updatedWords);
       addToast(`Linked "${sourceWord.term}" ⇄ "${res.wordB.term}".`, 'success');
       return { success: true };
     },
@@ -331,7 +331,7 @@ export default function App() {
       const wordA = wordsMap.get(wordAId);
       const wordB = wordsMap.get(wordBId);
       const updated = unlinkWords(words, wordAId, wordBId, tag);
-      setWords(updated);
+      setWords(updated); serverSync.pushWords(updated);
       addToast(
         `Removed link between "${wordA?.term || 'Word'}" and "${wordB?.term || 'Word'}".`,
         'info'
@@ -344,7 +344,7 @@ export default function App() {
   const handleSaveRelationTag = useCallback(
     (wordAId: string, wordBId: string, oldTag: RelationTag, newTag: RelationTag) => {
       const updated = updateRelationTag(words, wordAId, wordBId, oldTag, newTag);
-      setWords(updated);
+      setWords(updated); serverSync.pushWords(updated);
       addToast(`Updated tag type.`, 'success');
     },
     [words, addToast]
@@ -357,7 +357,7 @@ export default function App() {
       if (!target) return;
 
       const updated = deleteWord(words, wordId);
-      setWords(updated);
+      setWords(updated); serverSync.pushWords(updated);
       addToast(`Deleted "${target.term}".`, 'info');
     },
     [words, wordsMap, addToast]
@@ -379,7 +379,7 @@ export default function App() {
       }
 
       const updated = updateWordTerm(words, wordId, cleanNew);
-      setWords(updated);
+      setWords(updated); serverSync.pushWords(updated);
       addToast(`Updated to "${cleanNew}".`, 'success');
       return { success: true };
     },
@@ -433,7 +433,7 @@ export default function App() {
         {activeTab === 'settings' ? (
           <SettingsView
             words={words}
-            onUpdateWords={setWords}
+            onUpdateWords={(newWords) => { setWords(newWords); serverSync.pushWords(newWords); }}
             onToast={addToast}
             syncStatus={serverSync.syncStatus}
             lastSyncedAt={serverSync.lastSyncedAt}
@@ -749,7 +749,7 @@ export default function App() {
         onClose={() => setIsRawImportOpen(false)}
         existingWords={words}
         onImportComplete={(newWords, msg) => {
-          setWords(newWords);
+          setWords(newWords); serverSync.pushWords(newWords);
           addToast(msg, 'success');
         }}
       />

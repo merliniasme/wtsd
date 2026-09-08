@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ApiClient } from '../utils/api';
-import { Shield, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export const LoginView: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -11,9 +11,10 @@ export const LoginView: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
-      setError('Please enter nickname and password');
+      setError('Please enter username and password');
       return;
     }
+
     try {
       setLoading(true);
       setError('');
@@ -30,24 +31,26 @@ export const LoginView: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
     <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-[#1E293B] rounded-2xl border border-[#334155] p-6 shadow-2xl">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 bg-sky-500/20 rounded-full flex items-center justify-center mb-3">
-            <Shield className="w-6 h-6 text-sky-400" />
-          </div>
-          <h1 className="text-xl font-bold text-slate-100">Dictionary Login</h1>
-          <p className="text-xs text-slate-400 mt-1 text-center">
-            Sign in to access the collaborative word graph.
+          <img 
+            src="/app-icon.jpg" 
+            alt="App Icon" 
+            className="w-16 h-16 rounded-2xl shadow-lg mb-4 object-cover"
+          />
+          <h1 className="text-xl font-bold text-slate-100 text-center">Who Is The Spy Manual</h1>
+          <p className="text-xs text-slate-400 mt-2 text-center">
+            Everything about who is the spy
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Nickname</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1">Username</label>
             <input
               type="text"
               value={username}
               onChange={e => setUsername(e.target.value)}
               className="w-full bg-[#0F172A] border border-[#334155] focus:border-sky-500 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500"
-              placeholder="Enter your nickname"
+              placeholder="Enter your username"
             />
           </div>
           <div>
