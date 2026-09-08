@@ -426,11 +426,6 @@ export default function App() {
             onTabChange={setActiveTab}
           />
 
-          <div className="text-xs text-slate-400 font-medium flex items-center gap-2">
-            <span>{words.length} kata</span>
-            <span className="text-slate-600">•</span>
-            <span>{allPairs.length} pasangan</span>
-          </div>
         </div>
 
         {/* Tab 3: Settings View */}
