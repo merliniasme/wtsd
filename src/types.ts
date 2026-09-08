@@ -117,7 +117,7 @@ export interface PairItem {
   tag: RelationTag;
 }
 
-export type ActiveTab = 'pairs' | 'words' | 'settings';
+export type ActiveTab = 'pairs' | 'words';
 
 export interface SpyGamePair {
   wordA: Word;

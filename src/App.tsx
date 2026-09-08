@@ -10,43 +10,31 @@ import {
   getOrCreateWord,
   fastStringCompare,
 } from './utils/wordGraph';
-import { useServerSync } from './hooks/useServerSync';
-import { InstallPromptModal } from "./components/InstallPromptModal";
-import { LoginView } from './components/LoginView';
-import { ApiClient } from './utils/api';
-import { loadActiveWordsFromLocal } from './utils/storage';
+import { loadActiveWordsFromLocal, saveActiveWordsToLocal } from './utils/storage';
 
 import { Header } from './components/Header';
-
 import { TabsNav } from './components/TabsNav';
 import { SearchBar } from './components/SearchBar';
 import { PairCard } from './components/PairCard';
 import { WordCard } from './components/WordCard';
 import { NoResultsState } from './components/NoResultsState';
-import { SettingsView } from './components/SettingsView';
-import { NonLatinModal } from "./components/NonLatinModal";
-import { AntiCensorModal } from "./components/AntiCensorModal";
 import { FloatingAddButton } from './components/FloatingAddButton';
 import { AddWordModal } from './components/AddWordModal';
 import { CreateRelationModal } from './components/CreateRelationModal';
 import { AddRelationModal } from './components/AddRelationModal';
 import { EditRelationModal } from './components/EditRelationModal';
 import { EditWordModal } from './components/EditWordModal';
-import { RawImportModal } from './components/RawImportModal';
-import { MemoryGameModal } from './components/MemoryGameModal';
-import { AiClueModal } from './components/AiClueModal';
-import { WePlayPhotoEditorModal } from './components/WePlayPhotoEditorModal';
 import { ToastContainer } from './components/Toast';
-import { Plus, Settings as SettingsIcon, Link2, ChevronDown, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { Plus, Link2, ChevronDown } from 'lucide-react';
 
 const INITIAL_PAGE_SIZE = 40;
 const PAGE_INCREMENT = 40;
 
-function MainApp({ onLogout }: { onLogout: () => void }) {
-  // In-memory words state (hydrated instantly from local storage & synced with Google Drive)
+export default function App() {
+  // In-memory words state hydrated directly from local storage
   const [words, setWords] = useState<Word[]>(() => loadActiveWordsFromLocal());
 
-  // Active Tab: 'pairs' | 'words' | 'settings'
+  // Active Tab: 'pairs' | 'words'
   const [activeTab, setActiveTab] = useState<ActiveTab>('pairs');
 
   // Search & Filter State
@@ -59,17 +47,8 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
   const [visibleWordsCount, setVisibleWordsCount] = useState<number>(INITIAL_PAGE_SIZE);
 
   // Modal States
-  const [isAntiCensorOpen, setIsAntiCensorOpen] = useState(false);
-  const [isNonLatinOpen, setIsNonLatinOpen] = useState(false);
-
   const [isAddWordOpen, setIsAddWordOpen] = useState(false);
   const [isCreateRelationOpen, setIsCreateRelationOpen] = useState(false);
-  const [isRawImportOpen, setIsRawImportOpen] = useState(false);
-  const [isMemoryGameOpen, setIsMemoryGameOpen] = useState(false);
-  const [isAiClueOpen, setIsAiClueOpen] = useState(false);
-  const [aiClueWord, setAiClueWord] = useState<Word | null>(null);
-  const [isWePlayEditorOpen, setIsWePlayEditorOpen] = useState(false);
-  const [wePlayEditorInitialWord, setWePlayEditorInitialWord] = useState('');
   const [activeWordForRelation, setActiveWordForRelation] = useState<Word | null>(null);
   const [wordToEdit, setWordToEdit] = useState<Word | null>(null);
   const [relationToEdit, setRelationToEdit] = useState<{
@@ -93,18 +72,11 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // Server Sync Engine & Master Database
-  const serverSync = useServerSync({
-    words,
-    setWords,
-    addToast,
-    onLogout,
-  });
-
-  const handleLogout = useCallback(() => {
-    onLogout();
-    setWords([]); // Clear local words
-  }, [onLogout, setWords]);
+  // Persist words state change
+  const persistWords = useCallback((updated: Word[]) => {
+    setWords(updated);
+    saveActiveWordsToLocal(updated);
+  }, []);
 
   // Fast Word Lookup Map (O(1) lookups)
   const wordsMap = useMemo(() => {
@@ -221,7 +193,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
     setVisibleWordsCount(INITIAL_PAGE_SIZE);
   }, [deferredSearchTerm, activeTab]);
 
-  // Windowed display subsets (Ensures 60fps rendering without DOM node explosion)
+  // Windowed display subsets
   const displayedPairs = useMemo(() => {
     return filteredPairs.slice(0, visiblePairsCount);
   }, [filteredPairs, visiblePairsCount]);
@@ -256,19 +228,6 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
     [addToast]
   );
 
-  const handleCopyAntiCensorToast = useCallback(
-    (original: string, transformed: string) => {
-      addToast(`Disalin Anti-Sensor (Sirilik): "${transformed}"`, 'success');
-    },
-    [addToast]
-  );
-
-
-  const handleOpenWePlayEditor = useCallback((word?: string) => {
-    setWePlayEditorInitialWord(word || '');
-    setIsWePlayEditorOpen(true);
-  }, []);
-
   // Handler: Add Standalone Word
   const handleAddSingleWord = useCallback(
     (term: string) => {
@@ -282,11 +241,11 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
         return { success: true, word: res.word };
       }
 
-      setWords(res.updatedWords); serverSync.pushWords(res.updatedWords);
+      persistWords(res.updatedWords);
       addToast(`Added "${clean}".`, 'success');
       return { success: true, word: res.word };
     },
-    [words, addToast]
+    [words, persistWords, addToast]
   );
 
   // Handler: Create Mutual Relation / Pair
@@ -297,11 +256,11 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
         return { success: false, duplicate: true };
       }
 
-      setWords(res.updatedWords); serverSync.pushWords(res.updatedWords);
+      persistWords(res.updatedWords);
       addToast(`Connected "${res.wordA.term}" ⇄ "${res.wordB.term}".`, 'success');
       return { success: true };
     },
-    [words, addToast]
+    [words, persistWords, addToast]
   );
 
   // Handler: Add Relation to an Existing Word Card
@@ -315,11 +274,11 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
         return { success: false, duplicate: true };
       }
 
-      setWords(res.updatedWords); serverSync.pushWords(res.updatedWords);
+      persistWords(res.updatedWords);
       addToast(`Linked "${sourceWord.term}" ⇄ "${res.wordB.term}".`, 'success');
       return { success: true };
     },
-    [words, wordsMap, addToast]
+    [words, wordsMap, persistWords, addToast]
   );
 
   // Handler: Unlink relation
@@ -328,23 +287,23 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
       const wordA = wordsMap.get(wordAId);
       const wordB = wordsMap.get(wordBId);
       const updated = unlinkWords(words, wordAId, wordBId, tag);
-      setWords(updated); serverSync.pushWords(updated);
+      persistWords(updated);
       addToast(
         `Removed link between "${wordA?.term || 'Word'}" and "${wordB?.term || 'Word'}".`,
         'info'
       );
     },
-    [words, wordsMap, addToast]
+    [words, wordsMap, persistWords, addToast]
   );
 
   // Handler: Update relation tag
   const handleSaveRelationTag = useCallback(
     (wordAId: string, wordBId: string, oldTag: RelationTag, newTag: RelationTag) => {
       const updated = updateRelationTag(words, wordAId, wordBId, oldTag, newTag);
-      setWords(updated); serverSync.pushWords(updated);
+      persistWords(updated);
       addToast(`Updated tag type.`, 'success');
     },
-    [words, addToast]
+    [words, persistWords, addToast]
   );
 
   // Handler: Delete Word
@@ -354,10 +313,10 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
       if (!target) return;
 
       const updated = deleteWord(words, wordId);
-      setWords(updated); serverSync.pushWords(updated);
+      persistWords(updated);
       addToast(`Deleted "${target.term}".`, 'info');
     },
-    [words, wordsMap, addToast]
+    [words, wordsMap, persistWords, addToast]
   );
 
   // Handler: Edit Word Term
@@ -376,39 +335,22 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
       }
 
       const updated = updateWordTerm(words, wordId, cleanNew);
-      setWords(updated); serverSync.pushWords(updated);
+      persistWords(updated);
       addToast(`Updated to "${cleanNew}".`, 'success');
       return { success: true };
     },
-    [words, addToast]
+    [words, persistWords, addToast]
   );
 
-  // Handler: Open AI Clue Modal for Word
-  const handleOpenAiClue = useCallback((word: Word) => {
-    setAiClueWord(word);
-    setIsAiClueOpen(true);
-  }, []);
-
   const isSearchEmpty = !searchTerm.trim();
-
-  // If user is not signed in and dictionary is empty, show the forced sign-in landing page
-  // If words are already cached locally, immediately enter the app while auth verifies in background!
-
 
   return (
     <div
       id="app-root-container"
       className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200"
     >
-      {/* Dynamic Header with Sync & Account State */}
-      <Header
-        syncStatus={serverSync.syncStatus}
-        isOperating={serverSync.isOperating}
-        lastSyncedAt={serverSync.lastSyncedAt}
-        onSync={serverSync.fetchWords}
-        onSignOut={handleLogout}
-        onGoToSettings={() => setActiveTab('settings')}
-      />
+      {/* Header */}
+      <Header />
 
       {/* Main Content Area */}
       <main id="app-main-content" className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-5 space-y-4">
@@ -418,278 +360,244 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
-
         </div>
 
-        {/* Tab 3: Settings View */}
-        {activeTab === 'settings' ? (
-          <SettingsView
-            words={words}
-            onUpdateWords={(newWords) => { setWords(newWords); serverSync.pushWords(newWords); }}
-            onToast={addToast}
-            syncStatus={serverSync.syncStatus}
-            lastSyncedAt={serverSync.lastSyncedAt}
-            isOperating={serverSync.isOperating}
-            onSignOut={handleLogout}
-            onSyncNow={serverSync.fetchWords}
-            onOpenRawImport={() => setIsRawImportOpen(true)}
-          />
-        ) : (
-          <>
-            {/* Minimal Search & Filter */}
-            <SearchBar
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedTag={selectedTag}
-              onTagSelect={setSelectedTag}
-              activeTab={activeTab}
-            />
+        {/* Minimal Search & Filter */}
+        <SearchBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          selectedTag={selectedTag}
+          onTagSelect={setSelectedTag}
+          activeTab={activeTab}
+        />
 
-            {/* State Renderers */}
-            {words.length === 0 ? (
-              <div
-                id="empty-dictionary-state"
-                className="text-center py-20 px-4 max-w-sm mx-auto space-y-3 animate-in fade-in duration-150"
+        {/* State Renderers */}
+        {words.length === 0 ? (
+          <div
+            id="empty-dictionary-state"
+            className="text-center py-20 px-4 max-w-sm mx-auto space-y-3 animate-in fade-in duration-150"
+          >
+            <div className="w-10 h-10 rounded-full bg-[#1E293B] border border-[#334155] text-slate-400 mx-auto flex items-center justify-center">
+              <Plus className="w-5 h-5 text-sky-400" />
+            </div>
+            <h3 className="font-semibold text-slate-200 text-sm">Dictionary is empty (0 words)</h3>
+            <p className="text-xs text-slate-400">
+              Get started by adding your first word pair or standalone word.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+              <button
+                id="btn-empty-state-add-word"
+                onClick={() => setIsAddWordOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
               >
-                <div className="w-10 h-10 rounded-full bg-[#1E293B] border border-[#334155] text-slate-400 mx-auto flex items-center justify-center">
-                  <Plus className="w-5 h-5 text-sky-400" />
-                </div>
-                <h3 className="font-semibold text-slate-200 text-sm">Dictionary is empty (0 words)</h3>
-                <p className="text-xs text-slate-400">
-                  Get started by adding your first word pair, or import plain text rules.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-                  <button
-                    id="btn-empty-state-add-word"
-                    onClick={() => setIsAddWordOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
-                  >
-                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>Tambah Kata</span>
-                  </button>
-                  <button
-                    id="btn-empty-state-go-settings"
-                    onClick={() => setActiveTab('settings')}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1E293B] hover:bg-slate-700 text-slate-300 hover:text-white border border-[#334155] text-xs font-medium rounded-lg transition-colors cursor-pointer"
-                  >
-                    <SettingsIcon className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Pengaturan & Raw Import</span>
-                  </button>
-                </div>
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Tambah Kata</span>
+              </button>
+            </div>
+          </div>
+        ) : activeTab === 'pairs' ? (
+          /* PAIRS TAB VIEW */
+          allPairs.length === 0 ? (
+            <div
+              id="no-pairs-linked-state"
+              className="text-center py-16 px-4 max-w-sm mx-auto space-y-3 animate-in fade-in duration-150"
+            >
+              <div className="w-10 h-10 rounded-full bg-[#1E293B] border border-[#334155] text-slate-400 mx-auto flex items-center justify-center">
+                <Link2 className="w-4 h-4 text-sky-400" />
               </div>
-            ) : activeTab === 'pairs' ? (
-              /* PAIRS TAB VIEW */
-              allPairs.length === 0 ? (
-                <div
-                  id="no-pairs-linked-state"
-                  className="text-center py-16 px-4 max-w-sm mx-auto space-y-3 animate-in fade-in duration-150"
+              <h3 className="font-semibold text-slate-200 text-sm">No word pairs linked yet</h3>
+              <p className="text-xs text-slate-400">
+                Connect two words together by clicking Add Word or linking words from the Words tab.
+              </p>
+              <div className="pt-1">
+                <button
+                  id="btn-pairs-empty-add-word"
+                  onClick={() => setIsCreateRelationOpen(true)}
+                  className="inline-flex items-center gap-1 px-3.5 py-1.5 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-xs"
                 >
-                  <div className="w-10 h-10 rounded-full bg-[#1E293B] border border-[#334155] text-slate-400 mx-auto flex items-center justify-center">
-                    <Link2 className="w-4 h-4 text-sky-400" />
-                  </div>
-                  <h3 className="font-semibold text-slate-200 text-sm">No word pairs linked yet</h3>
-                  <p className="text-xs text-slate-400">
-                    Connect two words together by clicking Add Word or linking words from the Words tab.
-                  </p>
-                  <div className="pt-1">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Kaitkan Pasangan Baru</span>
+                </button>
+              </div>
+            </div>
+          ) : displayedPairs.length === 0 ? (
+            <NoResultsState
+              searchTerm={searchTerm}
+              selectedTag={selectedTag}
+              activeTab="pairs"
+              onClearFilters={() => {
+                setSearchTerm('');
+                setSelectedTag('all');
+              }}
+              onAddWithTerm={() => {
+                setIsAddWordOpen(true);
+              }}
+            />
+          ) : (
+            <section id="pairs-list-section" className="space-y-3 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+                <span>
+                  {filteredPairs.length > displayedPairs.length ? (
+                    <>
+                      Showing <strong className="text-slate-200">{displayedPairs.length}</strong> of{' '}
+                      <strong className="text-slate-200">{filteredPairs.length}</strong> pairs
+                    </>
+                  ) : (
+                    <>
+                      <strong className="text-slate-200">{filteredPairs.length}</strong>{' '}
+                      {filteredPairs.length === 1 ? 'pair' : 'pairs'}
+                      {!isSearchEmpty && ' found'}
+                    </>
+                  )}
+                </span>
+                {(searchTerm || selectedTag !== 'all') && (
+                  <button
+                    id="btn-reset-pairs-filters"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedTag('all');
+                    }}
+                    className="text-sky-400 hover:underline cursor-pointer text-xs"
+                  >
+                    Clear filter
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {displayedPairs.map((pair) => (
+                  <PairCard
+                    key={pair.id}
+                    pair={pair}
+                    onSelectWord={handleSelectWord}
+                    onEditRelationTag={handleEditPairRelationTag}
+                    onUnlinkRelation={handleUnlinkRelation}
+                    onCopyText={handleCopyToast}
+                  />
+                ))}
+              </div>
+
+              {/* Load More Pagination Trigger */}
+              {filteredPairs.length > displayedPairs.length && (
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-3 pb-2">
+                  <button
+                    id="btn-load-more-pairs"
+                    type="button"
+                    onClick={() => setVisiblePairsCount((prev) => prev + PAGE_INCREMENT)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-200 hover:text-white border border-[#334155] rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+                  >
+                    <ChevronDown className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Load More Pairs (+{PAGE_INCREMENT})</span>
+                  </button>
+                  {filteredPairs.length > displayedPairs.length + PAGE_INCREMENT && (
                     <button
-                      id="btn-pairs-empty-add-word"
-                      onClick={() => setIsAddWordOpen(true)}
-                      className="inline-flex items-center gap-1 px-3.5 py-1.5 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-xs"
+                      id="btn-show-all-pairs"
+                      type="button"
+                      onClick={() => setVisiblePairsCount(filteredPairs.length)}
+                      className="text-xs text-slate-400 hover:text-slate-200 px-3 py-2 transition-colors cursor-pointer"
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add Word / Pair</span>
+                      Show All ({filteredPairs.length})
                     </button>
-                  </div>
+                  )}
                 </div>
-              ) : displayedPairs.length === 0 ? (
-                <NoResultsState
-                  searchTerm={searchTerm}
-                  selectedTag={selectedTag}
-                  activeTab="pairs"
-                  onClearFilters={() => {
-                    setSearchTerm('');
-                    setSelectedTag('all');
-                  }}
-                  onAddWithTerm={() => {
-                    setIsAddWordOpen(true);
-                  }}
-                />
-              ) : (
-                <section id="pairs-list-section" className="space-y-3 animate-in fade-in duration-150">
-                  <div className="flex items-center justify-between text-xs text-slate-400 px-1">
-                    <span>
-                      {filteredPairs.length > displayedPairs.length ? (
-                        <>
-                          Showing <strong className="text-slate-200">{displayedPairs.length}</strong> of{' '}
-                          <strong className="text-slate-200">{filteredPairs.length}</strong> pairs
-                        </>
-                      ) : (
-                        <>
-                          <strong className="text-slate-200">{filteredPairs.length}</strong>{' '}
-                          {filteredPairs.length === 1 ? 'pair' : 'pairs'}
-                          {!isSearchEmpty && ' found'}
-                        </>
-                      )}
-                    </span>
-                    {(searchTerm || selectedTag !== 'all') && (
-                      <button
-                        id="btn-reset-pairs-filters"
-                        onClick={() => {
-                          setSearchTerm('');
-                          setSelectedTag('all');
-                        }}
-                        className="text-sky-400 hover:underline cursor-pointer text-xs"
-                      >
-                        Clear filter
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                    {displayedPairs.map((pair) => (
-                      <PairCard
-                        key={pair.id}
-                        pair={pair}
-                        onSelectWord={handleSelectWord}
-                        onEditRelationTag={handleEditPairRelationTag}
-                        onUnlinkRelation={handleUnlinkRelation}
-                        onCopyText={handleCopyToast}
-                        onCopyAntiCensor={handleCopyAntiCensorToast}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Load More Pagination Trigger */}
-                  {filteredPairs.length > displayedPairs.length && (
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-3 pb-2">
-                      <button
-                        id="btn-load-more-pairs"
-                        type="button"
-                        onClick={() => setVisiblePairsCount((prev) => prev + PAGE_INCREMENT)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-200 hover:text-white border border-[#334155] rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-xs"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5 text-sky-400" />
-                        <span>Load More Pairs (+{PAGE_INCREMENT})</span>
-                      </button>
-                      {filteredPairs.length > displayedPairs.length + PAGE_INCREMENT && (
-                        <button
-                          id="btn-show-all-pairs"
-                          type="button"
-                          onClick={() => setVisiblePairsCount(filteredPairs.length)}
-                          className="text-xs text-slate-400 hover:text-slate-200 px-3 py-2 transition-colors cursor-pointer"
-                        >
-                          Show All ({filteredPairs.length})
-                        </button>
-                      )}
-                    </div>
+              )}
+            </section>
+          )
+        ) : (
+          /* WORDS TAB VIEW */
+          displayedWords.length === 0 ? (
+            <NoResultsState
+              searchTerm={searchTerm}
+              selectedTag={selectedTag}
+              activeTab="words"
+              onClearFilters={() => {
+                setSearchTerm('');
+              }}
+              onAddWithTerm={() => {
+                setIsAddWordOpen(true);
+              }}
+            />
+          ) : (
+            <section id="words-list-section" className="space-y-3 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+                <span>
+                  {filteredWords.length > displayedWords.length ? (
+                    <>
+                      Showing <strong className="text-slate-200">{displayedWords.length}</strong> of{' '}
+                      <strong className="text-slate-200">{filteredWords.length}</strong> words
+                    </>
+                  ) : (
+                    <>
+                      <strong className="text-slate-200">{filteredWords.length}</strong>{' '}
+                      {filteredWords.length === 1 ? 'word' : 'words'}
+                      {!isSearchEmpty && ' found'}
+                    </>
                   )}
-                </section>
-              )
-            ) : (
-              /* WORDS TAB VIEW */
-              displayedWords.length === 0 ? (
-                <NoResultsState
-                  searchTerm={searchTerm}
-                  selectedTag={selectedTag}
-                  activeTab="words"
-                  onClearFilters={() => {
-                    setSearchTerm('');
-                  }}
-                  onAddWithTerm={() => {
-                    setIsAddWordOpen(true);
-                  }}
-                />
-              ) : (
-                <section id="words-list-section" className="space-y-3 animate-in fade-in duration-150">
-                  <div className="flex items-center justify-between text-xs text-slate-400 px-1">
-                    <span>
-                      {filteredWords.length > displayedWords.length ? (
-                        <>
-                          Showing <strong className="text-slate-200">{displayedWords.length}</strong> of{' '}
-                          <strong className="text-slate-200">{filteredWords.length}</strong> words
-                        </>
-                      ) : (
-                        <>
-                          <strong className="text-slate-200">{filteredWords.length}</strong>{' '}
-                          {filteredWords.length === 1 ? 'word' : 'words'}
-                          {!isSearchEmpty && ' found'}
-                        </>
-                      )}
-                    </span>
-                    {searchTerm && (
-                      <button
-                        id="btn-reset-words-filters"
-                        onClick={() => {
-                          setSearchTerm('');
-                        }}
-                        className="text-sky-400 hover:underline cursor-pointer text-xs"
-                      >
-                        Clear search
-                      </button>
-                    )}
-                  </div>
+                </span>
+                {searchTerm && (
+                  <button
+                    id="btn-reset-words-filters"
+                    onClick={() => {
+                      setSearchTerm('');
+                    }}
+                    className="text-sky-400 hover:underline cursor-pointer text-xs"
+                  >
+                    Clear search
+                  </button>
+                )}
+              </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {displayedWords.map((word) => (
-                      <WordCard
-                        key={word.id}
-                        word={word}
-                        allWordsMap={wordsMap}
-                        onSelectWord={handleSelectWord}
-                        onAddRelationToWord={(w) => setActiveWordForRelation(w)}
-                        onEditWord={(w) => setWordToEdit(w)}
-                        onDeleteWord={handleDeleteWord}
-                        onEditRelationTag={handleEditWordRelationTag}
-                        onUnlinkRelation={handleUnlinkRelation}
-                        onCopyTerm={handleCopyToast}
-                        onCopyAntiCensor={handleCopyAntiCensorToast}
-                        onGenerateAiClue={handleOpenAiClue}
-                        highlightTerm={searchTerm}
-                      />
-                    ))}
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {displayedWords.map((word) => (
+                  <WordCard
+                    key={word.id}
+                    word={word}
+                    allWordsMap={wordsMap}
+                    onSelectWord={handleSelectWord}
+                    onAddRelationToWord={(w) => setActiveWordForRelation(w)}
+                    onEditWord={(w) => setWordToEdit(w)}
+                    onDeleteWord={handleDeleteWord}
+                    onEditRelationTag={handleEditWordRelationTag}
+                    onUnlinkRelation={handleUnlinkRelation}
+                    onCopyTerm={handleCopyToast}
+                    highlightTerm={searchTerm}
+                  />
+                ))}
+              </div>
 
-                  {/* Load More Pagination Trigger */}
-                  {filteredWords.length > displayedWords.length && (
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-3 pb-2">
-                      <button
-                        id="btn-load-more-words"
-                        type="button"
-                        onClick={() => setVisibleWordsCount((prev) => prev + PAGE_INCREMENT)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-200 hover:text-white border border-[#334155] rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-xs"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5 text-sky-400" />
-                        <span>Load More Words (+{PAGE_INCREMENT})</span>
-                      </button>
-                      {filteredWords.length > displayedWords.length + PAGE_INCREMENT && (
-                        <button
-                          id="btn-show-all-words"
-                          type="button"
-                          onClick={() => setVisibleWordsCount(filteredWords.length)}
-                          className="text-xs text-slate-400 hover:text-slate-200 px-3 py-2 transition-colors cursor-pointer"
-                        >
-                          Show All ({filteredWords.length})
-                        </button>
-                      )}
-                    </div>
+              {/* Load More Pagination Trigger */}
+              {filteredWords.length > displayedWords.length && (
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-3 pb-2">
+                  <button
+                    id="btn-load-more-words"
+                    type="button"
+                    onClick={() => setVisibleWordsCount((prev) => prev + PAGE_INCREMENT)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-200 hover:text-white border border-[#334155] rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+                  >
+                    <ChevronDown className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Load More Words (+{PAGE_INCREMENT})</span>
+                  </button>
+                  {filteredWords.length > displayedWords.length + PAGE_INCREMENT && (
+                    <button
+                      id="btn-show-all-words"
+                      type="button"
+                      onClick={() => setVisibleWordsCount(filteredWords.length)}
+                      className="text-xs text-slate-400 hover:text-slate-200 px-3 py-2 transition-colors cursor-pointer"
+                    >
+                      Show All ({filteredWords.length})
+                    </button>
                   )}
-                </section>
-              )
-            )}
-          </>
+                </div>
+              )}
+            </section>
+          )
         )}
       </main>
 
-      {/* Single Main Floating Action Button with Features Popup */}
+      {/* Floating Action Button */}
       <FloatingAddButton
         onAddWord={() => setIsAddWordOpen(true)}
         onCreateRelation={() => setIsCreateRelationOpen(true)}
-        onOpenPuzzle={() => setIsMemoryGameOpen(true)}
-        onOpenWePlayEditor={() => handleOpenWePlayEditor('')}
-        onGoToSettings={() => setActiveTab('settings')}
-        onOpenAntiCensor={() => setIsAntiCensorOpen(true)}
-        onOpenNonLatin={() => setIsNonLatinOpen(true)}
       />
 
       {/* Add Word Modal */}
@@ -736,70 +644,8 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
         onSaveTerm={handleEditWordTerm}
       />
 
-      {/* Raw Plain Text Importer Modal */}
-      <RawImportModal
-        isOpen={isRawImportOpen}
-        onClose={() => setIsRawImportOpen(false)}
-        existingWords={words}
-        onImportComplete={(newWords, msg) => {
-          setWords(newWords); serverSync.pushWords(newWords);
-          addToast(msg, 'success');
-        }}
-      />
-
-      {/* Memory Puzzle Game Modal */}
-      <MemoryGameModal
-        isOpen={isMemoryGameOpen}
-        onClose={() => setIsMemoryGameOpen(false)}
-        words={words}
-      />
-
-      {/* Anti-Censor Homoglyph & Character Analyzer Modal */}
-
-      {/* AI Clue Generator Modal (Words Only) */}
-      <AiClueModal
-        isOpen={isAiClueOpen}
-        word={aiClueWord}
-        allWordsMap={wordsMap}
-        onClose={() => setIsAiClueOpen(false)}
-        onOpenSettingsPrompt={() => setActiveTab('settings')}
-        onToast={addToast}
-      />
-
-      {/* WePlay Photo Editor Modal */}
-      <WePlayPhotoEditorModal
-        isOpen={isWePlayEditorOpen}
-        onClose={() => setIsWePlayEditorOpen(false)}
-        words={words}
-        initialTargetWord={wePlayEditorInitialWord}
-        onToast={addToast}
-      />
-
-      {/* Install Prompt Modal for New/PWA Users */}
-      <InstallPromptModal onClose={() => {}} />
-
-      {/* Minimal Toast Feedback Alerts */}
+      {/* Toast Alerts */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
-
-export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!ApiClient.token);
-
-  const handleLogin = useCallback(() => {
-    setIsAuthenticated(true);
-  }, []);
-
-  const handleLogout = useCallback(() => {
-    ApiClient.logout();
-    setIsAuthenticated(false);
-  }, []);
-
-  if (!isAuthenticated) {
-    return <LoginView onLogin={handleLogin} />;
-  }
-
-  return <MainApp onLogout={handleLogout} />;
-}
-
