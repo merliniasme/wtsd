@@ -24,6 +24,7 @@ import { PairCard } from './components/PairCard';
 import { WordCard } from './components/WordCard';
 import { NoResultsState } from './components/NoResultsState';
 import { SettingsView } from './components/SettingsView';
+import { NonLatinModal } from "./components/NonLatinModal";
 import { AntiCensorModal } from "./components/AntiCensorModal";
 import { FloatingAddButton } from './components/FloatingAddButton';
 import { AddWordModal } from './components/AddWordModal';
@@ -59,6 +60,7 @@ export default function App() {
 
   // Modal States
   const [isAntiCensorOpen, setIsAntiCensorOpen] = useState(false);
+  const [isNonLatinOpen, setIsNonLatinOpen] = useState(false);
 
   const [isAddWordOpen, setIsAddWordOpen] = useState(false);
   const [isCreateRelationOpen, setIsCreateRelationOpen] = useState(false);
@@ -424,7 +426,7 @@ export default function App() {
             onTabChange={setActiveTab}
           />
 
-          <div className="text-xs text-slate-400 font-medium hidden sm:flex items-center gap-2">
+          <div className="text-xs text-slate-400 font-medium flex items-center gap-2">
             <span>{words.length} kata</span>
             <span className="text-slate-600">•</span>
             <span>{allPairs.length} pasangan</span>
@@ -699,6 +701,7 @@ export default function App() {
         onOpenWePlayEditor={() => handleOpenWePlayEditor('')}
         onGoToSettings={() => setActiveTab('settings')}
         onOpenAntiCensor={() => setIsAntiCensorOpen(true)}
+        onOpenNonLatin={() => setIsNonLatinOpen(true)}
       />
 
       {/* Add Word Modal */}

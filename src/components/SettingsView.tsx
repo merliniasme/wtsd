@@ -48,6 +48,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenRawImport,
 }) => {
   // State for Delete Confirmation Modal
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem("gemini_api_key") || "");
+  const handleSaveApiKey = () => {
+    localStorage.setItem("gemini_api_key", apiKey);
+    onToast("Gemini API Key saved.", "success");
+  };
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [confirmInput, setConfirmInput] = useState('');
   
@@ -195,6 +200,49 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               ))}
             </div>
             <span>Length: {cluePrompt.length} chars</span>
+          </div>
+        </div>
+      </section>
+
+      {/* API Configuration */}
+      <section className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 space-y-3 shadow-sm">
+        <div className="flex items-center gap-2 text-sky-400 mb-2">
+          <Settings className="w-4 h-4" />
+          <h3 className="text-sm font-semibold text-slate-100">API Configuration</h3>
+        </div>
+        <p className="text-xs text-slate-400">
+          Enter your Gemini API key to enable AI features like clue generation.
+        </p>
+        <div className="flex items-center gap-2">
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="AIzaSy..."
+            className="flex-1 px-3 py-2 bg-[#0F172A] text-slate-200 text-xs rounded-lg border border-[#334155] focus:outline-none focus:border-sky-500"
+          />
+          <button
+            onClick={handleSaveApiKey}
+            className="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-lg transition-colors"
+          >
+            Save Key
+          </button>
+        </div>
+      </section>
+
+      {/* Database Overview */}
+      <section className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 space-y-3 shadow-sm">
+        <div className="flex items-center gap-2 text-emerald-400 mb-2">
+          <h3 className="text-sm font-semibold text-slate-100">Database Overview</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-[#0F172A] border border-[#334155] rounded-lg p-3 flex flex-col items-center justify-center">
+            <span className="text-2xl font-bold text-sky-400">{words.length}</span>
+            <span className="text-xs text-slate-400">Total Words</span>
+          </div>
+          <div className="bg-[#0F172A] border border-[#334155] rounded-lg p-3 flex flex-col items-center justify-center">
+            <span className="text-2xl font-bold text-emerald-400">{words.reduce((acc, w) => acc + Object.keys(w.relations || {}).length, 0) / 2}</span>
+            <span className="text-xs text-slate-400">Total Pairs</span>
           </div>
         </div>
       </section>
