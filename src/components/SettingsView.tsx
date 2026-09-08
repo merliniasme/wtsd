@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Word } from '../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Word, RELATION_TAGS, TAG_METADATA } from '../types';
+import { extractAllPairs } from '../utils/wordGraph';
 import {
   Settings,
   Trash2,
@@ -47,6 +48,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSyncNow,
   onOpenRawImport,
 }) => {
+  const allPairs = useMemo(() => extractAllPairs(words), [words]);
+
   // State for Delete Confirmation Modal
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("gemini_api_key") || "");
   const handleSaveApiKey = () => {
@@ -241,7 +244,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className="text-xs text-slate-400">Total Words</span>
           </div>
           <div className="bg-[#0F172A] border border-[#334155] rounded-lg p-3 flex flex-col items-center justify-center">
-            <span className="text-2xl font-bold text-emerald-400">{words.reduce((acc, w) => acc + Object.keys(w.relations || {}).length, 0) / 2}</span>
+            <span className="text-2xl font-bold text-emerald-400">{allPairs.length}</span>
             <span className="text-xs text-slate-400">Total Pairs</span>
           </div>
         </div>
@@ -252,7 +255,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {RELATION_TAGS.map(tag => {
               const meta = TAG_METADATA[tag];
-              const count = words.reduce((acc, w) => acc + (w.relations?.filter(r => r.tag === tag).length || 0), 0) / 2;
+              const count = allPairs.filter(p => p.tag === tag).length;
               return (
                 <div key={tag} className="bg-[#0F172A] border border-[#334155] rounded-lg p-2 flex flex-col items-center justify-center text-center gap-1">
                   <span className={`text-lg font-bold ${meta.badgeText}`}>{count}</span>

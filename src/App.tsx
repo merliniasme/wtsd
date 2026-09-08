@@ -42,7 +42,7 @@ import { Plus, Settings as SettingsIcon, Link2, ChevronDown, Sparkles, Image as 
 const INITIAL_PAGE_SIZE = 40;
 const PAGE_INCREMENT = 40;
 
-export default function App() {
+function MainApp({ onLogout }: { onLogout: () => void }) {
   // In-memory words state (hydrated instantly from local storage & synced with Google Drive)
   const [words, setWords] = useState<Word[]>(() => loadActiveWordsFromLocal());
 
@@ -93,25 +93,18 @@ export default function App() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!ApiClient.token);
-
   // Server Sync Engine & Master Database
   const serverSync = useServerSync({
     words,
     setWords,
     addToast,
-    isAuthenticated,
+    onLogout,
   });
 
   const handleLogout = useCallback(() => {
-    ApiClient.logout();
-    setIsAuthenticated(false);
+    onLogout();
     setWords([]); // Clear local words
-  }, [setWords]);
-
-  if (!isAuthenticated) {
-    return <LoginView onLogin={() => setIsAuthenticated(true)} />;
-  }
+  }, [onLogout, setWords]);
 
   // Fast Word Lookup Map (O(1) lookups)
   const wordsMap = useMemo(() => {
@@ -782,8 +775,31 @@ export default function App() {
         onToast={addToast}
       />
 
+      {/* Install Prompt Modal for New/PWA Users */}
+      <InstallPromptModal onClose={() => {}} />
+
       {/* Minimal Toast Feedback Alerts */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
+
+export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!ApiClient.token);
+
+  const handleLogin = useCallback(() => {
+    setIsAuthenticated(true);
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    ApiClient.logout();
+    setIsAuthenticated(false);
+  }, []);
+
+  if (!isAuthenticated) {
+    return <LoginView onLogin={handleLogin} />;
+  }
+
+  return <MainApp onLogout={handleLogout} />;
+}
+

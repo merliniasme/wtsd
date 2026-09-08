@@ -4,17 +4,16 @@ import { ApiClient } from '../utils/api';
 import { saveActiveWordsToLocal } from '../utils/storage';
 
 interface UseServerSyncOptions {
-  isAuthenticated?: boolean;
   words: Word[];
   setWords: React.Dispatch<React.SetStateAction<Word[]>>;
   addToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
+  onLogout?: () => void;
 }
 
-export function useServerSync({ words, setWords, addToast, isAuthenticated }: UseServerSyncOptions) {
+export function useServerSync({ words, setWords, addToast, onLogout }: UseServerSyncOptions) {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [isTokenExpired, setIsTokenExpired] = useState(false);
-  const isFirstMount = useRef(true);
 
   const fetchWords = useCallback(async (silent = true) => {
     if (!ApiClient.token) return;
@@ -31,13 +30,13 @@ export function useServerSync({ words, setWords, addToast, isAuthenticated }: Us
         setIsTokenExpired(true);
         if (err.message.includes('Missing or insufficient permissions')) {
             ApiClient.logout();
-            window.location.reload();
+            onLogout?.();
         }
       }
       setSyncStatus('error');
       if (!silent) addToast(err.message, 'error');
     }
-  }, [setWords, addToast]);
+  }, [setWords, addToast, onLogout]);
 
   const pushWords = useCallback(async (newWords: Word[]) => {
     if (!ApiClient.token) return;
@@ -52,20 +51,20 @@ export function useServerSync({ words, setWords, addToast, isAuthenticated }: Us
         setIsTokenExpired(true);
         if (err.message.includes('Missing or insufficient permissions')) {
             ApiClient.logout();
-            window.location.reload();
+            onLogout?.();
         }
       }
       setSyncStatus('error');
       addToast(err.message, 'error');
     }
-  }, [addToast]);
+  }, [addToast, onLogout]);
 
-  // Initial load or Auth change
+  // Initial load when mounted
   useEffect(() => {
-    if (isAuthenticated && ApiClient.token) {
+    if (ApiClient.token) {
       fetchWords();
     }
-  }, [isAuthenticated, fetchWords]);
+  }, [fetchWords]);
 
   return {
     syncStatus,
