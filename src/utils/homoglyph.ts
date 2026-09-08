@@ -1,22 +1,26 @@
 /**
  * Anti-Censorship text transformation utilities.
- * Uses Zero-Width Space insertion to escape and bypass automated keyword filters.
+ * Uses Zero-Width Joiner (ZWJ) insertion to escape and bypass automated keyword filters.
  */
 
-// Zero-Width Space (U+200B)
-export const ZWS = '\u200B';
+// Zero-Width Joiner (U+200D)
+export const ZWJ = '\u200D';
 
 /**
- * Transforms input text to escape censorship by inserting ZWS in the middle.
+ * Transforms input text to escape censorship by inserting ZWJ in the middle of each word.
  */
-export function insertZWSInMiddle(text: string): string {
-  if (!text || text.length < 2) return text;
-  const mid = Math.floor(text.length / 2);
-  return text.substring(0, mid) + ZWS + text.substring(mid);
+export function insertZWJInMiddle(text: string): string {
+  if (!text) return text;
+  
+  return text.split(' ').map(word => {
+    if (word.length < 2) return word;
+    const mid = Math.floor(word.length / 2);
+    return word.substring(0, mid) + ZWJ + word.substring(mid);
+  }).join(' ');
 }
 
 export function escapeCensoredWord(text: string): string {
-  return insertZWSInMiddle(text);
+  return insertZWJInMiddle(text);
 }
 
 /**

@@ -7,11 +7,12 @@ import {
   RotateCcw,
   Save,
   Check,
-  FileUp,
+  FileUp, Download,
   Sparkles,
 } from 'lucide-react';
 import { ApiClient } from '../utils/api';
 import { AdminDashboard } from './AdminDashboard';
+import { usePWAInstall } from "../hooks/usePWAInstall";
 import { getCustomCluePrompt, saveCustomCluePrompt, DEFAULT_CLUE_PROMPT_TEMPLATE } from '../utils/aiClue';
 
 interface SettingsViewProps {
@@ -25,6 +26,15 @@ interface SettingsViewProps {
   onSyncNow: () => void;
   onOpenRawImport: () => void;
 }
+
+const InstallSettingsButton = () => {
+  const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const [showIOSGuide, setShowIOSGuide] = useState(false);
+  if (isInstalled) return <div className="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold rounded-lg">App is Installed</div>;
+  if (isInstallable) return <button onClick={install} className="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shrink-0">Install App</button>;
+  if (isIOS) return <button onClick={() => setShowIOSGuide(!showIOSGuide)} className="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shrink-0">{showIOSGuide ? "See above guide" : "Install on iOS"}</button>;
+  return <div className="text-xs text-slate-500">Not available on this browser</div>;
+};
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   words,
@@ -189,6 +199,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </section>
 
+      {/* App Install Section */}
+      <section
+        id="section-app-install"
+        className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 space-y-3 shadow-sm"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-sky-400">
+              <Download className="w-4 h-4" />
+              <h3 className="text-sm font-semibold text-slate-100">App Installation</h3>
+            </div>
+            <p className="text-xs text-slate-400">
+              Install Who Is The Spy Manual on your device for quick access and offline support.
+            </p>
+          </div>
+          <InstallSettingsButton />
+        </div>
+      </section>
+
       {/* Raw Plain Text Import Section */}
       <section
         id="section-raw-import-settings"
@@ -197,7 +226,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sky-400">
-              <FileUp className="w-4 h-4" />
+              <Download className="w-4 h-4" />
               <h3 className="text-sm font-semibold text-slate-100">Raw Text Dictionary Import</h3>
             </div>
             <p className="text-xs text-slate-400">

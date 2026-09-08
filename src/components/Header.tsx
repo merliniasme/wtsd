@@ -3,7 +3,6 @@ import { SyncStatus } from '../types';
 import { RefreshCw, CheckCircle2, AlertTriangle, LogOut, User as UserIcon } from 'lucide-react';
 import appLogo from '../assets/logo.jpg';
 import { ApiClient } from '../utils/api';
-import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
   syncStatus: SyncStatus;
@@ -70,14 +69,13 @@ export const Header: React.FC<HeaderProps> = ({
             className="w-7 h-7 rounded-lg object-cover border border-cyan-500/30 shadow-xs shadow-cyan-950"
             referrerPolicy="no-referrer"
           />
-          <h1 className="text-sm font-semibold tracking-tight text-slate-100 hidden xs:block">
+          <h1 className="text-sm font-semibold tracking-tight text-slate-100 ">
             Who Is The Spy Manual
           </h1>
         </div>
 
         {/* Right Section */}
         <div className="flex items-center gap-3 relative">
-          <PWAInstallButton />
           
           {user && (
             <div ref={dropdownRef}>

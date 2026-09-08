@@ -4,12 +4,13 @@ import { ApiClient } from '../utils/api';
 import { saveActiveWordsToLocal } from '../utils/storage';
 
 interface UseServerSyncOptions {
+  isAuthenticated?: boolean;
   words: Word[];
   setWords: React.Dispatch<React.SetStateAction<Word[]>>;
   addToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-export function useServerSync({ words, setWords, addToast }: UseServerSyncOptions) {
+export function useServerSync({ words, setWords, addToast, isAuthenticated }: UseServerSyncOptions) {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [isTokenExpired, setIsTokenExpired] = useState(false);
@@ -59,15 +60,12 @@ export function useServerSync({ words, setWords, addToast }: UseServerSyncOption
     }
   }, [addToast]);
 
-  // Initial load
+  // Initial load or Auth change
   useEffect(() => {
-    if (isFirstMount.current) {
-      isFirstMount.current = false;
-      if (ApiClient.token) {
-        fetchWords();
-      }
+    if (isAuthenticated && ApiClient.token) {
+      fetchWords();
     }
-  }, [fetchWords]);
+  }, [isAuthenticated, fetchWords]);
 
   return {
     syncStatus,

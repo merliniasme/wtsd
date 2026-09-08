@@ -11,6 +11,7 @@ import {
   fastStringCompare,
 } from './utils/wordGraph';
 import { useServerSync } from './hooks/useServerSync';
+import { InstallPromptModal } from "./components/InstallPromptModal";
 import { LoginView } from './components/LoginView';
 import { ApiClient } from './utils/api';
 import { loadActiveWordsFromLocal } from './utils/storage';
@@ -97,6 +98,7 @@ export default function App() {
     words,
     setWords,
     addToast,
+    isAuthenticated,
   });
 
   const handleLogout = useCallback(() => {
