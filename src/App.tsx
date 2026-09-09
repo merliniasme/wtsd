@@ -265,13 +265,22 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
 
 
   const handleOpenWePlayEditor = useCallback((word?: string) => {
+    if (!ApiClient.hasPermission('canUseWePlayEditor')) {
+      addToast('Permission restricted: WePlay Meme Editor is locked for your account.', 'error');
+      return;
+    }
     setWePlayEditorInitialWord(word || '');
     setIsWePlayEditorOpen(true);
-  }, []);
+  }, [addToast]);
 
   // Handler: Add Standalone Word
   const handleAddSingleWord = useCallback(
     (term: string) => {
+      if (!ApiClient.hasPermission('canEditDictionary')) {
+        addToast('Permission denied: You do not have permission to add words.', 'error');
+        return { success: false, error: 'Permission denied.' };
+      }
+
       const clean = term.trim();
       if (!clean) {
         return { success: false, error: 'Word cannot be empty.' };
@@ -292,6 +301,11 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
   // Handler: Create Mutual Relation / Pair
   const handleCreateRelation = useCallback(
     (termA: string, termB: string, tag: RelationTag) => {
+      if (!ApiClient.hasPermission('canEditDictionary')) {
+        addToast('Permission denied: You do not have permission to link words.', 'error');
+        return { success: false, error: 'Permission denied.' };
+      }
+
       const res = addOrLinkPair(words, termA, termB, tag);
       if (res.duplicate) {
         return { success: false, duplicate: true };
@@ -307,6 +321,11 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
   // Handler: Add Relation to an Existing Word Card
   const handleAddRelationToExisting = useCallback(
     (sourceWordId: string, targetTerm: string, tag: RelationTag) => {
+      if (!ApiClient.hasPermission('canEditDictionary')) {
+        addToast('Permission denied: You do not have permission to link words.', 'error');
+        return { success: false, error: 'Permission denied.' };
+      }
+
       const sourceWord = wordsMap.get(sourceWordId);
       if (!sourceWord) return { success: false, error: 'Word not found.' };
 
@@ -325,6 +344,11 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
   // Handler: Unlink relation
   const handleUnlinkRelation = useCallback(
     (wordAId: string, wordBId: string, tag: RelationTag) => {
+      if (!ApiClient.hasPermission('canEditDictionary')) {
+        addToast('Permission denied: You do not have permission to unlink words.', 'error');
+        return;
+      }
+
       const wordA = wordsMap.get(wordAId);
       const wordB = wordsMap.get(wordBId);
       const updated = unlinkWords(words, wordAId, wordBId, tag);
@@ -340,6 +364,11 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
   // Handler: Update relation tag
   const handleSaveRelationTag = useCallback(
     (wordAId: string, wordBId: string, oldTag: RelationTag, newTag: RelationTag) => {
+      if (!ApiClient.hasPermission('canEditDictionary')) {
+        addToast('Permission denied: You do not have permission to edit relation tags.', 'error');
+        return;
+      }
+
       const updated = updateRelationTag(words, wordAId, wordBId, oldTag, newTag);
       setWords(updated); serverSync.pushWords(updated);
       addToast(`Updated tag type.`, 'success');
@@ -350,6 +379,11 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
   // Handler: Delete Word
   const handleDeleteWord = useCallback(
     (wordId: string) => {
+      if (!ApiClient.hasPermission('canEditDictionary')) {
+        addToast('Permission denied: You do not have permission to delete words.', 'error');
+        return;
+      }
+
       const target = wordsMap.get(wordId);
       if (!target) return;
 
@@ -363,6 +397,11 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
   // Handler: Edit Word Term
   const handleEditWordTerm = useCallback(
     (wordId: string, newTerm: string) => {
+      if (!ApiClient.hasPermission('canEditDictionary')) {
+        addToast('Permission denied: You do not have permission to edit words.', 'error');
+        return { success: false, error: 'Permission denied.' };
+      }
+
       const target = wordsMap.get(wordId);
       if (!target) return { success: false, error: 'Word not found.' };
 
@@ -385,9 +424,13 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
 
   // Handler: Open AI Clue Modal for Word
   const handleOpenAiClue = useCallback((word: Word) => {
+    if (!ApiClient.hasPermission('canUseAi')) {
+      addToast('Permission restricted: Gemini AI Clue Assistant is locked for your account.', 'error');
+      return;
+    }
     setAiClueWord(word);
     setIsAiClueOpen(true);
-  }, []);
+  }, [addToast]);
 
   const isSearchEmpty = !searchTerm.trim();
 
@@ -690,6 +733,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
         onGoToSettings={() => setActiveTab('settings')}
         onOpenAntiCensor={() => setIsAntiCensorOpen(true)}
         onOpenNonLatin={() => setIsNonLatinOpen(true)}
+        onToast={addToast}
       />
 
       {/* Add Word Modal */}

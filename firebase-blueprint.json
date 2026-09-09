@@ -1,0 +1,39 @@
+{
+  "entities": [
+    {
+      "name": "User",
+      "description": "User profile containing authentication nickname, role (admin or user), and granular feature permissions.",
+      "collection": "users",
+      "fields": {
+        "id": { "type": "string", "description": "Unique Firebase Auth UID" },
+        "username": { "type": "string", "description": "Display nickname" },
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "Master administrative or restricted role" },
+        "permissions": {
+          "type": "map",
+          "description": "Granular complete application feature permissions",
+          "fields": {
+            "canEditDictionary": { "type": "boolean", "description": "Add, edit, delete words and relation tags" },
+            "canBackupRestore": { "type": "boolean", "description": "Export and restore JSON database backups" },
+            "canRawImport": { "type": "boolean", "description": "Bulk import plain text syntax lists" },
+            "canResetData": { "type": "boolean", "description": "Clear all words from active database" },
+            "canUseAi": { "type": "boolean", "description": "Generate AI clues and customize Gemini prompts" },
+            "canUseWePlayEditor": { "type": "boolean", "description": "WePlay screenshot meme and photo editor" },
+            "canUseAntiCensor": { "type": "boolean", "description": "Anti-censor homoglyph generator" },
+            "canPlayMemoryGame": { "type": "boolean", "description": "Play interactive memory graph game" }
+          }
+        }
+      }
+    },
+    {
+      "name": "Dictionary",
+      "description": "Central repository containing the full array of undercover words and bidirectional relation pairings.",
+      "collection": "dictionary",
+      "fields": {
+        "words": {
+          "type": "list",
+          "description": "Array of Word entities including terms, relations, and category tags"
+        }
+      }
+    }
+  ]
+}

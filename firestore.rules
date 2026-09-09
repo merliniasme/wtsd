@@ -22,11 +22,13 @@ service cloud.firestore {
       return isAuthenticated() && isUserActive() && getUserRole() == 'admin';
     }
     
-    // Function to check if user has dictionary edit permissions
+    // Function to check if user has dictionary write or restore permissions
     function canEditDictionary() {
       return isAuthenticated() && isUserActive() && (
         getUserRole() == 'admin' || 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.canEditDictionary == true
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.canEditDictionary == true ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.canBackupRestore == true ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.canResetData == true
       );
     }
     

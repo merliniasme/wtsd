@@ -204,3 +204,73 @@ export interface WePlayEditorOptions {
   yOffset: number; // -100 to 100 px
   useHomoglyph: boolean; // Anti-censor mode
 }
+
+export interface UserPermissions {
+  canEditDictionary: boolean;     // Add/edit/delete words, link/unlink relations
+  canBackupRestore: boolean;      // Download database backup & restore from file
+  canRawImport: boolean;          // Access raw plain-text batch importer
+  canResetData: boolean;          // Wipe/clear active dictionary (Danger Zone)
+  canUseAi: boolean;              // AI Clue generator & Gemini custom system instructions
+  canUseWePlayEditor: boolean;    // WePlay screenshot meme editor
+  canUseAntiCensor: boolean;      // Cyrillic homoglyph generator & non-Latin analyzer
+  canPlayMemoryGame: boolean;     // Interactive memory graph puzzle game
+}
+
+export interface FeaturePermissionInfo {
+  key: keyof UserPermissions;
+  name: string;
+  category: 'Dictionary' | 'Database' | 'Tools' | 'AI & Game';
+  description: string;
+}
+
+export const COMPLETE_APP_FEATURES: FeaturePermissionInfo[] = [
+  {
+    key: 'canEditDictionary',
+    name: 'Dictionary Management',
+    category: 'Dictionary',
+    description: 'Add new words, edit terms, remove entries, and manage mutual relations & tags.',
+  },
+  {
+    key: 'canBackupRestore',
+    name: 'Database Backup & Restore',
+    category: 'Database',
+    description: 'Export JSON database backups and restore words from existing backup files.',
+  },
+  {
+    key: 'canRawImport',
+    name: 'Raw Text Dictionary Importer',
+    category: 'Database',
+    description: 'Bulk import plain text dictionaries with syntax parsing ([Word] # [Word2] & [Word3]).',
+  },
+  {
+    key: 'canResetData',
+    name: 'Reset Active Dictionary',
+    category: 'Database',
+    description: 'Access the Danger Zone to clear and wipe all dictionary records from the database.',
+  },
+  {
+    key: 'canUseAi',
+    name: 'Gemini AI Clue Assistant',
+    category: 'AI & Game',
+    description: 'Generate AI undercover clues and customize Gemini system instructions and API keys.',
+  },
+  {
+    key: 'canUseWePlayEditor',
+    name: 'WePlay Screenshot Photo Editor',
+    category: 'Tools',
+    description: 'Use the AI and canvas photo editor to modify displayed secret words on screenshots.',
+  },
+  {
+    key: 'canUseAntiCensor',
+    name: 'Anti-Censor & Homoglyph Tools',
+    category: 'Tools',
+    description: 'Generate Cyrillic homoglyphs and analyze non-Latin characters to bypass censorship.',
+  },
+  {
+    key: 'canPlayMemoryGame',
+    name: 'Memory Graph Puzzle Game',
+    category: 'AI & Game',
+    description: 'Play the interactive memory game to test knowledge of paired dictionary terms.',
+  },
+];
+

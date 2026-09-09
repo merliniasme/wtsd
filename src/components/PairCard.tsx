@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PairItem, RelationTag, TAG_METADATA } from '../types';
 import { Copy, Check, Tag, Unlink, VenetianMask } from 'lucide-react';
 import { escapeCensoredWord, copyToClipboard } from '../utils/homoglyph';
+import { ApiClient } from '../utils/api';
 
 interface PairCardProps {
   pair: PairItem;
@@ -22,7 +23,10 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
 }) => {
   const [copied, setCopied] = useState(false);
   const [copiedAntiCensor, setCopiedAntiCensor] = useState(false);
-  
+
+  const canEditDictionary = ApiClient.hasPermission('canEditDictionary');
+  const canUseAntiCensor = ApiClient.hasPermission('canUseAntiCensor');
+
   const meta = TAG_METADATA[pair.tag] || TAG_METADATA.others;
 
   const handleCopyPair = async () => {
@@ -38,15 +42,15 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
     const wordBEscaped = escapeCensoredWord(pair.wordB.term);
     const transformed = `${wordAEscaped} / ${wordBEscaped}`;
     const raw = `${pair.wordA.term} / ${pair.wordB.term}`;
-    
+
     await copyToClipboard(transformed);
-    
+
     if (onCopyAntiCensor) {
       onCopyAntiCensor(raw, transformed);
     } else {
       onCopyText(transformed);
     }
-    
+
     setCopiedAntiCensor(true);
     setTimeout(() => setCopiedAntiCensor(false), 1200);
   };
@@ -76,12 +80,19 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
         >
           {pair.wordB.term}
         </button>
-        
+
         {/* Tag Type Badge */}
         <button
-          onClick={() => onEditRelationTag(pair.wordA, pair.wordB, pair.tag)}
-          className={`text-[10px] px-2 py-0.5 rounded font-mono ${meta.badgeBg} ${meta.badgeText} border ${meta.badgeBorder} hover:opacity-80 transition-opacity cursor-pointer inline-flex items-center gap-1`}
-          title={`Tag Type: ${meta.label}. Click to edit.`}
+          disabled={!canEditDictionary}
+          onClick={() => canEditDictionary && onEditRelationTag(pair.wordA, pair.wordB, pair.tag)}
+          className={`text-[10px] px-2 py-0.5 rounded font-mono ${meta.badgeBg} ${meta.badgeText} border ${meta.badgeBorder} ${
+            canEditDictionary ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'
+          } transition-opacity inline-flex items-center gap-1`}
+          title={
+            canEditDictionary
+              ? `Tag Type: ${meta.label}. Click to edit.`
+              : `Tag Type: ${meta.label}`
+          }
         >
           <span className="font-bold">{meta.shortCode}</span>
           <span className="opacity-80 hidden sm:inline">• {meta.label}</span>
@@ -102,41 +113,46 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
             <Copy className="w-3.5 h-3.5" />
           )}
         </button>
-        
-        {/* Anti-Censor Copy Pair (Cyrillic) */}
-        <button
-          onClick={handleCopyPairAntiCensor}
-          className={`p-1.5 transition-colors cursor-pointer rounded hover:bg-slate-800 ${
-            copiedAntiCensor
-              ? 'text-amber-400 bg-amber-500/15'
-              : 'text-slate-400 hover:text-amber-400'
-          }`}
-          title="Salin Anti-Sensor (Sisipkan spasi kosong)"
-        >
-          {copiedAntiCensor ? (
-            <Check className="w-3.5 h-3.5 text-amber-400" />
-          ) : (
-            <VenetianMask className="w-3.5 h-3.5" />
-          )}
-        </button>
 
-        {/* Change Tag Type */}
-        <button
-          onClick={() => onEditRelationTag(pair.wordA, pair.wordB, pair.tag)}
-          className="p-1.5 text-slate-400 hover:text-sky-400 transition-colors cursor-pointer rounded hover:bg-slate-800"
-          title="Change Tag Type"
-        >
-          <Tag className="w-3.5 h-3.5" />
-        </button>
-        
-        {/* Unlink Pair */}
-        <button
-          onClick={() => onUnlinkRelation(pair.wordA.id, pair.wordB.id, pair.tag)}
-          className="p-1.5 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer rounded hover:bg-slate-800"
-          title="Unlink pair"
-        >
-          <Unlink className="w-3.5 h-3.5" />
-        </button>
+        {/* Anti-Censor Copy Pair (Cyrillic) */}
+        {canUseAntiCensor && (
+          <button
+            onClick={handleCopyPairAntiCensor}
+            className={`p-1.5 transition-colors cursor-pointer rounded hover:bg-slate-800 ${
+              copiedAntiCensor
+                ? 'text-amber-400 bg-amber-500/15'
+                : 'text-slate-400 hover:text-amber-400'
+            }`}
+            title="Salin Anti-Sensor (Sisipkan spasi kosong)"
+          >
+            {copiedAntiCensor ? (
+              <Check className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <VenetianMask className="w-3.5 h-3.5" />
+            )}
+          </button>
+        )}
+
+        {/* Change Tag Type & Unlink (Gated by canEditDictionary) */}
+        {canEditDictionary && (
+          <>
+            <button
+              onClick={() => onEditRelationTag(pair.wordA, pair.wordB, pair.tag)}
+              className="p-1.5 text-slate-400 hover:text-sky-400 transition-colors cursor-pointer rounded hover:bg-slate-800"
+              title="Change Tag Type"
+            >
+              <Tag className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => onUnlinkRelation(pair.wordA.id, pair.wordB.id, pair.tag)}
+              className="p-1.5 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer rounded hover:bg-slate-800"
+              title="Unlink pair"
+            >
+              <Unlink className="w-3.5 h-3.5" />
+            </button>
+          </>
+        )}
       </div>
     </article>
   );

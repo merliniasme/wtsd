@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { escapeCensoredWord, copyToClipboard } from '../utils/homoglyph';
+import { ApiClient } from '../utils/api';
 
 interface WordCardProps {
   word: Word;
@@ -42,6 +43,10 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
 }) => {
   const [copied, setCopied] = useState(false);
   const [copiedAntiCensor, setCopiedAntiCensor] = useState(false);
+
+  const canEditDictionary = ApiClient.hasPermission('canEditDictionary');
+  const canUseAntiCensor = ApiClient.hasPermission('canUseAntiCensor');
+  const canUseAi = ApiClient.hasPermission('canUseAi');
 
   const handleCopy = async () => {
     await copyToClipboard(word.term);
@@ -95,44 +100,48 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
           </button>
           
           {/* Anti-Censor Homoglyph Copy */}
-          <button
-            id={`btn-anticensor-copy-${word.id}`}
-            onClick={handleCopyAntiCensor}
-            className={`p-1 transition-colors cursor-pointer rounded hover:bg-slate-800 ${
-              copiedAntiCensor
-                ? 'text-amber-400 bg-amber-500/15'
-                : 'text-slate-500 hover:text-amber-400'
-            }`}
-            title="Salin Anti-Sensor (Sisipkan spasi kosong)"
-          >
-            {copiedAntiCensor ? (
-              <Check className="w-3.5 h-3.5 text-amber-400" />
-            ) : (
-              <VenetianMask className="w-3.5 h-3.5" />
-            )}
-          </button>
+          {canUseAntiCensor && (
+            <button
+              id={`btn-anticensor-copy-${word.id}`}
+              onClick={handleCopyAntiCensor}
+              className={`p-1 transition-colors cursor-pointer rounded hover:bg-slate-800 ${
+                copiedAntiCensor
+                  ? 'text-amber-400 bg-amber-500/15'
+                  : 'text-slate-500 hover:text-amber-400'
+              }`}
+              title="Salin Anti-Sensor (Sisipkan spasi kosong)"
+            >
+              {copiedAntiCensor ? (
+                <Check className="w-3.5 h-3.5 text-amber-400" />
+              ) : (
+                <VenetianMask className="w-3.5 h-3.5" />
+              )}
+            </button>
+          )}
         </div>
 
-        {/* Edit & Delete Actions */}
-        <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-          <button
-            id={`btn-edit-word-${word.id}`}
-            onClick={() => onEditWord(word)}
-            className="p-1 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer rounded hover:bg-slate-800"
-            title="Edit word"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-          
-          <button
-            id={`btn-delete-word-${word.id}`}
-            onClick={() => onDeleteWord(word.id)}
-            className="p-1 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer rounded hover:bg-slate-800"
-            title="Delete word"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        {/* Edit & Delete Actions (Gated by canEditDictionary) */}
+        {canEditDictionary && (
+          <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+            <button
+              id={`btn-edit-word-${word.id}`}
+              onClick={() => onEditWord(word)}
+              className="p-1 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer rounded hover:bg-slate-800"
+              title="Edit word"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+            
+            <button
+              id={`btn-delete-word-${word.id}`}
+              onClick={() => onDeleteWord(word.id)}
+              className="p-1 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer rounded hover:bg-slate-800"
+              title="Delete word"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Relations Section */}
@@ -167,21 +176,30 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
                   
                   {/* Tag Type Badge showing shortCode */}
                   <button
-                    onClick={() => target && onEditRelationTag(word, target, rel.tag)}
-                    className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold ${meta.badgeBg} ${meta.badgeText} border ${meta.badgeBorder} hover:opacity-80 transition-opacity cursor-pointer`}
-                    title={`Tag Type: ${meta.label} (${meta.shortCode}). Click to change.`}
+                    disabled={!canEditDictionary}
+                    onClick={() => canEditDictionary && target && onEditRelationTag(word, target, rel.tag)}
+                    className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold ${meta.badgeBg} ${meta.badgeText} border ${meta.badgeBorder} ${
+                      canEditDictionary ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'
+                    } transition-opacity`}
+                    title={
+                      canEditDictionary
+                        ? `Tag Type: ${meta.label} (${meta.shortCode}). Click to change.`
+                        : `Tag Type: ${meta.label} (${meta.shortCode})`
+                    }
                   >
                     {meta.shortCode}
                   </button>
                   
                   {/* Remove relation */}
-                  <button
-                    onClick={() => onUnlinkRelation(word.id, rel.targetWordId, rel.tag)}
-                    className="text-slate-500 hover:text-rose-400 transition-colors p-0.5 cursor-pointer ml-0.5"
-                    title="Remove relation"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+                  {canEditDictionary && (
+                    <button
+                      onClick={() => onUnlinkRelation(word.id, rel.targetWordId, rel.tag)}
+                      className="text-slate-500 hover:text-rose-400 transition-colors p-0.5 cursor-pointer ml-0.5"
+                      title="Remove relation"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -192,8 +210,8 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
       {/* Card Footer: Actions */}
       <div className="pt-2 border-t border-[#334155]/50 flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 flex-wrap">
-          {/* AI Clue Button (Words Only) */}
-          {onGenerateAiClue && (
+          {/* AI Clue Button (Words Only, Gated by canUseAi) */}
+          {canUseAi && onGenerateAiClue && (
             <button
               id={`btn-ai-clue-${word.id}`}
               type="button"
@@ -207,15 +225,18 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
           )}
         </div>
         
-        <button
-          id={`btn-add-rel-${word.id}`}
-          onClick={() => onAddRelationToWord(word)}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-400 hover:text-sky-300 bg-slate-800/70 hover:bg-slate-800 px-2.5 py-1 rounded-md border border-[#334155] transition-colors cursor-pointer"
-        >
-          <Link2 className="w-3.5 h-3.5" />
-          <span>Add Relation</span>
-        </button>
+        {canEditDictionary && (
+          <button
+            id={`btn-add-rel-${word.id}`}
+            onClick={() => onAddRelationToWord(word)}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-400 hover:text-sky-300 bg-slate-800/70 hover:bg-slate-800 px-2.5 py-1 rounded-md border border-[#334155] transition-colors cursor-pointer ml-auto"
+          >
+            <Link2 className="w-3.5 h-3.5" />
+            <span>Add Relation</span>
+          </button>
+        )}
       </div>
     </article>
   );
 });
+
