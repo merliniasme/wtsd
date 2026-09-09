@@ -24,8 +24,9 @@ import { CreateRelationModal } from './components/CreateRelationModal';
 import { AddRelationModal } from './components/AddRelationModal';
 import { EditRelationModal } from './components/EditRelationModal';
 import { EditWordModal } from './components/EditWordModal';
+import { BackupRestoreModal } from './components/BackupRestoreModal';
 import { ToastContainer } from './components/Toast';
-import { Plus, Link2, ChevronDown } from 'lucide-react';
+import { Plus, Link2, ChevronDown, RotateCcw } from 'lucide-react';
 
 const INITIAL_PAGE_SIZE = 40;
 const PAGE_INCREMENT = 40;
@@ -49,6 +50,7 @@ export default function App() {
   // Modal States
   const [isAddWordOpen, setIsAddWordOpen] = useState(false);
   const [isCreateRelationOpen, setIsCreateRelationOpen] = useState(false);
+  const [isBackupRestoreOpen, setIsBackupRestoreOpen] = useState(false);
   const [activeWordForRelation, setActiveWordForRelation] = useState<Word | null>(null);
   const [wordToEdit, setWordToEdit] = useState<Word | null>(null);
   const [relationToEdit, setRelationToEdit] = useState<{
@@ -77,6 +79,15 @@ export default function App() {
     setWords(updated);
     saveActiveWordsToLocal(updated);
   }, []);
+
+  // Handler: Restore Words from backup or snapshot
+  const handleRestoreWords = useCallback(
+    (newWords: Word[], message: string) => {
+      persistWords(newWords);
+      addToast(message, 'success');
+    },
+    [persistWords, addToast]
+  );
 
   // Fast Word Lookup Map (O(1) lookups)
   const wordsMap = useMemo(() => {
@@ -350,7 +361,7 @@ export default function App() {
       className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200"
     >
       {/* Header */}
-      <Header />
+      <Header onOpenBackupRestore={() => setIsBackupRestoreOpen(true)} />
 
       {/* Main Content Area */}
       <main id="app-main-content" className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-5 space-y-4">
@@ -382,7 +393,7 @@ export default function App() {
             </div>
             <h3 className="font-semibold text-slate-200 text-sm">Dictionary is empty (0 words)</h3>
             <p className="text-xs text-slate-400">
-              Get started by adding your first word pair or standalone word.
+              Get started by adding your first word pair or standalone word, or restore from a previous backup.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
               <button
@@ -392,6 +403,14 @@ export default function App() {
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Tambah Kata</span>
+              </button>
+              <button
+                id="btn-empty-state-restore"
+                onClick={() => setIsBackupRestoreOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition-colors cursor-pointer shadow-xs"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-sky-400" />
+                <span>Restore Backup</span>
               </button>
             </div>
           </div>
@@ -598,6 +617,16 @@ export default function App() {
       <FloatingAddButton
         onAddWord={() => setIsAddWordOpen(true)}
         onCreateRelation={() => setIsCreateRelationOpen(true)}
+        onOpenBackupRestore={() => setIsBackupRestoreOpen(true)}
+      />
+
+      {/* Backup & Restore Modal */}
+      <BackupRestoreModal
+        isOpen={isBackupRestoreOpen}
+        onClose={() => setIsBackupRestoreOpen(false)}
+        currentWords={words}
+        onRestoreWords={handleRestoreWords}
+        onAddToast={addToast}
       />
 
       {/* Add Word Modal */}

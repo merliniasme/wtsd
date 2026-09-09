@@ -1,14 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Link2 } from 'lucide-react';
+import { Plus, Link2, Database } from 'lucide-react';
 
 interface FloatingAddButtonProps {
   onAddWord: () => void;
   onCreateRelation: () => void;
+  onOpenBackupRestore?: () => void;
 }
 
 export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
   onAddWord,
   onCreateRelation,
+  onOpenBackupRestore,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -72,6 +74,26 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
               <div className="text-[10px] text-slate-400">Hubungkan 2 kata (pasangan)</div>
             </div>
           </button>
+
+          {onOpenBackupRestore && (
+            <>
+              <div className="h-px bg-[#334155]/50 my-1 mx-2" />
+              <button
+                type="button"
+                id="fab-action-backup-restore"
+                onClick={() => handleAction(onOpenBackupRestore)}
+                className="w-full flex items-center gap-3 p-2 rounded-xl text-left hover:bg-slate-800/80 active:bg-slate-800 transition-colors cursor-pointer group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-indigo-500/25 transition-all">
+                  <Database className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-slate-200">Backup & Restore</div>
+                  <div className="text-[10px] text-slate-400">Cadangkan & pulihkan data</div>
+                </div>
+              </button>
+            </>
+          )}
         </div>
       </div>
 

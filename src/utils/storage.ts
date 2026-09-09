@@ -1,4 +1,5 @@
-import { Word, RELATION_TAGS, RelationTag } from '../types';
+import { Word, RELATION_TAGS, RelationTag, LocalBackupSnapshot } from '../types';
+import { calculateTotalRelations } from './wordGraph';
 
 const LEGACY_STORAGE_KEYS = [
   'whos_the_spy_dictionary_words_v3',
@@ -228,6 +229,7 @@ export function validateAndImportJson(
   lastModified?: number;
   error?: string;
   importedCount?: number;
+  pairCount?: number;
 } {
   try {
     const parsed = JSON.parse(jsonString);
@@ -265,6 +267,7 @@ export function validateAndImportJson(
         words: deduplicated,
         lastModified: fileLastModified,
         importedCount: deduplicated.length,
+        pairCount: calculateTotalRelations(deduplicated),
       };
     }
 
@@ -277,12 +280,72 @@ export function validateAndImportJson(
       words: mergedWords,
       lastModified: fileLastModified,
       importedCount: mergedWords.length,
+      pairCount: calculateTotalRelations(mergedWords),
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Invalid JSON format';
     return {
       success: false,
       error: `Failed to parse JSON: ${message}`,
+    };
+  }
+}
+
+/**
+ * Previews/inspects a JSON backup string without committing changes.
+ */
+export function inspectBackupJson(jsonString: string): {
+  success: boolean;
+  words?: Word[];
+  totalWords?: number;
+  totalPairs?: number;
+  lastModified?: number;
+  error?: string;
+} {
+  try {
+    const parsed = JSON.parse(jsonString);
+    let candidateWords: unknown;
+    let fileLastModified: number = Date.now();
+
+    if (Array.isArray(parsed)) {
+      candidateWords = parsed;
+    } else if (parsed && typeof parsed === 'object' && Array.isArray((parsed as Record<string, unknown>).words)) {
+      candidateWords = (parsed as Record<string, unknown>).words;
+      if (typeof (parsed as Record<string, unknown>).lastModified === 'number') {
+        fileLastModified = (parsed as Record<string, unknown>).lastModified as number;
+      } else if (typeof (parsed as Record<string, unknown>).exportedAt === 'string') {
+        fileLastModified = new Date((parsed as Record<string, unknown>).exportedAt as string).getTime() || Date.now();
+      }
+    } else {
+      return {
+        success: false,
+        error: 'Invalid file format: JSON must contain an array of words or a { "words": [...] } object.',
+      };
+    }
+
+    const sanitized = sanitizeWords(candidateWords as Word[]);
+    if (sanitized.length === 0 && candidateWords && Array.isArray(candidateWords) && candidateWords.length > 0) {
+      return {
+        success: false,
+        error: 'No valid words found in the backup file.',
+      };
+    }
+
+    const deduplicated = deduplicateWords(sanitized);
+    const pairs = calculateTotalRelations(deduplicated);
+
+    return {
+      success: true,
+      words: deduplicated,
+      totalWords: deduplicated.length,
+      totalPairs: pairs,
+      lastModified: fileLastModified,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Invalid JSON format';
+    return {
+      success: false,
+      error: `Could not parse file: ${msg}`,
     };
   }
 }
@@ -384,6 +447,121 @@ export function clearAllWords(): Word[] {
     // ignore
   }
   return [];
+}
+
+export const LOCAL_SNAPSHOTS_STORAGE_KEY = 'whos_the_spy_local_snapshots_v1';
+const MAX_SNAPSHOTS = 20;
+
+/**
+ * Loads all locally saved backup snapshots from localStorage.
+ */
+export function loadLocalSnapshots(): LocalBackupSnapshot[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_SNAPSHOTS_STORAGE_KEY);
+    if (!raw) return [];
+    const list = JSON.parse(raw);
+    if (Array.isArray(list)) {
+      return list.sort((a, b) => b.createdAt - a.createdAt);
+    }
+  } catch (err) {
+    console.warn('Error reading local snapshots:', err);
+  }
+  return [];
+}
+
+/**
+ * Saves a named or automatic local backup snapshot to localStorage.
+ */
+export function saveLocalSnapshot(words: Word[], customName?: string): LocalBackupSnapshot {
+  const snapshots = loadLocalSnapshots();
+  const cleanWords = deduplicateWords(words);
+  const now = Date.now();
+  const dateFormatted = new Date(now).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  const name = customName?.trim() || `Backup (${dateFormatted})`;
+
+  const newSnapshot: LocalBackupSnapshot = {
+    id: 'snap_' + now + '_' + Math.random().toString(36).substring(2, 7),
+    name,
+    createdAt: now,
+    wordCount: cleanWords.length,
+    pairCount: calculateTotalRelations(cleanWords),
+    words: cleanWords,
+  };
+
+  const updated = [newSnapshot, ...snapshots.filter((s) => s.id !== newSnapshot.id)].slice(0, MAX_SNAPSHOTS);
+  try {
+    localStorage.setItem(LOCAL_SNAPSHOTS_STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.warn('Error saving local snapshot:', err);
+  }
+  return newSnapshot;
+}
+
+/**
+ * Deletes a specific local snapshot.
+ */
+export function deleteLocalSnapshot(snapshotId: string): LocalBackupSnapshot[] {
+  const snapshots = loadLocalSnapshots();
+  const updated = snapshots.filter((s) => s.id !== snapshotId);
+  try {
+    localStorage.setItem(LOCAL_SNAPSHOTS_STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.warn('Error deleting local snapshot:', err);
+  }
+  return updated;
+}
+
+/**
+ * Clears all local backup snapshots.
+ */
+export function clearAllLocalSnapshots(): void {
+  try {
+    localStorage.removeItem(LOCAL_SNAPSHOTS_STORAGE_KEY);
+  } catch (err) {
+    console.warn('Error clearing local snapshots:', err);
+  }
+}
+
+/**
+ * Downloads a backup file (.json) to the user's device.
+ */
+export function downloadBackupJsonFile(words: Word[], customFilename?: string): void {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  const timeStr = `${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`;
+  const filename = customFilename?.trim() || `spy-dictionary-backup-${dateStr}_${timeStr}.json`;
+
+  const jsonContent = exportWordsJson(words);
+  const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Copies the raw backup JSON to user's clipboard.
+ */
+export async function copyBackupJsonToClipboard(words: Word[]): Promise<boolean> {
+  const jsonContent = exportWordsJson(words);
+  try {
+    await navigator.clipboard.writeText(jsonContent);
+    return true;
+  } catch (err) {
+    console.warn('Could not copy to clipboard:', err);
+    return false;
+  }
 }
 
 
