@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PairItem, RelationTag, TAG_METADATA } from '../types';
-import { Copy, Check, Tag, Unlink } from 'lucide-react';
+import { Copy, Check, Tag, Unlink, VenetianMask } from 'lucide-react';
+import { escapeCensoredWord, copyToClipboard } from '../utils/homoglyph';
 
 interface PairCardProps {
   pair: PairItem;
@@ -8,6 +9,7 @@ interface PairCardProps {
   onEditRelationTag: (wordA: PairItem['wordA'], wordB: PairItem['wordB'], currentTag: RelationTag) => void;
   onUnlinkRelation: (wordAId: string, wordBId: string, tag: RelationTag) => void;
   onCopyText: (text: string) => void;
+  onCopyAntiCensor?: (text: string, transformed: string) => void;
 }
 
 export const PairCard: React.FC<PairCardProps> = React.memo(({
@@ -16,21 +18,37 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
   onEditRelationTag,
   onUnlinkRelation,
   onCopyText,
+  onCopyAntiCensor,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [copiedAntiCensor, setCopiedAntiCensor] = useState(false);
   
   const meta = TAG_METADATA[pair.tag] || TAG_METADATA.others;
 
   const handleCopyPair = async () => {
     const text = `${pair.wordA.term} / ${pair.wordB.term}`;
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // fallback
-    }
+    await copyToClipboard(text);
     onCopyText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1200);
+  };
+
+  const handleCopyPairAntiCensor = async () => {
+    const wordAEscaped = escapeCensoredWord(pair.wordA.term);
+    const wordBEscaped = escapeCensoredWord(pair.wordB.term);
+    const transformed = `${wordAEscaped} / ${wordBEscaped}`;
+    const raw = `${pair.wordA.term} / ${pair.wordB.term}`;
+    
+    await copyToClipboard(transformed);
+    
+    if (onCopyAntiCensor) {
+      onCopyAntiCensor(raw, transformed);
+    } else {
+      onCopyText(transformed);
+    }
+    
+    setCopiedAntiCensor(true);
+    setTimeout(() => setCopiedAntiCensor(false), 1200);
   };
 
   return (
@@ -76,12 +94,29 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
         <button
           onClick={handleCopyPair}
           className="p-1.5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer rounded hover:bg-slate-800"
-          title="Salin pasangan kata"
+          title="Salin pasangan kata (Latin biasa)"
         >
           {copied ? (
             <Check className="w-3.5 h-3.5 text-emerald-400" />
           ) : (
             <Copy className="w-3.5 h-3.5" />
+          )}
+        </button>
+        
+        {/* Anti-Censor Copy Pair (Cyrillic) */}
+        <button
+          onClick={handleCopyPairAntiCensor}
+          className={`p-1.5 transition-colors cursor-pointer rounded hover:bg-slate-800 ${
+            copiedAntiCensor
+              ? 'text-amber-400 bg-amber-500/15'
+              : 'text-slate-400 hover:text-amber-400'
+          }`}
+          title="Salin Anti-Sensor (Sisipkan spasi kosong)"
+        >
+          {copiedAntiCensor ? (
+            <Check className="w-3.5 h-3.5 text-amber-400" />
+          ) : (
+            <VenetianMask className="w-3.5 h-3.5" />
           )}
         </button>
 
@@ -106,4 +141,3 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
     </article>
   );
 });
-

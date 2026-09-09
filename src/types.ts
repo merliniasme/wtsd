@@ -117,7 +117,7 @@ export interface PairItem {
   tag: RelationTag;
 }
 
-export type ActiveTab = 'pairs' | 'words';
+export type ActiveTab = 'pairs' | 'words' | 'settings';
 
 export interface SpyGamePair {
   wordA: Word;
@@ -131,15 +131,6 @@ export interface ToastMessage {
   id: string;
   message: string;
   type?: ToastType;
-}
-
-export interface LocalBackupSnapshot {
-  id: string;
-  name: string;
-  createdAt: number;
-  wordCount: number;
-  pairCount: number;
-  words: Word[];
 }
 
 export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'unsaved' | 'offline' | 'error';

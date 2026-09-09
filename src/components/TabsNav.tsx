@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActiveTab } from '../types';
-import { Link2, Type } from 'lucide-react';
+import { Link2, Type, Settings } from 'lucide-react';
 
 interface TabsNavProps {
   activeTab: ActiveTab;
@@ -29,7 +29,7 @@ export const TabsNav: React.FC<TabsNavProps> = ({
         }`}
       >
         <Link2 className="w-3.5 h-3.5" />
-        <span>Pairs Word</span>
+        <span>Pairs</span>
       </button>
 
       <button
@@ -43,10 +43,23 @@ export const TabsNav: React.FC<TabsNavProps> = ({
         }`}
       >
         <Type className="w-3.5 h-3.5" />
-        <span>Words List</span>
+        <span>Words</span>
+      </button>
+
+      <button
+        id="tab-btn-settings"
+        type="button"
+        onClick={() => onTabChange('settings')}
+        className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-md text-xs font-medium transition-all cursor-pointer ${
+          activeTab === 'settings'
+            ? 'bg-sky-400 text-slate-950 font-semibold shadow-xs'
+            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+        }`}
+      >
+        <Settings className="w-3.5 h-3.5" />
+        <span>Settings</span>
       </button>
     </div>
   );
 };
-
 

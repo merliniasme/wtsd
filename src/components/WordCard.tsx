@@ -7,7 +7,10 @@ import {
   Copy,
   Check,
   Link2,
+  VenetianMask,
+  Sparkles,
 } from 'lucide-react';
+import { escapeCensoredWord, copyToClipboard } from '../utils/homoglyph';
 
 interface WordCardProps {
   word: Word;
@@ -19,6 +22,8 @@ interface WordCardProps {
   onEditRelationTag: (word: Word, targetWord: Word, currentTag: RelationTag) => void;
   onUnlinkRelation: (wordAId: string, wordBId: string, tag: RelationTag) => void;
   onCopyTerm: (term: string) => void;
+  onCopyAntiCensor?: (term: string, transformed: string) => void;
+  onGenerateAiClue?: (word: Word) => void;
   highlightTerm?: string;
 }
 
@@ -32,18 +37,29 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
   onEditRelationTag,
   onUnlinkRelation,
   onCopyTerm,
+  onCopyAntiCensor,
+  onGenerateAiClue,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [copiedAntiCensor, setCopiedAntiCensor] = useState(false);
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(word.term);
-    } catch {
-      // fallback
-    }
+    await copyToClipboard(word.term);
     onCopyTerm(word.term);
     setCopied(true);
     setTimeout(() => setCopied(false), 1200);
+  };
+
+  const handleCopyAntiCensor = async () => {
+    const transformed = escapeCensoredWord(word.term);
+    await copyToClipboard(transformed);
+    if (onCopyAntiCensor) {
+      onCopyAntiCensor(word.term, transformed);
+    } else {
+      onCopyTerm(transformed);
+    }
+    setCopiedAntiCensor(true);
+    setTimeout(() => setCopiedAntiCensor(false), 1200);
   };
 
   return (
@@ -69,12 +85,30 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
           <button
             onClick={handleCopy}
             className="text-slate-500 hover:text-slate-300 transition-colors p-1 cursor-pointer rounded hover:bg-slate-800"
-            title="Salin kata"
+            title="Salin kata biasa"
           >
             {copied ? (
               <Check className="w-3.5 h-3.5 text-emerald-400" />
             ) : (
               <Copy className="w-3.5 h-3.5" />
+            )}
+          </button>
+          
+          {/* Anti-Censor Homoglyph Copy */}
+          <button
+            id={`btn-anticensor-copy-${word.id}`}
+            onClick={handleCopyAntiCensor}
+            className={`p-1 transition-colors cursor-pointer rounded hover:bg-slate-800 ${
+              copiedAntiCensor
+                ? 'text-amber-400 bg-amber-500/15'
+                : 'text-slate-500 hover:text-amber-400'
+            }`}
+            title="Salin Anti-Sensor (Sisipkan spasi kosong)"
+          >
+            {copiedAntiCensor ? (
+              <Check className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <VenetianMask className="w-3.5 h-3.5" />
             )}
           </button>
         </div>
@@ -156,7 +190,23 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
       </div>
 
       {/* Card Footer: Actions */}
-      <div className="pt-2 border-t border-[#334155]/50 flex items-center justify-end gap-2">
+      <div className="pt-2 border-t border-[#334155]/50 flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* AI Clue Button (Words Only) */}
+          {onGenerateAiClue && (
+            <button
+              id={`btn-ai-clue-${word.id}`}
+              type="button"
+              onClick={() => onGenerateAiClue(word)}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-violet-300 hover:text-white bg-violet-950/60 hover:bg-violet-900/80 border border-violet-700/60 hover:border-violet-500 transition-all cursor-pointer py-1 px-2 rounded-md shadow-2xs"
+              title="Generate AI clue for this word"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+              <span>AI Clue</span>
+            </button>
+          )}
+        </div>
+        
         <button
           id={`btn-add-rel-${word.id}`}
           onClick={() => onAddRelationToWord(word)}
@@ -169,4 +219,3 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
     </article>
   );
 });
-
