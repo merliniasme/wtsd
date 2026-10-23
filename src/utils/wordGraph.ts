@@ -45,6 +45,7 @@ export function calculateRelationsByTag(words: Word[]): Record<RelationTag, numb
     ectm: 0,
     mag: 0,
     cghn: 0,
+    ss_verified: 0,
   };
 
   const uniqueEdges = new Set<string>();

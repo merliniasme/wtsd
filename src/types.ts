@@ -1,4 +1,4 @@
-export type RelationTag = 'unknown' | 'others' | 'aoh' | 'ectm' | 'mag' | 'cghn';
+export type RelationTag = 'unknown' | 'others' | 'aoh' | 'ectm' | 'mag' | 'cghn' | 'ss_verified';
 
 export const RELATION_TAGS: readonly RelationTag[] = [
   'unknown',
@@ -7,6 +7,7 @@ export const RELATION_TAGS: readonly RelationTag[] = [
   'ectm',
   'mag',
   'cghn',
+  'ss_verified',
 ] as const;
 
 export interface Relation {
@@ -106,6 +107,18 @@ export const TAG_METADATA: Record<RelationTag, TagInfo> = {
     badgeText: 'text-emerald-300',
     badgeBorder: 'border-emerald-500/30',
     activeBg: 'bg-emerald-400',
+    activeText: 'text-slate-950',
+  },
+  ss_verified: {
+    tag: 'ss_verified',
+    label: 'SS Verified',
+    shortCode: 'SSV',
+    description: 'Verified from WePlay game result victory screenshots',
+    color: 'cyan',
+    badgeBg: 'bg-cyan-500/15',
+    badgeText: 'text-cyan-300',
+    badgeBorder: 'border-cyan-500/30',
+    activeBg: 'bg-cyan-400',
     activeText: 'text-slate-950',
   },
 };
@@ -273,4 +286,29 @@ export const COMPLETE_APP_FEATURES: FeaturePermissionInfo[] = [
     description: 'Play the interactive memory game to test knowledge of paired dictionary terms.',
   },
 ];
+
+export interface ExtractedGameResult {
+  id: string;
+  fileName: string;
+  imagePreviewUrl: string;
+  civilianWord: string;
+  spyWord: string;
+  confidence: number;
+  winner?: 'civilian' | 'spy' | 'unknown' | string;
+  notes?: string;
+  status: 'pending' | 'success' | 'error';
+  errorMessage?: string;
+  selectedTag: RelationTag;
+  isDuplicate?: boolean;
+  duplicateInfo?: string;
+}
+
+export interface GameResultsExtractionResponse {
+  isWePlayResultScreen: boolean;
+  civilianWord: string;
+  spyWord: string;
+  confidence: number;
+  winner?: string;
+  notes?: string;
+}
 

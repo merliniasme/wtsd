@@ -36,6 +36,7 @@ import { RawImportModal } from './components/RawImportModal';
 import { MemoryGameModal } from './components/MemoryGameModal';
 import { AiClueModal } from './components/AiClueModal';
 import { WePlayPhotoEditorModal } from './components/WePlayPhotoEditorModal';
+import { ScreenshotResultsModal } from './components/ScreenshotResultsModal';
 import { ToastContainer } from './components/Toast';
 import { Plus, Settings as SettingsIcon, Link2, ChevronDown, Sparkles, Image as ImageIcon } from 'lucide-react';
 
@@ -70,6 +71,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
   const [aiClueWord, setAiClueWord] = useState<Word | null>(null);
   const [isWePlayEditorOpen, setIsWePlayEditorOpen] = useState(false);
   const [wePlayEditorInitialWord, setWePlayEditorInitialWord] = useState('');
+  const [isScreenshotScannerOpen, setIsScreenshotScannerOpen] = useState(false);
   const [activeWordForRelation, setActiveWordForRelation] = useState<Word | null>(null);
   const [wordToEdit, setWordToEdit] = useState<Word | null>(null);
   const [relationToEdit, setRelationToEdit] = useState<{
@@ -272,6 +274,36 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
     setWePlayEditorInitialWord(word || '');
     setIsWePlayEditorOpen(true);
   }, [addToast]);
+
+  // Handler: Commit Pairs Extracted from Screenshots (SS Verified)
+  const handleCommitScannedPairs = useCallback(
+    (pairsToCommit: { termA: string; termB: string; tag: RelationTag }[]) => {
+      if (!ApiClient.hasPermission('canEditDictionary')) {
+        addToast('Permission denied: You do not have permission to add words.', 'error');
+        return;
+      }
+
+      let currentWords = [...words];
+      let addedCount = 0;
+
+      for (const p of pairsToCommit) {
+        const res = addOrLinkPair(currentWords, p.termA, p.termB, p.tag);
+        if (!res.duplicate) {
+          currentWords = res.updatedWords;
+          addedCount++;
+        }
+      }
+
+      if (addedCount > 0) {
+        setWords(currentWords);
+        serverSync.pushWords(currentWords);
+        addToast(`Successfully added ${addedCount} pair(s) to dictionary under SS Verified!`, 'success');
+      } else {
+        addToast('No new pairs added (all terms were already linked).', 'info');
+      }
+    },
+    [words, serverSync, addToast]
+  );
 
   // Handler: Add Standalone Word
   const handleAddSingleWord = useCallback(
@@ -575,18 +607,37 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
                         </>
                       )}
                     </span>
-                    {(searchTerm || selectedTag !== 'all') && (
+                    <div className="flex items-center gap-2">
                       <button
-                        id="btn-reset-pairs-filters"
+                        type="button"
+                        id="btn-pairs-scan-ss"
                         onClick={() => {
-                          setSearchTerm('');
-                          setSelectedTag('all');
+                          if (!ApiClient.hasPermission('canEditDictionary')) {
+                            addToast('Permission restricted: Adding words requires editor permissions.', 'error');
+                            return;
+                          }
+                          setIsScreenshotScannerOpen(true);
                         }}
-                        className="text-sky-400 hover:underline cursor-pointer text-xs"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-md transition-colors cursor-pointer"
+                        title="Scan and extract pairs from WePlay game results screenshot"
                       >
-                        Clear filter
+                        <Sparkles className="w-3 h-3 text-cyan-400" />
+                        <span>Scan Hasil SS</span>
                       </button>
-                    )}
+
+                      {(searchTerm || selectedTag !== 'all') && (
+                        <button
+                          id="btn-reset-pairs-filters"
+                          onClick={() => {
+                            setSearchTerm('');
+                            setSelectedTag('all');
+                          }}
+                          className="text-sky-400 hover:underline cursor-pointer text-xs"
+                        >
+                          Clear filter
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
@@ -728,6 +779,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
       <FloatingAddButton
         onAddWord={() => setIsAddWordOpen(true)}
         onCreateRelation={() => setIsCreateRelationOpen(true)}
+        onOpenScreenshotScanner={() => setIsScreenshotScannerOpen(true)}
         onOpenPuzzle={() => setIsMemoryGameOpen(true)}
         onOpenWePlayEditor={() => handleOpenWePlayEditor('')}
         onGoToSettings={() => setActiveTab('settings')}
@@ -816,6 +868,15 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
         onClose={() => setIsWePlayEditorOpen(false)}
         words={words}
         initialTargetWord={wePlayEditorInitialWord}
+        onToast={addToast}
+      />
+
+      {/* Game Over Screenshot Pair Importer Modal */}
+      <ScreenshotResultsModal
+        isOpen={isScreenshotScannerOpen}
+        onClose={() => setIsScreenshotScannerOpen(false)}
+        words={words}
+        onCommitPairs={handleCommitScannedPairs}
         onToast={addToast}
       />
 

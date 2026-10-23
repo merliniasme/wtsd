@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Link2, Puzzle, Image as ImageIcon, Settings, Lock } from 'lucide-react';
+import { Plus, Link2, Puzzle, Image as ImageIcon, Settings, Lock, Sparkles } from 'lucide-react';
 import { ApiClient } from '../utils/api';
 
 interface FloatingAddButtonProps {
@@ -7,6 +7,7 @@ interface FloatingAddButtonProps {
   onOpenAntiCensor: () => void;
   onAddWord: () => void;
   onCreateRelation: () => void;
+  onOpenScreenshotScanner?: () => void;
   onOpenPuzzle: () => void;
   onOpenWePlayEditor: () => void;
   onGoToSettings?: () => void;
@@ -16,6 +17,7 @@ interface FloatingAddButtonProps {
 export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
   onAddWord,
   onCreateRelation,
+  onOpenScreenshotScanner,
   onOpenPuzzle,
   onOpenWePlayEditor,
   onGoToSettings,
@@ -105,6 +107,38 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
             </div>
             {!canEditDictionary && <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0 mr-1" />}
           </button>
+
+          {/* Scan Game Result Screenshots (SS Verified) */}
+          {onOpenScreenshotScanner && (
+            <button
+              type="button"
+              id="fab-action-scan-ss"
+              onClick={() =>
+                handleAction(canEditDictionary, onOpenScreenshotScanner, 'Scan Screenshot Results')
+              }
+              className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer group ${
+                canEditDictionary
+                  ? 'hover:bg-slate-800/80 active:bg-slate-800'
+                  : 'opacity-60 hover:bg-slate-800/40'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-cyan-500/25 transition-all">
+                  <Sparkles className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
+                    Scan Hasil Game
+                    <span className="text-[9px] px-1.5 py-0.2 rounded font-mono bg-cyan-500/20 text-cyan-300">
+                      SSV
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-400">Auto-input pasang kata dari SS</div>
+                </div>
+              </div>
+              {!canEditDictionary && <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0 mr-1" />}
+            </button>
+          )}
 
           <div className="h-px bg-[#334155]/50 my-1 mx-2" />
 
