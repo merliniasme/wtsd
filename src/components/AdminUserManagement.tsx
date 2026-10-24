@@ -174,10 +174,10 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
 
   if (!isAdmin) {
     return (
-      <div className="bg-[#1E293B] border border-amber-500/30 rounded-xl p-5 text-center space-y-2">
+      <div className="bg-[#112240] border border-amber-500/30 rounded-xl p-5 text-center space-y-2">
         <Lock className="w-6 h-6 text-amber-400 mx-auto" />
-        <h4 className="text-sm font-semibold text-slate-100">Admin Feature Restricted</h4>
-        <p className="text-xs text-slate-400 max-w-md mx-auto">
+        <h4 className="text-sm font-semibold text-[#F8FAFC]">Admin Feature Restricted</h4>
+        <p className="text-xs text-[#94A3B8] max-w-md mx-auto">
           User account management and role delegation are restricted strictly to master administrator accounts.
         </p>
       </div>
@@ -203,7 +203,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
       case 'Dictionary':
         return <BookOpen className="w-3.5 h-3.5 text-emerald-400" />;
       case 'Database':
-        return <Database className="w-3.5 h-3.5 text-sky-400" />;
+        return <Database className="w-3.5 h-3.5 text-[#00D2FF]" />;
       case 'AI & Game':
         return <Sparkles className="w-3.5 h-3.5 text-violet-400" />;
       case 'Tools':
@@ -216,26 +216,26 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
   return (
     <div className="space-y-6">
       {/* Overview & Security Badge */}
-      <div className="bg-gradient-to-r from-amber-500/10 via-slate-800 to-slate-900 border border-amber-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="bg-[#112240] border border-[#233554] rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30">
+          <div className="p-2.5 rounded-lg bg-[#00D2FF]/10 text-[#00D2FF] border border-[#00D2FF]/30">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-slate-100">Admin User Management</h3>
-              <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold tracking-wider uppercase border border-amber-500/30">
+              <h3 className="text-sm font-semibold text-[#F8FAFC]">Admin User Management</h3>
+              <span className="px-2 py-0.5 rounded-lg bg-[#00D2FF]/10 text-[#00D2FF] text-[10px] font-bold tracking-wider uppercase border border-[#00D2FF]/30">
                 Admin Exclusive
               </span>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[#94A3B8]">
               Provision sub-accounts with custom restricted feature permissions.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700/60 self-stretch sm:self-auto justify-center">
-          <Users className="w-3.5 h-3.5 text-amber-400" />
+        <div className="flex items-center gap-2 text-xs font-mono text-[#94A3B8] bg-[#080F1E] px-3 py-1.5 rounded-lg border border-[#233554] self-stretch sm:self-auto justify-center">
+          <Users className="w-3.5 h-3.5 text-[#00D2FF]" />
           <span>{users.length} registered accounts</span>
         </div>
       </div>
@@ -243,21 +243,21 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
       {/* Create New Account Section */}
       <section
         id="section-create-user-account"
-        className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
+        className="bg-[#112240] border border-[#233554] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
       >
-        <div className="flex items-center justify-between pb-3 border-b border-slate-700/60">
-          <div className="flex items-center gap-2 text-amber-400">
+        <div className="flex items-center justify-between pb-3 border-b border-[#233554]">
+          <div className="flex items-center gap-2 text-[#00D2FF]">
             <UserPlus className="w-4 h-4" />
-            <h4 className="text-sm font-semibold text-slate-100">Create Restricted User Account</h4>
+            <h4 className="text-sm font-semibold text-[#F8FAFC]">Create Restricted User Account</h4>
           </div>
-          <span className="text-[11px] text-slate-400">Granular feature isolation</span>
+          <span className="text-[11px] text-[#94A3B8]">Granular feature isolation</span>
         </div>
 
         <form onSubmit={handleCreateUser} className="space-y-4">
           {/* Credentials Inputs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+              <label className="text-xs font-medium text-[#94A3B8] flex items-center gap-1.5">
                 <span>Account Nickname / Username</span>
               </label>
               <div className="relative">
@@ -266,20 +266,20 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
                   placeholder="e.g. detective_alex"
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
-                  className="w-full bg-[#0F172A] border border-slate-700 text-xs text-slate-100 px-3 py-2.5 rounded-lg focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                  className="w-full bg-[#080F1E] border border-[#233554] text-xs text-[#F8FAFC] placeholder-[#64748B] px-3.5 py-2.5 rounded-lg focus:outline-none focus:border-[#00D2FF] focus:ring-1 focus:ring-[#00D2FF] transition-all"
                   required
                 />
               </div>
-              <p className="text-[10px] text-slate-500">Signs in via nickname or {newUsername.trim() || 'user'}@spy.local</p>
+              <p className="text-[10px] text-[#94A3B8]">Signs in via nickname or {newUsername.trim() || 'user'}@spy.local</p>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-300 flex items-center justify-between">
+              <label className="text-xs font-medium text-[#94A3B8] flex items-center justify-between">
                 <span>Account Password</span>
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-[10px] text-slate-400 hover:text-slate-200 inline-flex items-center gap-1 cursor-pointer"
+                  className="text-[10px] text-[#94A3B8] hover:text-[#F8FAFC] inline-flex items-center gap-1 cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                   <span>{showPassword ? 'Hide' : 'Show'}</span>
@@ -291,55 +291,55 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
                   placeholder="At least 6 characters"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full bg-[#0F172A] border border-slate-700 text-xs text-slate-100 px-3 py-2.5 rounded-lg focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                  className="w-full bg-[#080F1E] border border-[#233554] text-xs text-[#F8FAFC] placeholder-[#64748B] px-3.5 py-2.5 rounded-lg focus:outline-none focus:border-[#00D2FF] focus:ring-1 focus:ring-[#00D2FF] transition-all"
                   required
                 />
               </div>
-              <p className="text-[10px] text-slate-500">Secure credentials stored via Firebase Auth</p>
+              <p className="text-[10px] text-[#94A3B8]">Secure credentials stored via Firebase Auth</p>
             </div>
           </div>
 
           {/* Feature Permissions Complete List Header & Presets */}
-          <div className="space-y-2 pt-2 border-t border-slate-700/50">
+          <div className="space-y-2 pt-2 border-t border-[#233554]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h5 className="text-xs font-semibold text-slate-200">
+                <h5 className="text-xs font-semibold text-[#F8FAFC]">
                   Feature Permissions Delegation ({countPermissions(permissions)}/
                   {COMPLETE_APP_FEATURES.length} Allowed)
                 </h5>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-[#94A3B8]">
                   Select which features this account can access. Unchecked features will be locked.
                 </p>
               </div>
 
               {/* Quick Presets */}
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] text-slate-500 font-medium">Presets:</span>
+                <span className="text-[10px] text-[#94A3B8] font-medium">Presets:</span>
                 <button
                   type="button"
                   onClick={() => handleApplyPreset('readonly')}
-                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-medium rounded border border-slate-700 transition-colors cursor-pointer"
+                  className="px-2 py-1 bg-[#112240] hover:bg-[#1E293B] text-[#94A3B8] hover:text-[#F8FAFC] text-[10px] font-medium rounded-lg border border-[#233554] transition-colors cursor-pointer"
                 >
                   Read-Only
                 </button>
                 <button
                   type="button"
                   onClick={() => handleApplyPreset('editor')}
-                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-300 text-[10px] font-medium rounded border border-slate-700 transition-colors cursor-pointer"
+                  className="px-2 py-1 bg-[#112240] hover:bg-[#1E293B] text-emerald-400 text-[10px] font-medium rounded-lg border border-[#233554] transition-colors cursor-pointer"
                 >
                   Editor
                 </button>
                 <button
                   type="button"
                   onClick={() => handleApplyPreset('power')}
-                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-sky-300 text-[10px] font-medium rounded border border-slate-700 transition-colors cursor-pointer"
+                  className="px-2 py-1 bg-[#112240] hover:bg-[#1E293B] text-[#00D2FF] text-[10px] font-medium rounded-lg border border-[#233554] transition-colors cursor-pointer"
                 >
                   Power User
                 </button>
                 <button
                   type="button"
                   onClick={() => handleApplyPreset('all')}
-                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 text-[10px] font-medium rounded border border-slate-700 transition-colors cursor-pointer"
+                  className="px-2 py-1 bg-[#112240] hover:bg-[#1E293B] text-amber-400 text-[10px] font-medium rounded-lg border border-[#233554] transition-colors cursor-pointer"
                 >
                   All Features
                 </button>
@@ -356,8 +356,8 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
                     htmlFor={`perm-toggle-${feature.key}`}
                     className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
                       isEnabled
-                        ? 'bg-amber-500/10 border-amber-500/40 text-slate-100 shadow-xs'
-                        : 'bg-[#0F172A]/70 border-slate-800 text-slate-400 hover:border-slate-700'
+                        ? 'bg-[#00D2FF]/10 border-[#00D2FF]/40 text-[#F8FAFC] shadow-xs'
+                        : 'bg-[#080F1E] border-[#233554] text-[#94A3B8] hover:border-slate-600'
                     }`}
                   >
                     <input
@@ -365,19 +365,19 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
                       id={`perm-toggle-${feature.key}`}
                       checked={isEnabled}
                       onChange={() => handleToggleFormPerm(feature.key)}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-700 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900 accent-amber-500 cursor-pointer shrink-0"
+                      className="mt-0.5 w-4 h-4 rounded border-[#233554] text-[#00D2FF] focus:ring-[#00D2FF] focus:ring-offset-[#0A192F] accent-[#00D2FF] cursor-pointer shrink-0"
                     />
                     <div className="flex-1 min-w-0 space-y-0.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-xs font-semibold text-slate-200">
+                        <span className="text-xs font-semibold text-[#F8FAFC]">
                           {feature.name}
                         </span>
-                        <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                        <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded bg-[#112240] text-[#94A3B8] border border-[#233554]">
                           {getCategoryIcon(feature.category)}
                           <span>{feature.category}</span>
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-400 leading-tight">
+                      <p className="text-[11px] text-[#94A3B8] leading-tight">
                         {feature.description}
                       </p>
                     </div>
@@ -390,7 +390,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
           <button
             type="submit"
             disabled={loading || !newUsername.trim() || !newPassword}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:hover:bg-amber-600 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer shadow-sm disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#00D2FF] hover:bg-[#38BDF8] active:scale-[0.98] disabled:opacity-40 disabled:hover:bg-[#00D2FF] text-[#0A192F] font-semibold text-xs rounded-lg transition-all duration-200 cursor-pointer shadow-sm disabled:cursor-not-allowed"
           >
             <UserPlus className="w-4 h-4" />
             <span>{loading ? 'Provisioning Account...' : 'Create Account with Custom Permissions'}</span>
@@ -401,25 +401,25 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
       {/* Existing User Accounts List */}
       <section
         id="section-existing-user-accounts"
-        className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
+        className="bg-[#112240] border border-[#233554] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
       >
-        <div className="flex items-center justify-between pb-3 border-b border-slate-700/60">
-          <div className="flex items-center gap-2 text-slate-200">
-            <Users className="w-4 h-4 text-sky-400" />
+        <div className="flex items-center justify-between pb-3 border-b border-[#233554]">
+          <div className="flex items-center gap-2 text-[#F8FAFC]">
+            <Users className="w-4 h-4 text-[#00D2FF]" />
             <h4 className="text-sm font-semibold">Active User Accounts ({users.length})</h4>
           </div>
           <button
             type="button"
             onClick={loadUsers}
             disabled={loadingUsers}
-            className="text-xs text-sky-400 hover:text-sky-300 transition-colors cursor-pointer"
+            className="text-xs text-[#00D2FF] hover:text-[#38BDF8] transition-colors cursor-pointer"
           >
             {loadingUsers ? 'Refreshing...' : 'Refresh List'}
           </button>
         </div>
 
         {users.length === 0 ? (
-          <p className="text-xs text-slate-400 italic py-3 text-center">
+          <p className="text-xs text-[#94A3B8] italic py-3 text-center">
             No user accounts found in the system.
           </p>
         ) : (
@@ -434,7 +434,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
               return (
                 <div
                   key={u.id}
-                  className="bg-[#0F172A] border border-slate-800 rounded-xl overflow-hidden transition-colors"
+                  className="bg-[#080F1E] border border-[#233554] rounded-xl overflow-hidden transition-colors"
                 >
                   {/* Account Header Line */}
                   <div className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -443,7 +443,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
                         className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
                           isUserAdmin
                             ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                            : 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
+                            : 'bg-[#00D2FF]/20 text-[#00D2FF] border border-[#00D2FF]/40'
                         }`}
                       >
                         {u.username.charAt(0).toUpperCase()}
@@ -451,20 +451,20 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-xs text-slate-100 truncate">
+                          <span className="font-semibold text-xs text-[#F8FAFC] truncate">
                             {u.username}
                           </span>
                           {isUserAdmin ? (
-                            <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold uppercase tracking-wider">
+                            <span className="px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[10px] font-bold uppercase tracking-wider">
                               Admin (Full Access)
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[10px] font-medium">
+                            <span className="px-2 py-0.5 rounded-lg bg-[#00D2FF]/10 text-[#00D2FF] border border-[#00D2FF]/30 text-[10px] font-medium">
                               Restricted User ({activePermsCount}/{COMPLETE_APP_FEATURES.length} Features)
                             </span>
                           )}
                         </div>
-                        <p className="text-[10px] text-slate-500 font-mono">ID: {u.id.substring(0, 14)}...</p>
+                        <p className="text-[10px] text-[#94A3B8] font-mono">ID: {u.id.substring(0, 14)}...</p>
                       </div>
                     </div>
 
@@ -474,7 +474,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
                         <button
                           type="button"
                           onClick={() => setExpandedUserId(isExpanded ? null : u.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-slate-700 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#112240] hover:bg-[#1E293B] text-[#F8FAFC] text-xs font-medium rounded-lg border border-[#233554] transition-all cursor-pointer"
                         >
                           <span>{isExpanded ? 'Hide Permissions' : 'Manage Permissions'}</span>
                           {isExpanded ? (
@@ -489,7 +489,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
                         <button
                           type="button"
                           onClick={() => handleDeleteUser(u)}
-                          className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-rose-500/20"
+                          className="p-1.5 text-[#94A3B8] hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-rose-500/20"
                           title={`Delete account "${u.username}"`}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -500,7 +500,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
 
                   {/* Quick Active Badges for Restricted Users */}
                   {!isUserAdmin && !isExpanded && (
-                    <div className="px-3.5 pb-3 flex flex-wrap gap-1.5 pt-0.5 border-t border-slate-800/60">
+                    <div className="px-3.5 pb-3 flex flex-wrap gap-1.5 pt-0.5 border-t border-[#233554]">
                       {COMPLETE_APP_FEATURES.map((feat) => {
                         const hasIt = u.permissions?.[feat.key];
                         return (
@@ -508,14 +508,14 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
                             key={feat.key}
                             className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded ${
                               hasIt
-                                ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
-                                : 'bg-slate-900 text-slate-600 border border-slate-800/80 line-through'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : 'bg-[#112240] text-[#94A3B8]/50 border border-[#233554] line-through'
                             }`}
                           >
                             {hasIt ? (
                               <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                             ) : (
-                              <XCircle className="w-3 h-3 text-slate-600" />
+                              <XCircle className="w-3 h-3 text-[#94A3B8]/50" />
                             )}
                             <span>{feat.name}</span>
                           </span>
@@ -526,12 +526,12 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
 
                   {/* Expanded Interactive Permissions Panel */}
                   {!isUserAdmin && isExpanded && (
-                    <div className="p-3.5 bg-slate-900/90 border-t border-slate-800 space-y-3 animate-in fade-in duration-150">
+                    <div className="p-3.5 bg-[#112240]/90 border-t border-[#233554] space-y-3 animate-in fade-in duration-150">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-medium text-slate-300">
-                          Toggle feature permissions for <strong className="text-amber-300">{u.username}</strong>:
+                        <span className="font-medium text-[#F8FAFC]">
+                          Toggle feature permissions for <strong className="text-[#00D2FF]">{u.username}</strong>:
                         </span>
-                        <span className="text-[11px] text-slate-500">
+                        <span className="text-[11px] text-[#94A3B8]">
                           Changes take effect immediately in cloud
                         </span>
                       </div>
@@ -544,15 +544,15 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
                               key={feat.key}
                               className={`flex items-center justify-between p-2.5 rounded-lg border transition-colors ${
                                 isEnabled
-                                  ? 'bg-slate-800/90 border-amber-500/30 text-slate-200'
-                                  : 'bg-slate-950/60 border-slate-800 text-slate-400'
+                                  ? 'bg-[#080F1E] border-[#00D2FF]/30 text-[#F8FAFC]'
+                                  : 'bg-[#080F1E]/60 border-[#233554] text-[#94A3B8]'
                               }`}
                             >
                               <div className="min-w-0 pr-2">
-                                <div className="text-xs font-semibold text-slate-200 truncate">
+                                <div className="text-xs font-semibold text-[#F8FAFC] truncate">
                                   {feat.name}
                                 </div>
-                                <div className="text-[10px] text-slate-400 truncate">
+                                <div className="text-[10px] text-[#94A3B8] truncate">
                                   {feat.description}
                                 </div>
                               </div>
@@ -560,10 +560,10 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onToas
                               <button
                                 type="button"
                                 onClick={() => handleToggleExistingPerm(u.id, feat.key, isEnabled)}
-                                className={`px-2.5 py-1 text-[11px] font-semibold rounded-md border transition-all cursor-pointer shrink-0 ${
+                                className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all cursor-pointer shrink-0 ${
                                   isEnabled
-                                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
-                                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
+                                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/30'
+                                    : 'bg-[#112240] text-[#94A3B8] border-[#233554] hover:bg-[#1E293B]'
                                 }`}
                               >
                                 {isEnabled ? 'Allowed' : 'Locked'}

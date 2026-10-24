@@ -1,6 +1,6 @@
 {
-  "name": "Who's the Spy? Dictionary",
-  "description": "Everything About Who Is The Spy - Dictionary for 'Who is the Undercover' game word pairs, mutual relation tracking, AI screenshot victory results pair scanner, WePlay photo editor, homoglyph anti-censor evasion, Firebase Firestore persistence, and database backup & restore.",
+  "name": "Spydex",
+  "description": "The Ultimate Spy Toolkit - Complete companion for WePlay / Who is the Spy party games: undercover word pairs dictionary, relation tracking, victory screenshot scanner, photo editor, homoglyph anti-censor evasion, and cloud persistence.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

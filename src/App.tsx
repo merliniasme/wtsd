@@ -473,7 +473,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
   return (
     <div
       id="app-root-container"
-      className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200"
+      className="min-h-screen bg-[#0A192F] text-[#F8FAFC] flex flex-col font-sans selection:bg-[#00D2FF]/30 selection:text-[#00D2FF]"
     >
       {/* Dynamic Header with Sync & Account State */}
       <Header
@@ -493,7 +493,6 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
-
         </div>
 
         {/* Tab 3: Settings View */}
@@ -524,20 +523,20 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
             {words.length === 0 ? (
               <div
                 id="empty-dictionary-state"
-                className="text-center py-20 px-4 max-w-sm mx-auto space-y-3 animate-in fade-in duration-150"
+                className="text-center py-16 px-6 max-w-md mx-auto space-y-3.5 bg-[#112240] border border-[#233554] rounded-xl shadow-sm animate-in fade-in duration-150"
               >
-                <div className="w-10 h-10 rounded-full bg-[#1E293B] border border-[#334155] text-slate-400 mx-auto flex items-center justify-center">
-                  <Plus className="w-5 h-5 text-sky-400" />
+                <div className="w-12 h-12 rounded-xl bg-[#0A192F] border border-[#233554] text-[#00D2FF] mx-auto flex items-center justify-center">
+                  <Plus className="w-5 h-5 stroke-[2.5]" />
                 </div>
-                <h3 className="font-semibold text-slate-200 text-sm">Dictionary is empty (0 words)</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="font-bold text-[#F8FAFC] text-sm sm:text-base">Dictionary is empty (0 words)</h3>
+                <p className="text-xs text-[#94A3B8] leading-relaxed">
                   Get started by adding your first word pair, or import plain text rules.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
                   <button
                     id="btn-empty-state-add-word"
                     onClick={() => setIsAddWordOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#00D2FF] hover:bg-[#38BDF8] text-[#0A192F] text-xs font-semibold rounded-lg transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-sm"
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>Tambah Kata</span>
@@ -545,9 +544,9 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
                   <button
                     id="btn-empty-state-go-settings"
                     onClick={() => setActiveTab('settings')}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1E293B] hover:bg-slate-700 text-slate-300 hover:text-white border border-[#334155] text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#112240] hover:bg-[#1E293B] text-[#F8FAFC] border border-[#233554] text-xs font-medium rounded-lg transition-all duration-200 cursor-pointer"
                   >
-                    <SettingsIcon className="w-3.5 h-3.5 text-sky-400" />
+                    <SettingsIcon className="w-3.5 h-3.5 text-[#00D2FF]" />
                     <span>Pengaturan & Raw Import</span>
                   </button>
                 </div>
@@ -557,22 +556,22 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
               allPairs.length === 0 ? (
                 <div
                   id="no-pairs-linked-state"
-                  className="text-center py-16 px-4 max-w-sm mx-auto space-y-3 animate-in fade-in duration-150"
+                  className="text-center py-16 px-6 max-w-md mx-auto space-y-3.5 bg-[#112240] border border-[#233554] rounded-xl shadow-sm animate-in fade-in duration-150"
                 >
-                  <div className="w-10 h-10 rounded-full bg-[#1E293B] border border-[#334155] text-slate-400 mx-auto flex items-center justify-center">
-                    <Link2 className="w-4 h-4 text-sky-400" />
+                  <div className="w-12 h-12 rounded-xl bg-[#0A192F] border border-[#233554] text-[#00D2FF] mx-auto flex items-center justify-center">
+                    <Link2 className="w-5 h-5" />
                   </div>
-                  <h3 className="font-semibold text-slate-200 text-sm">No word pairs linked yet</h3>
-                  <p className="text-xs text-slate-400">
+                  <h3 className="font-bold text-[#F8FAFC] text-sm sm:text-base">No word pairs linked yet</h3>
+                  <p className="text-xs text-[#94A3B8] leading-relaxed">
                     Connect two words together by clicking Add Word or linking words from the Words tab.
                   </p>
-                  <div className="pt-1">
+                  <div className="pt-2">
                     <button
                       id="btn-pairs-empty-add-word"
                       onClick={() => setIsAddWordOpen(true)}
-                      className="inline-flex items-center gap-1 px-3.5 py-1.5 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-xs"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#00D2FF] hover:bg-[#38BDF8] text-[#0A192F] text-xs font-semibold rounded-lg transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-sm"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                       <span>Add Word / Pair</span>
                     </button>
                   </div>
@@ -618,10 +617,10 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
                           }
                           setIsScreenshotScannerOpen(true);
                         }}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-md transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold bg-[#00D2FF]/10 hover:bg-[#00D2FF]/20 text-[#00D2FF] border border-[#00D2FF]/30 rounded-lg transition-colors cursor-pointer"
                         title="Scan and extract pairs from WePlay game results screenshot"
                       >
-                        <Sparkles className="w-3 h-3 text-cyan-400" />
+                        <Sparkles className="w-3.5 h-3.5 text-[#00D2FF]" />
                         <span>Scan Hasil SS</span>
                       </button>
 
@@ -632,7 +631,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
                             setSearchTerm('');
                             setSelectedTag('all');
                           }}
-                          className="text-sky-400 hover:underline cursor-pointer text-xs"
+                          className="text-[#00D2FF] hover:underline cursor-pointer text-xs"
                         >
                           Clear filter
                         </button>
@@ -661,9 +660,9 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
                         id="btn-load-more-pairs"
                         type="button"
                         onClick={() => setVisiblePairsCount((prev) => prev + PAGE_INCREMENT)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-200 hover:text-white border border-[#334155] rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#112240] hover:bg-[#1E293B] text-[#F8FAFC] border border-[#233554] rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-xs"
                       >
-                        <ChevronDown className="w-3.5 h-3.5 text-sky-400" />
+                        <ChevronDown className="w-3.5 h-3.5 text-[#00D2FF]" />
                         <span>Load More Pairs (+{PAGE_INCREMENT})</span>
                       </button>
                       {filteredPairs.length > displayedPairs.length + PAGE_INCREMENT && (
@@ -671,7 +670,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
                           id="btn-show-all-pairs"
                           type="button"
                           onClick={() => setVisiblePairsCount(filteredPairs.length)}
-                          className="text-xs text-slate-400 hover:text-slate-200 px-3 py-2 transition-colors cursor-pointer"
+                          className="text-xs text-[#94A3B8] hover:text-[#F8FAFC] px-3 py-2 transition-colors cursor-pointer"
                         >
                           Show All ({filteredPairs.length})
                         </button>
@@ -717,7 +716,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
                         onClick={() => {
                           setSearchTerm('');
                         }}
-                        className="text-sky-400 hover:underline cursor-pointer text-xs"
+                        className="text-[#00D2FF] hover:underline cursor-pointer text-xs"
                       >
                         Clear search
                       </button>
@@ -751,9 +750,9 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
                         id="btn-load-more-words"
                         type="button"
                         onClick={() => setVisibleWordsCount((prev) => prev + PAGE_INCREMENT)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-200 hover:text-white border border-[#334155] rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#112240] hover:bg-[#1E293B] text-[#F8FAFC] border border-[#233554] rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-xs"
                       >
-                        <ChevronDown className="w-3.5 h-3.5 text-sky-400" />
+                        <ChevronDown className="w-3.5 h-3.5 text-[#00D2FF]" />
                         <span>Load More Words (+{PAGE_INCREMENT})</span>
                       </button>
                       {filteredWords.length > displayedWords.length + PAGE_INCREMENT && (
@@ -761,7 +760,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
                           id="btn-show-all-words"
                           type="button"
                           onClick={() => setVisibleWordsCount(filteredWords.length)}
-                          className="text-xs text-slate-400 hover:text-slate-200 px-3 py-2 transition-colors cursor-pointer"
+                          className="text-xs text-[#94A3B8] hover:text-[#F8FAFC] px-3 py-2 transition-colors cursor-pointer"
                         >
                           Show All ({filteredWords.length})
                         </button>

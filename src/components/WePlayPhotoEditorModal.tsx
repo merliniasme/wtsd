@@ -275,28 +275,28 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
   return (
     <div
       id="weplay-photo-editor-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xs overflow-y-auto"
     >
       <div
-        className="bg-[#0F172A] border border-[#334155] w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200"
+        className="bg-[#112240] border border-[#233554] w-full max-w-4xl rounded-xl shadow-sm overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-[#334155]/80 bg-[#1E293B]/70">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-[#233554] bg-[#0A192F]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-500/30 text-sky-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#00D2FF]/15 border border-[#00D2FF]/30 text-[#00D2FF] flex items-center justify-center">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-bold text-slate-100">
+                <h2 className="text-sm sm:text-base font-bold text-[#F8FAFC] tracking-tight">
                   AI Screenshot WePlay Editor
                 </h2>
-                <span className="text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                   Who's the Spy
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-[#94A3B8]">
                 Ganti kata peran di screenshot game WePlay secara otomatis & autentik
               </p>
             </div>
@@ -304,7 +304,7 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#1E293B] rounded-lg transition-colors cursor-pointer"
             title="Tutup Modal"
           >
             <X className="w-5 h-5" />
@@ -327,10 +327,10 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                 const file = e.dataTransfer.files?.[0];
                 if (file) handleProcessFile(file);
               }}
-              className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center transition-all ${
+              className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-all ${
                 isDraggingOver
-                  ? 'border-sky-400 bg-sky-500/10'
-                  : 'border-[#334155] bg-[#1E293B]/40 hover:border-slate-500'
+                  ? 'border-[#00D2FF] bg-[#00D2FF]/10'
+                  : 'border-[#233554] bg-[#080F1E] hover:border-[#38BDF8]/60'
               }`}
             >
               <input
@@ -345,16 +345,16 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
               />
 
               <div className="max-w-md mx-auto space-y-4">
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center">
+                <div className="w-14 h-14 mx-auto rounded-xl bg-[#00D2FF]/10 border border-[#00D2FF]/20 text-[#00D2FF] flex items-center justify-center">
                   <ImageIcon className="w-7 h-7" />
                 </div>
 
                 <div>
-                  <h3 className="text-base font-semibold text-slate-200">
+                  <h3 className="text-base font-bold text-[#F8FAFC] tracking-tight">
                     Upload Screenshot WePlay Who's the Spy
                   </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Tarik dan lepas screenshot kartu kata / room WePlay di sini, atau paste langsung dari clipboard (<code className="bg-slate-800 px-1 py-0.5 rounded text-sky-300">Ctrl + V</code>).
+                  <p className="text-xs text-[#94A3B8] mt-1">
+                    Tarik dan lepas screenshot kartu kata / room WePlay di sini, atau paste langsung dari clipboard (<code className="bg-[#112240] px-1 py-0.5 rounded text-[#00D2FF]">Ctrl + V</code>).
                   </p>
                 </div>
 
@@ -362,7 +362,7 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs rounded-xl transition-colors cursor-pointer shadow-md"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#00D2FF] hover:bg-[#38BDF8] text-[#0A192F] font-semibold text-xs rounded-lg transition-all cursor-pointer shadow-sm active:scale-[0.98]"
                   >
                     <Upload className="w-4 h-4" />
                     <span>Pilih Foto Screenshot</span>
@@ -371,14 +371,14 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                   <button
                     type="button"
                     onClick={handleLoadSample}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-xl border border-slate-700 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#112240] hover:bg-[#1E293B] text-[#F8FAFC] text-xs font-medium rounded-lg border border-[#233554] transition-colors cursor-pointer"
                   >
                     <Sparkles className="w-4 h-4 text-amber-400" />
                     <span>Gunakan Contoh WePlay</span>
                   </button>
                 </div>
 
-                <div className="text-[11px] text-slate-400 pt-2 flex items-center justify-center gap-1.5">
+                <div className="text-[11px] text-[#94A3B8] pt-2 flex items-center justify-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Mendukung kartu kata kuning, kartu rahasia civilian/undercover & meja diskus WePlay.</span>
                 </div>
@@ -390,9 +390,9 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
               {/* Left Column: Image Canvas Preview (7 cols) */}
               <div className="lg:col-span-7 flex flex-col space-y-3">
                 {/* Preview Toolbar */}
-                <div className="flex items-center justify-between text-xs text-slate-400 bg-[#1E293B] px-3 py-2 rounded-xl border border-[#334155]/70">
+                <div className="flex items-center justify-between text-xs text-[#94A3B8] bg-[#0A192F] px-3 py-2 rounded-lg border border-[#233554]">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-200 truncate max-w-[160px]">
+                    <span className="font-semibold text-[#F8FAFC] truncate max-w-[160px]">
                       {imageFileName}
                     </span>
                     {analysisResult?.isWePlayOrSpyGame && (
@@ -406,10 +406,10 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowOriginal(!showOriginal)}
-                      className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
                         showOriginal
                           ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                          : 'text-slate-300 hover:bg-slate-800'
+                          : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#112240]'
                       }`}
                       title="Tahan untuk melihat screenshot asli sebelum diedit"
                     >
@@ -423,7 +423,7 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                         setSourceImageElement(null);
                         setAnalysisResult(null);
                       }}
-                      className="text-slate-400 hover:text-slate-200 text-[11px] hover:underline cursor-pointer"
+                      className="text-[#94A3B8] hover:text-[#F8FAFC] text-[11px] hover:underline cursor-pointer"
                     >
                       Ganti Foto
                     </button>
@@ -509,13 +509,13 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
               {/* Right Column: Controls, Word Selector & Fine Tuning (5 cols) */}
               <div className="lg:col-span-5 flex flex-col space-y-4">
                 {/* 1. Target Word Input & Quick Selector */}
-                <div className="bg-[#1E293B] border border-[#334155] rounded-xl p-3.5 space-y-3">
+                <div className="bg-[#112240] border border-[#233554] rounded-xl p-3.5 space-y-3 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-                      <Type className="w-3.5 h-3.5 text-sky-400" />
+                    <label className="text-xs font-bold text-[#F8FAFC] tracking-tight flex items-center gap-1.5">
+                      <Type className="w-3.5 h-3.5 text-[#00D2FF]" />
                       <span>Kata Baru (Pengganti)</span>
                     </label>
-                    <span className="text-[10px] text-slate-400">Pilih atau ketik</span>
+                    <span className="text-[10px] text-[#94A3B8]">Pilih atau ketik</span>
                   </div>
 
                   {/* Input field */}
@@ -525,14 +525,14 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                       value={replacementWord}
                       onChange={(e) => setReplacementWord(e.target.value)}
                       placeholder="Masukkan kata baru (cth: KOPI)..."
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm font-bold text-sky-300 placeholder:text-slate-500 focus:outline-hidden focus:border-sky-500 focus:ring-1 focus:ring-sky-500 uppercase"
+                      className="w-full px-3.5 py-2.5 bg-[#080F1E] border border-[#233554] rounded-lg text-sm font-bold text-[#00D2FF] placeholder-[#64748B] focus:outline-none focus:border-[#00D2FF] focus:ring-1 focus:ring-[#00D2FF] uppercase transition-all"
                     />
                   </div>
 
                   {/* One-Click Swap with Opposing Pair if available */}
                   {linkedPairWords.length > 0 && (
-                    <div className="p-2 bg-slate-900/60 rounded-lg border border-slate-800 space-y-1.5">
-                      <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <div className="p-2.5 bg-[#080F1E] rounded-lg border border-[#233554] space-y-1.5">
+                      <div className="text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider flex items-center gap-1">
                         <ArrowRightLeft className="w-3 h-3 text-emerald-400" />
                         <span>Pasangan Terkait di Kamus</span>
                       </div>
@@ -542,7 +542,7 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                             key={pw}
                             type="button"
                             onClick={() => setReplacementWord(pw)}
-                            className="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition-colors cursor-pointer"
+                            className="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 transition-colors cursor-pointer"
                           >
                             Ganti ke: {pw}
                           </button>
@@ -556,26 +556,26 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsWordDropdownOpen(!isWordDropdownOpen)}
-                      className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-300 text-xs rounded-lg border border-slate-700/80 transition-colors cursor-pointer"
+                      className="w-full flex items-center justify-between px-3 py-2 bg-[#080F1E] hover:bg-[#1E293B] text-[#94A3B8] hover:text-[#F8FAFC] text-xs rounded-lg border border-[#233554] transition-colors cursor-pointer"
                     >
                       <span className="flex items-center gap-1.5">
-                        <Search className="w-3 h-3 text-slate-400" />
+                        <Search className="w-3 h-3 text-[#94A3B8]" />
                         <span>Pilih dari Kamus Kata ({words.length})</span>
                       </span>
-                      <span className="text-[10px] text-sky-400">
+                      <span className="text-[10px] text-[#00D2FF] font-semibold">
                         {isWordDropdownOpen ? 'Tutup' : 'Buka List'}
                       </span>
                     </button>
 
                     {/* Expandable Dictionary Dropdown */}
                     {isWordDropdownOpen && (
-                      <div className="mt-2 p-2 bg-slate-900 border border-slate-700 rounded-lg space-y-2 max-h-48 overflow-y-auto">
+                      <div className="mt-2 p-2 bg-[#080F1E] border border-[#233554] rounded-lg space-y-2 max-h-48 overflow-y-auto">
                         <input
                           type="text"
                           value={wordSearchFilter}
                           onChange={(e) => setWordSearchFilter(e.target.value)}
                           placeholder="Cari kata di kamus..."
-                          className="w-full px-2 py-1 bg-slate-950 border border-slate-700 rounded text-xs text-slate-200"
+                          className="w-full px-2.5 py-1.5 bg-[#0A192F] border border-[#233554] rounded-lg text-xs text-[#F8FAFC] placeholder-[#64748B] focus:outline-none focus:border-[#00D2FF]"
                         />
                         <div className="flex flex-wrap gap-1">
                           {filteredWords.map((w) => (
@@ -586,7 +586,7 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                                 setReplacementWord(w.term);
                                 setIsWordDropdownOpen(false);
                               }}
-                              className="px-2 py-0.5 rounded text-[11px] bg-slate-800 hover:bg-sky-500/20 hover:text-sky-300 text-slate-300 border border-slate-700/70 transition-colors cursor-pointer"
+                              className="px-2 py-1 rounded-md text-[11px] bg-[#112240] hover:bg-[#00D2FF]/20 hover:text-[#00D2FF] text-[#94A3B8] border border-[#233554] transition-colors cursor-pointer"
                             >
                               {w.term}
                             </button>
@@ -597,8 +597,8 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                   </div>
 
                   {/* Anti-Censor Homoglyph Toggle */}
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-800">
-                    <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                  <div className="flex items-center justify-between pt-1 border-t border-[#233554]">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs text-[#94A3B8]">
                       <VenetianMask className="w-3.5 h-3.5 text-amber-400" />
                       <span>Homoglif Anti-Sensor</span>
                     </label>
@@ -608,22 +608,22 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                       onChange={(e) =>
                         setEditorOptions((prev) => ({ ...prev, useHomoglyph: e.target.checked }))
                       }
-                      className="rounded border-slate-700 text-amber-500 focus:ring-0 cursor-pointer"
+                      className="rounded border-[#233554] text-[#00D2FF] focus:ring-0 cursor-pointer accent-[#00D2FF]"
                     />
                   </div>
                 </div>
 
                 {/* 2. Visual Style & Fine-Tuning Controls */}
-                <div className="bg-[#1E293B] border border-[#334155] rounded-xl p-3.5 space-y-3">
+                <div className="bg-[#112240] border border-[#233554] rounded-xl p-3.5 space-y-3 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-                      <Sliders className="w-3.5 h-3.5 text-sky-400" />
+                    <span className="text-xs font-bold text-[#F8FAFC] tracking-tight flex items-center gap-1.5">
+                      <Sliders className="w-3.5 h-3.5 text-[#00D2FF]" />
                       <span>Penyesuaian Visual Font & Kartu</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-                      className="text-[10px] text-sky-400 hover:underline cursor-pointer"
+                      className="text-[10px] text-[#00D2FF] hover:underline cursor-pointer font-semibold"
                     >
                       {showAdvancedSettings ? 'Sederhana' : 'Lebih Lengkap'}
                     </button>
@@ -631,9 +631,9 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
 
                   {/* Font Size Scale Slider */}
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] text-slate-400">
+                    <div className="flex justify-between text-[11px] text-[#94A3B8]">
                       <span>Ukuran Huruf (Font Scale)</span>
-                      <span className="font-mono text-slate-200">
+                      <span className="font-mono text-[#F8FAFC]">
                         {Math.round(editorOptions.fontSizeScale * 100)}%
                       </span>
                     </div>
@@ -649,15 +649,15 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                           fontSizeScale: parseFloat(e.target.value),
                         }))
                       }
-                      className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400"
+                      className="w-full h-1.5 bg-[#080F1E] rounded-lg appearance-none cursor-pointer accent-[#00D2FF]"
                     />
                   </div>
 
                   {/* Text Color Presets */}
                   <div className="space-y-1.5">
-                    <div className="flex justify-between text-[11px] text-slate-400">
+                    <div className="flex justify-between text-[11px] text-[#94A3B8]">
                       <span>Warna Teks</span>
-                      <span className="font-mono text-[10px] text-slate-300">
+                      <span className="font-mono text-[10px] text-[#94A3B8]">
                         {editorOptions.textColor}
                       </span>
                     </div>
@@ -678,8 +678,8 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                           style={{ backgroundColor: c.color }}
                           className={`w-6 h-6 rounded-full border transition-transform cursor-pointer ${
                             editorOptions.textColor.toLowerCase() === c.color.toLowerCase()
-                              ? 'scale-115 border-sky-400 ring-2 ring-sky-400/40'
-                              : 'border-slate-600 hover:scale-105'
+                              ? 'scale-115 border-[#00D2FF] ring-2 ring-[#00D2FF]/40'
+                              : 'border-[#233554] hover:scale-105'
                           }`}
                           title={c.label}
                         />
@@ -698,13 +698,13 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
 
                   {/* Advanced Controls (Position offsets & blending) */}
                   {showAdvancedSettings && (
-                    <div className="pt-2 border-t border-slate-800 space-y-3 animate-in fade-in duration-150">
+                    <div className="pt-2 border-t border-[#233554] space-y-3 animate-in fade-in duration-150">
                       {/* Vertical & Horizontal Offset */}
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                          <div className="flex justify-between text-[10px] text-[#94A3B8] mb-1">
                             <span>Geser X</span>
-                            <span className="font-mono">{editorOptions.xOffset}px</span>
+                            <span className="font-mono text-[#F8FAFC]">{editorOptions.xOffset}px</span>
                           </div>
                           <input
                             type="range"
@@ -717,13 +717,13 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                                 xOffset: parseInt(e.target.value, 10),
                               }))
                             }
-                            className="w-full h-1 bg-slate-800 rounded appearance-none accent-sky-400"
+                            className="w-full h-1 bg-[#080F1E] rounded appearance-none accent-[#00D2FF]"
                           />
                         </div>
                         <div>
-                          <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                          <div className="flex justify-between text-[10px] text-[#94A3B8] mb-1">
                             <span>Geser Y</span>
-                            <span className="font-mono">{editorOptions.yOffset}px</span>
+                            <span className="font-mono text-[#F8FAFC]">{editorOptions.yOffset}px</span>
                           </div>
                           <input
                             type="range"
@@ -736,14 +736,14 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                                 yOffset: parseInt(e.target.value, 10),
                               }))
                             }
-                            className="w-full h-1 bg-slate-800 rounded appearance-none accent-sky-400"
+                            className="w-full h-1 bg-[#080F1E] rounded appearance-none accent-[#00D2FF]"
                           />
                         </div>
                       </div>
 
                       {/* Card Blend Mode */}
                       <div>
-                        <div className="text-[10px] text-slate-400 mb-1.5">Penyamaran Kartu Latar</div>
+                        <div className="text-[10px] text-[#94A3B8] mb-1.5">Penyamaran Kartu Latar</div>
                         <div className="grid grid-cols-3 gap-1.5 text-[10px]">
                           {[
                             { id: 'auto_sample', label: 'Auto Sample' },
@@ -759,10 +759,10 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                                   blendMode: b.id as any,
                                 }))
                               }
-                              className={`py-1 px-1.5 rounded text-center border font-medium transition-colors cursor-pointer ${
+                              className={`py-1 px-1.5 rounded-lg text-center border font-medium transition-colors cursor-pointer ${
                                 editorOptions.blendMode === b.id
-                                  ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
-                                  : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200'
+                                  ? 'bg-[#00D2FF]/20 text-[#00D2FF] border-[#00D2FF]/40'
+                                  : 'bg-[#080F1E] text-[#94A3B8] border-[#233554] hover:text-[#F8FAFC]'
                               }`}
                             >
                               {b.label}
@@ -773,7 +773,7 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
 
                       {/* Text Transform Casing */}
                       <div>
-                        <div className="text-[10px] text-slate-400 mb-1.5">Format Huruf</div>
+                        <div className="text-[10px] text-[#94A3B8] mb-1.5">Format Huruf</div>
                         <div className="grid grid-cols-3 gap-1.5 text-[10px]">
                           {[
                             { id: 'uppercase', label: 'HURUF BESAR' },
@@ -789,10 +789,10 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                                   textTransform: t.id as any,
                                 }))
                               }
-                              className={`py-1 px-1.5 rounded text-center border font-medium transition-colors cursor-pointer ${
+                              className={`py-1 px-1.5 rounded-lg text-center border font-medium transition-colors cursor-pointer ${
                                 editorOptions.textTransform === t.id
-                                  ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
-                                  : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200'
+                                  ? 'bg-[#00D2FF]/20 text-[#00D2FF] border-[#00D2FF]/40'
+                                  : 'bg-[#080F1E] text-[#94A3B8] border-[#233554] hover:text-[#F8FAFC]'
                               }`}
                             >
                               {t.label}
@@ -802,7 +802,7 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                       </div>
 
                       {/* Stroke & Shadow Toggles */}
-                      <div className="flex items-center justify-between text-[11px] text-slate-300 pt-1">
+                      <div className="flex items-center justify-between text-[11px] text-[#94A3B8] pt-1">
                         <label className="flex items-center gap-1.5 cursor-pointer">
                           <input
                             type="checkbox"
@@ -813,9 +813,9 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                                 hasShadow: e.target.checked,
                               }))
                             }
-                            className="rounded border-slate-700 text-sky-500 focus:ring-0"
+                            className="rounded border-[#233554] bg-[#080F1E] text-[#00D2FF] focus:ring-0"
                           />
-                          <span>Bayangan Teks (Shadow)</span>
+                          <span className="text-[#F8FAFC]">Bayangan Teks (Shadow)</span>
                         </label>
 
                         <button
@@ -828,7 +828,7 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                               yOffset: 0,
                             }))
                           }
-                          className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-200"
+                          className="flex items-center gap-1 text-[10px] text-[#94A3B8] hover:text-[#F8FAFC] transition-colors"
                         >
                           <RotateCcw className="w-3 h-3" />
                           <span>Reset Posisi</span>
@@ -844,7 +844,7 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                     <button
                       type="button"
                       onClick={handleCopyClipboard}
-                      className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#1E293B] hover:bg-slate-700 text-slate-100 font-semibold text-xs rounded-xl border border-[#334155] transition-colors cursor-pointer shadow-xs"
+                      className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#112240] hover:bg-[#1E293B] text-[#F8FAFC] font-semibold text-xs rounded-lg border border-[#233554] transition-all duration-200 cursor-pointer shadow-sm active:scale-[0.98]"
                     >
                       {isCopied ? (
                         <>
@@ -853,7 +853,7 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                         </>
                       ) : (
                         <>
-                          <Copy className="w-4 h-4 text-sky-400" />
+                          <Copy className="w-4 h-4 text-[#00D2FF]" />
                           <span>Salin Gambar</span>
                         </>
                       )}
@@ -862,14 +862,14 @@ export const WePlayPhotoEditorModal: React.FC<WePlayPhotoEditorModalProps> = ({
                     <button
                       type="button"
                       onClick={handleDownload}
-                      className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 bg-sky-400 hover:bg-sky-300 text-slate-950 font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-md"
+                      className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#00D2FF] hover:bg-[#38BDF8] active:scale-[0.98] text-[#0A192F] font-semibold text-xs rounded-lg transition-all duration-200 cursor-pointer shadow-sm"
                     >
                       <Download className="w-4 h-4" />
                       <span>Unduh Foto (PNG)</span>
                     </button>
                   </div>
 
-                  <p className="text-[10px] text-center text-slate-400">
+                  <p className="text-[10px] text-center text-[#94A3B8]">
                     Foto hasil editan beresolusi tinggi, siap dibagikan ke anggota party atau grup WePlay.
                   </p>
                 </div>

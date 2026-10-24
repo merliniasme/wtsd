@@ -85,16 +85,16 @@ export const PasteOnlyInput: React.FC<PasteOnlyInputProps> = ({
           autoFocus={autoFocus}
           disabled={disabled}
           autoComplete="off"
-          className={`w-full pl-2.5 pr-20 py-1.5 bg-[#0F172A] text-slate-100 text-xs sm:text-sm rounded-lg border border-[#334155] focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400/40 transition-colors ${className}`}
+          className={`w-full pl-3 pr-20 py-2 bg-[#080F1E] text-[#F8FAFC] placeholder-[#64748B] text-xs sm:text-sm rounded-lg border border-[#233554] focus:outline-none focus:border-[#00D2FF] focus:ring-1 focus:ring-[#00D2FF] transition-all ${className}`}
         />
 
         <button
           type="button"
           onClick={handlePasteButtonClick}
-          className={`absolute right-1.5 px-2 py-1 rounded text-[10px] font-bold font-mono transition-all flex items-center gap-1 cursor-pointer ${
+          className={`absolute right-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold font-mono transition-all flex items-center gap-1 cursor-pointer ${
             justPasted
               ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-              : 'bg-[#1E293B] hover:bg-slate-700 text-sky-400 border border-[#334155]'
+              : 'bg-[#112240] hover:bg-[#1E293B] text-[#00D2FF] border border-[#233554]'
           }`}
           title="Paste from clipboard"
         >
@@ -105,7 +105,7 @@ export const PasteOnlyInput: React.FC<PasteOnlyInputProps> = ({
             </>
           ) : (
             <>
-              <Clipboard className="w-3 h-3 text-sky-400" />
+              <Clipboard className="w-3 h-3 text-[#00D2FF]" />
               <span>Paste</span>
             </>
           )}
@@ -113,7 +113,7 @@ export const PasteOnlyInput: React.FC<PasteOnlyInputProps> = ({
       </div>
 
       <div className="flex items-center justify-between text-[10px] px-1 font-mono">
-        <span className="text-slate-500">Input Mode: Paste only</span>
+        <span className="text-[#94A3B8]">Input Mode: Paste only</span>
         {showPasteHint && (
           <span className="text-amber-400 font-semibold animate-pulse">
             Manual typing disabled. Use Paste button or Ctrl+V / ⌘+V

@@ -86,7 +86,7 @@ const InstallSettingsButton = () => {
     return (
       <button
         onClick={install}
-        className="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shrink-0 shadow-sm"
+        className="px-3.5 py-2 bg-[#00D2FF] hover:bg-[#38BDF8] active:scale-[0.98] text-[#0A192F] text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer shrink-0 shadow-sm"
       >
         Install Offline App
       </button>
@@ -98,12 +98,12 @@ const InstallSettingsButton = () => {
       <div className="space-y-1">
         <button
           onClick={() => setShowIOSGuide(!showIOSGuide)}
-          className="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shrink-0"
+          className="px-3.5 py-2 bg-[#00D2FF] hover:bg-[#38BDF8] active:scale-[0.98] text-[#0A192F] text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer shrink-0"
         >
           {showIOSGuide ? 'Hide iOS Instructions' : 'Install on iOS Safari'}
         </button>
         {showIOSGuide && (
-          <p className="text-[11px] text-slate-400 bg-slate-900 p-2 rounded border border-slate-800">
+          <p className="text-[11px] text-[#94A3B8] bg-[#080F1E] p-2 rounded-lg border border-[#233554]">
             Tap the Share button in Safari, then select <strong>Add to Home Screen</strong>.
           </p>
         )}
@@ -111,7 +111,7 @@ const InstallSettingsButton = () => {
     );
   }
 
-  return <div className="text-xs text-slate-500 italic">Running in web browser</div>;
+  return <div className="text-xs text-[#94A3B8] italic">Running in web browser</div>;
 };
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -227,30 +227,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20 animate-in fade-in duration-200">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#334155]/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#233554]">
         <div>
-          <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2.5">
-            <Settings className="w-5 h-5 text-sky-400" />
+          <h2 className="text-xl font-bold text-[#F8FAFC] tracking-tight flex items-center gap-2.5">
+            <Settings className="w-5 h-5 text-[#00D2FF]" />
             <span>Settings & Administration</span>
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#94A3B8] mt-0.5">
             Configure system settings, cloud synchronization, AI parameters, and user permissions.
           </p>
         </div>
 
         {/* Current Account Pill */}
-        <div className="flex items-center gap-2 self-start sm:self-auto bg-[#1E293B] px-3 py-1.5 rounded-lg border border-[#334155]">
+        <div className="flex items-center gap-2 self-start sm:self-auto bg-[#112240] px-3 py-1.5 rounded-lg border border-[#233554]">
           <div
-            className={`w-2.5 h-2.5 rounded-full ${
-              isAdmin ? 'bg-rose-400 animate-pulse' : 'bg-sky-400'
+            className={`w-2 h-2 rounded-full ${
+              isAdmin ? 'bg-rose-400 animate-pulse' : 'bg-[#00D2FF]'
             }`}
           />
-          <span className="text-xs text-slate-200 font-medium">{currentUser?.username || 'Guest'}</span>
+          <span className="text-xs text-[#F8FAFC] font-medium">{currentUser?.username || 'Guest'}</span>
           <span
             className={`text-[10px] font-bold px-1.5 py-0.2 rounded uppercase ${
               isAdmin
-                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                : 'bg-[#00D2FF]/10 text-[#00D2FF] border border-[#00D2FF]/30'
             }`}
           >
             {isAdmin ? 'Master Admin' : 'Restricted User'}
@@ -261,7 +261,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* Settings Navigation Tabs (Prioritized and Ordered) */}
       <div
         id="settings-tab-bar"
-        className="flex items-center gap-1.5 p-1 bg-[#0F172A] border border-[#334155] rounded-xl overflow-x-auto"
+        className="flex items-center gap-1.5 p-1 bg-[#080F1E] border border-[#233554] rounded-lg overflow-x-auto"
       >
         {isAdmin && (
           <button
@@ -270,8 +270,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             onClick={() => setActiveTab('users')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'users'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+                ? 'bg-amber-500/15 text-amber-300 border border-amber-500/40 shadow-sm'
+                : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#112240] border border-transparent'
             }`}
           >
             <Users className="w-4 h-4 text-amber-400" />
@@ -288,11 +288,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           onClick={() => setActiveTab('database')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'database'
-              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-xs'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+              ? 'bg-[#00D2FF]/15 text-[#00D2FF] border border-[#00D2FF]/40 shadow-sm'
+              : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#112240] border border-transparent'
           }`}
         >
-          <Database className="w-4 h-4 text-sky-400" />
+          <Database className="w-4 h-4 text-[#00D2FF]" />
           <span>Database & Backup</span>
         </button>
 
@@ -302,13 +302,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           onClick={() => setActiveTab('ai')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'ai'
-              ? 'bg-violet-500/20 text-violet-300 border border-violet-500/40 shadow-xs'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+              ? 'bg-violet-500/15 text-violet-300 border border-violet-500/40 shadow-sm'
+              : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#112240] border border-transparent'
           }`}
         >
           <Sparkles className="w-4 h-4 text-violet-400" />
           <span>AI Intelligence</span>
-          {!canUseAi && !isAdmin && <Lock className="w-3 h-3 text-slate-500" />}
+          {!canUseAi && !isAdmin && <Lock className="w-3 h-3 text-[#94A3B8]" />}
         </button>
 
         <button
@@ -317,11 +317,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           onClick={() => setActiveTab('app')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'app'
-              ? 'bg-slate-800 text-slate-100 border border-slate-700 shadow-xs'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+              ? 'bg-[#112240] text-[#F8FAFC] border border-[#233554] shadow-sm'
+              : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#112240] border border-transparent'
           }`}
         >
-          <Smartphone className="w-4 h-4 text-slate-400" />
+          <Smartphone className="w-4 h-4 text-[#94A3B8]" />
           <span>App & Permissions</span>
         </button>
       </div>
@@ -341,15 +341,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {activeTab === 'database' && (
         <div className="space-y-6 animate-in fade-in duration-150">
           {/* Cloud Synchronization Status Card */}
-          <section className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 sm:p-5 shadow-sm space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-700/60">
+          <section className="bg-[#112240] border border-[#233554] rounded-xl p-4 sm:p-5 shadow-sm space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#233554]">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                <div className="p-2.5 rounded-lg bg-[#00D2FF]/10 text-[#00D2FF] border border-[#00D2FF]/30">
                   <Cloud className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-100">Cloud Database Synchronization</h4>
-                  <p className="text-xs text-slate-400">
+                  <h4 className="text-sm font-semibold text-[#F8FAFC]">Cloud Database Synchronization</h4>
+                  <p className="text-xs text-[#94A3B8]">
                     Real-time persistence powered by Firebase Firestore.
                   </p>
                 </div>
@@ -359,7 +359,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 type="button"
                 onClick={onSyncNow}
                 disabled={isOperating}
-                className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-sm"
+                className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-[#00D2FF] hover:bg-[#38BDF8] active:scale-[0.98] disabled:opacity-50 text-[#0A192F] text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer shadow-sm"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isOperating ? 'animate-spin' : ''}`} />
                 <span>{isOperating ? 'Syncing...' : 'Sync Cloud Now'}</span>
@@ -367,16 +367,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
-              <div className="bg-[#0F172A] p-3 rounded-lg border border-slate-800 flex items-center justify-between">
-                <span className="text-slate-400">Sync Engine Status</span>
+              <div className="bg-[#080F1E] p-3 rounded-lg border border-[#233554] flex items-center justify-between">
+                <span className="text-[#94A3B8]">Sync Engine Status</span>
                 <span className="text-emerald-400 font-semibold flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   Connected & Active
                 </span>
               </div>
-              <div className="bg-[#0F172A] p-3 rounded-lg border border-slate-800 flex items-center justify-between">
-                <span className="text-slate-400">Last Synced</span>
-                <span className="text-slate-200 font-mono">
+              <div className="bg-[#080F1E] p-3 rounded-lg border border-[#233554] flex items-center justify-between">
+                <span className="text-[#94A3B8]">Last Synced</span>
+                <span className="text-[#F8FAFC] font-mono">
                   {lastSyncedAt ? lastSyncedAt.toLocaleTimeString() : 'Current session'}
                 </span>
               </div>
@@ -391,29 +391,29 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           />
 
           {/* Database Overview & Distribution */}
-          <section className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-700/60">
+          <section className="bg-[#112240] border border-[#233554] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between pb-3 border-b border-[#233554]">
               <div className="flex items-center gap-2 text-emerald-400">
                 <Database className="w-4 h-4" />
-                <h4 className="text-sm font-semibold text-slate-100">Dictionary Inventory & Metrics</h4>
+                <h4 className="text-sm font-semibold text-[#F8FAFC]">Dictionary Inventory & Metrics</h4>
               </div>
-              <span className="text-xs text-slate-400 font-mono">{words.length} terms cataloged</span>
+              <span className="text-xs text-[#94A3B8] font-mono">{words.length} terms cataloged</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
-              <div className="bg-[#0F172A] border border-slate-800 rounded-lg p-3.5 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-sky-400">{words.length}</span>
-                <span className="text-xs text-slate-400 font-medium mt-0.5">Total Words in Dictionary</span>
+              <div className="bg-[#080F1E] border border-[#233554] rounded-lg p-3.5 flex flex-col items-center justify-center">
+                <span className="text-2xl font-bold text-[#00D2FF]">{words.length}</span>
+                <span className="text-xs text-[#94A3B8] font-medium mt-0.5">Total Words in Dictionary</span>
               </div>
-              <div className="bg-[#0F172A] border border-slate-800 rounded-lg p-3.5 flex flex-col items-center justify-center">
+              <div className="bg-[#080F1E] border border-[#233554] rounded-lg p-3.5 flex flex-col items-center justify-center">
                 <span className="text-2xl font-bold text-emerald-400">{allPairs.length}</span>
-                <span className="text-xs text-slate-400 font-medium mt-0.5">Established Paired Relations</span>
+                <span className="text-xs text-[#94A3B8] font-medium mt-0.5">Established Paired Relations</span>
               </div>
             </div>
 
             {/* Category Breakdown */}
             <div className="pt-2">
-              <h5 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5">
+              <h5 className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider mb-2.5">
                 Pairs by Tag Category
               </h5>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -423,17 +423,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   return (
                     <div
                       key={tag}
-                      className="bg-[#0F172A] border border-slate-800 rounded-lg p-2.5 flex items-center justify-between"
+                      className="bg-[#080F1E] border border-[#233554] rounded-lg p-2.5 flex items-center justify-between"
                     >
                       <div className="min-w-0 pr-2">
                         <span className={`text-[10px] font-bold ${meta.badgeText} block`}>
                           {meta.shortCode}
                         </span>
-                        <span className="text-xs text-slate-300 font-medium truncate block">
+                        <span className="text-xs text-[#F8FAFC] font-medium truncate block">
                           {meta.label}
                         </span>
                       </div>
-                      <span className="text-base font-bold text-slate-100 font-mono">{count}</span>
+                      <span className="text-base font-bold text-[#F8FAFC] font-mono">{count}</span>
                     </div>
                   );
                 })}
@@ -444,22 +444,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Raw Text Dictionary Importer */}
           <section
             id="section-raw-import-settings"
-            className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 sm:p-5 space-y-3 shadow-sm"
+            className="bg-[#112240] border border-[#233554] rounded-xl p-4 sm:p-5 space-y-3 shadow-sm"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-sky-400">
+                <div className="flex items-center gap-2 text-[#00D2FF]">
                   <FileUp className="w-4 h-4" />
-                  <h4 className="text-sm font-semibold text-slate-100">Raw Plain Text Dictionary Importer</h4>
+                  <h4 className="text-sm font-semibold text-[#F8FAFC]">Raw Plain Text Dictionary Importer</h4>
                   {!canRawImport && (
-                    <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px]">
+                    <span className="px-2 py-0.5 rounded bg-[#080F1E] text-[#94A3B8] border border-[#233554] text-[10px]">
                       Locked
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed max-w-xl">
+                <p className="text-xs text-[#94A3B8] leading-relaxed max-w-xl">
                   Quickly bulk-import words from plain text files using syntax formatting{' '}
-                  <code className="text-sky-300 font-mono text-[11px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                  <code className="text-[#00D2FF] font-mono text-[11px] bg-[#080F1E] px-1.5 py-0.5 rounded border border-[#233554]">
                     [Word1] # [Word2] & [Word3]
                   </code>
                   .
@@ -471,13 +471,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   id="btn-open-raw-import-settings"
                   type="button"
                   onClick={onOpenRawImport}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shrink-0 shadow-sm"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-[#00D2FF] hover:bg-[#38BDF8] active:scale-[0.98] text-[#0A192F] text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer shrink-0 shadow-sm"
                 >
                   <FileUp className="w-3.5 h-3.5" />
                   <span>Open Raw Importer</span>
                 </button>
               ) : (
-                <div className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-slate-500 text-xs font-medium rounded-lg border border-slate-700">
+                <div className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#080F1E] text-[#94A3B8] text-xs font-medium rounded-lg border border-[#233554]">
                   <Lock className="w-3.5 h-3.5" />
                   <span>Import Disabled</span>
                 </div>
@@ -488,20 +488,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Danger Zone: Reset Active Dictionary */}
           <section
             id="section-danger-zone-delete"
-            className="bg-[#1E293B] border border-rose-900/40 rounded-xl p-4 sm:p-5 space-y-3 shadow-sm"
+            className="bg-[#112240] border border-rose-900/40 rounded-xl p-4 sm:p-5 space-y-3 shadow-sm"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-rose-400">
                   <Trash2 className="w-4 h-4" />
-                  <h4 className="text-sm font-semibold text-slate-100">Reset Active Dictionary (Danger Zone)</h4>
+                  <h4 className="text-sm font-semibold text-[#F8FAFC]">Reset Active Dictionary (Danger Zone)</h4>
                   {!canResetData && (
-                    <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px]">
+                    <span className="px-2 py-0.5 rounded bg-[#080F1E] text-[#94A3B8] border border-[#233554] text-[10px]">
                       Admin Only
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-[#94A3B8]">
                   Permanently clear all words and relationships in the Firestore cloud database.
                 </p>
               </div>
@@ -520,7 +520,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <span>Reset Data</span>
                 </button>
               ) : (
-                <div className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-slate-500 text-xs font-medium rounded-lg border border-slate-700">
+                <div className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#080F1E] text-[#94A3B8] text-xs font-medium rounded-lg border border-[#233554]">
                   <Lock className="w-3.5 h-3.5" />
                   <span>Reset Restricted</span>
                 </div>
@@ -536,10 +536,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {activeTab === 'ai' && (
         <div className="space-y-6 animate-in fade-in duration-150">
           {!canUseAi ? (
-            <div className="bg-[#1E293B] border border-violet-500/30 rounded-xl p-5 text-center space-y-2">
+            <div className="bg-[#112240] border border-violet-500/30 rounded-xl p-5 text-center space-y-2">
               <Lock className="w-6 h-6 text-violet-400 mx-auto" />
-              <h4 className="text-sm font-semibold text-slate-100">AI Intelligence Restricted</h4>
-              <p className="text-xs text-slate-400 max-w-md mx-auto">
+              <h4 className="text-sm font-semibold text-[#F8FAFC]">AI Intelligence Restricted</h4>
+              <p className="text-xs text-[#94A3B8] max-w-md mx-auto">
                 Gemini AI Clue Assistant and Prompt Configuration are locked for your account. Please ask an administrator to grant the <strong>"Gemini AI Clue Assistant"</strong> permission to your account.
               </p>
             </div>
@@ -548,16 +548,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {/* API Key Configuration */}
               <section
                 id="section-gemini-api-key"
-                className="bg-[#1E293B] border border-violet-500/30 rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
+                className="bg-[#112240] border border-violet-500/30 rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-700/60">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#233554]">
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/30">
                       <Key className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-slate-100">Gemini API Key Authentication</h4>
-                      <p className="text-xs text-slate-400">
+                      <h4 className="text-sm font-semibold text-[#F8FAFC]">Gemini API Key Authentication</h4>
+                      <p className="text-xs text-[#94A3B8]">
                         Required for generating strategic undercover clues and tactical analysis.
                       </p>
                     </div>
@@ -565,12 +565,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
                   <div className="flex items-center gap-2">
                     {apiKey ? (
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold flex items-center gap-1">
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold flex items-center gap-1">
                         <Check className="w-3 h-3 text-emerald-400" />
                         API Key Active
                       </span>
                     ) : (
-                      <span className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-semibold">
+                      <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] font-semibold">
                         Not Configured
                       </span>
                     )}
@@ -578,12 +578,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-300 flex items-center justify-between">
+                  <label className="text-xs font-medium text-[#94A3B8] flex items-center justify-between">
                     <span>Google Gemini API Secret Key</span>
                     <button
                       type="button"
                       onClick={() => setShowApiKey(!showApiKey)}
-                      className="text-[10px] text-slate-400 hover:text-slate-200 inline-flex items-center gap-1 cursor-pointer"
+                      className="text-[10px] text-[#94A3B8] hover:text-[#F8FAFC] inline-flex items-center gap-1 cursor-pointer"
                     >
                       {showApiKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                       <span>{showApiKey ? 'Hide' : 'Show'}</span>
@@ -596,12 +596,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
                       placeholder="AIzaSy..."
-                      className="flex-1 px-3 py-2 bg-[#0F172A] text-slate-100 text-xs rounded-lg border border-slate-700 focus:outline-none focus:border-violet-500 font-mono transition-colors"
+                      className="flex-1 px-3.5 py-2.5 bg-[#080F1E] text-[#F8FAFC] text-xs rounded-lg border border-[#233554] focus:outline-none focus:border-[#00D2FF] focus:ring-1 focus:ring-[#00D2FF] font-mono placeholder-[#64748B] transition-colors"
                     />
                     <button
                       type="button"
                       onClick={handleSaveApiKey}
-                      className="px-3.5 py-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-sm shrink-0"
+                      className="px-3.5 py-2.5 bg-[#00D2FF] hover:bg-[#38BDF8] active:scale-[0.98] text-[#0A192F] text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer shadow-sm shrink-0"
                     >
                       Save Key
                     </button>
@@ -609,13 +609,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       <button
                         type="button"
                         onClick={handleClearApiKey}
-                        className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-slate-700 transition-colors cursor-pointer shrink-0"
+                        className="px-3 py-2.5 bg-[#112240] hover:bg-[#1E293B] text-[#94A3B8] hover:text-[#F8FAFC] text-xs font-medium rounded-lg border border-[#233554] transition-colors cursor-pointer shrink-0"
                       >
                         Clear
                       </button>
                     )}
                   </div>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-[10px] text-[#94A3B8]">
                     Stored securely in your local browser sandbox and never shared publicly.
                   </p>
                 </div>
@@ -624,17 +624,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {/* Model & Reasoning Parameter Settings */}
               <section
                 id="section-gemini-parameters"
-                className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
+                className="bg-[#112240] border border-[#233554] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
               >
-                <div className="flex items-center gap-2 text-violet-400 pb-3 border-b border-slate-700/60">
+                <div className="flex items-center gap-2 text-violet-400 pb-3 border-b border-[#233554]">
                   <Sliders className="w-4 h-4" />
-                  <h4 className="text-sm font-semibold text-slate-100">Model Selection & Strategy</h4>
+                  <h4 className="text-sm font-semibold text-[#F8FAFC]">Model Selection & Strategy</h4>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Model Choice */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Gemini AI Model</label>
+                    <label className="text-xs font-semibold text-[#F8FAFC]">Gemini AI Model</label>
                     <div className="space-y-2">
                       {GEMINI_SUPPORTED_MODELS.map((m) => (
                         <button
@@ -643,16 +643,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                           onClick={() => handleModelChange(m.id)}
                           className={`w-full text-left p-2.5 rounded-lg border transition-all cursor-pointer flex items-center justify-between ${
                             selectedModel === m.id
-                              ? 'bg-violet-500/15 border-violet-500/50 text-slate-100'
-                              : 'bg-[#0F172A] border-slate-800 text-slate-400 hover:border-slate-700'
+                              ? 'bg-[#00D2FF]/15 border-[#00D2FF]/50 text-[#F8FAFC]'
+                              : 'bg-[#080F1E] border-[#233554] text-[#94A3B8] hover:border-slate-600'
                           }`}
                         >
                           <div>
-                            <div className="text-xs font-semibold text-slate-200">{m.name}</div>
-                            <div className="text-[10px] text-slate-400">{m.description}</div>
+                            <div className="text-xs font-semibold text-[#F8FAFC]">{m.name}</div>
+                            <div className="text-[10px] text-[#94A3B8]">{m.description}</div>
                           </div>
                           {m.badge && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-violet-300 border border-slate-700 font-mono shrink-0 ml-2">
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#112240] text-[#00D2FF] border border-[#233554] font-mono shrink-0 ml-2">
                               {m.badge}
                             </span>
                           )}
@@ -664,10 +664,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   {/* Temperature & Strategy Style */}
                   <div className="space-y-4">
                     {/* Temperature Slider */}
-                    <div className="space-y-1.5 bg-[#0F172A] p-3 rounded-lg border border-slate-800">
+                    <div className="space-y-1.5 bg-[#080F1E] p-3 rounded-lg border border-[#233554]">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-slate-300">Temperature</label>
-                        <span className="text-xs font-mono text-violet-400 font-bold">{temperature}</span>
+                        <label className="text-xs font-semibold text-[#F8FAFC]">Temperature</label>
+                        <span className="text-xs font-mono text-[#00D2FF] font-bold">{temperature}</span>
                       </div>
                       <input
                         type="range"
@@ -676,9 +676,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         step={0.1}
                         value={temperature}
                         onChange={(e) => handleTemperatureChange(parseFloat(e.target.value))}
-                        className="w-full accent-violet-500 cursor-pointer"
+                        className="w-full accent-[#00D2FF] cursor-pointer"
                       />
-                      <div className="flex justify-between text-[9px] text-slate-500">
+                      <div className="flex justify-between text-[9px] text-[#94A3B8]">
                         <span>Strict & Subtle (0.2)</span>
                         <span>Balanced (0.7)</span>
                         <span>Creative & Deceptive (1.2)</span>
@@ -687,7 +687,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
                     {/* Default Style Preset */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-300">Default Tactical Style</label>
+                      <label className="text-xs font-semibold text-[#F8FAFC]">Default Tactical Style</label>
                       <div className="grid grid-cols-2 gap-1.5">
                         {GEMINI_STYLE_PRESETS.map((preset) => (
                           <button
@@ -696,14 +696,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                             onClick={() => handleStyleChange(preset.id)}
                             className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
                               clueStyle === preset.id
-                                ? 'bg-violet-500/20 border-violet-500 text-violet-200'
-                                : 'bg-[#0F172A] border-slate-800 text-slate-400 hover:border-slate-700'
+                                ? 'bg-[#00D2FF]/15 border-[#00D2FF] text-[#00D2FF]'
+                                : 'bg-[#080F1E] border-[#233554] text-[#94A3B8] hover:border-slate-600'
                             }`}
                           >
-                            <div className="text-[11px] font-semibold text-slate-200 truncate">
+                            <div className="text-[11px] font-semibold text-[#F8FAFC] truncate">
                               {preset.label}
                             </div>
-                            <div className="text-[9px] text-slate-500 line-clamp-1">
+                            <div className="text-[9px] text-[#94A3B8] line-clamp-1">
                               {preset.description}
                             </div>
                           </button>
@@ -717,12 +717,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {/* System Instruction Prompt Template Editor */}
               <section
                 id="section-gemini-prompt-template"
-                className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
+                className="bg-[#112240] border border-[#233554] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
               >
-                <div className="flex items-center justify-between pb-3 border-b border-slate-700/60">
+                <div className="flex items-center justify-between pb-3 border-b border-[#233554]">
                   <div className="space-y-0.5">
-                    <h4 className="text-sm font-semibold text-slate-100">System Instruction Prompt Template</h4>
-                    <p className="text-xs text-slate-400">
+                    <h4 className="text-sm font-semibold text-[#F8FAFC]">System Instruction Prompt Template</h4>
+                    <p className="text-xs text-[#94A3B8]">
                       Format the strategic context and dynamic variables injected when generating word clues.
                     </p>
                   </div>
@@ -732,7 +732,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       type="button"
                       id="btn-reset-ai-prompt"
                       onClick={handleResetPrompt}
-                      className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer px-2.5 py-1.5 rounded-lg hover:bg-slate-800"
+                      className="inline-flex items-center gap-1 text-xs text-[#94A3B8] hover:text-[#F8FAFC] transition-colors cursor-pointer px-2.5 py-1.5 rounded-lg hover:bg-[#112240]"
                     >
                       <RotateCcw className="w-3 h-3" />
                       <span>Reset</span>
@@ -741,11 +741,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       type="button"
                       id="btn-save-ai-prompt"
                       onClick={handleSavePrompt}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#00D2FF] hover:bg-[#38BDF8] active:scale-[0.98] text-[#0A192F] text-xs font-semibold rounded-lg shadow-sm transition-all duration-200 cursor-pointer"
                     >
                       {isPromptSaved ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-300" />
+                          <Check className="w-3.5 h-3.5 text-[#0A192F]" />
                           <span>Saved</span>
                         </>
                       ) : (
@@ -767,13 +767,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       setIsPromptSaved(false);
                     }}
                     rows={8}
-                    className="w-full bg-[#0F172A] border border-slate-700 focus:border-violet-500 rounded-lg p-3 text-xs text-slate-200 font-mono leading-relaxed focus:outline-none focus:ring-1 focus:ring-violet-500 resize-y transition-colors"
+                    className="w-full bg-[#080F1E] border border-[#233554] focus:border-[#00D2FF] focus:ring-1 focus:ring-[#00D2FF] rounded-lg p-3 text-xs text-[#F8FAFC] font-mono leading-relaxed focus:outline-none resize-y transition-colors"
                     placeholder="Enter system prompt instructions..."
                   />
                 </div>
 
                 {/* Variable injection helper buttons */}
-                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-0.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#94A3B8] pt-0.5">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span>Quick insert token:</span>
                     {[
@@ -786,7 +786,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         key={tag}
                         type="button"
                         onClick={() => setCluePrompt((prev) => prev + ` ${tag}`)}
-                        className="px-2 py-0.5 rounded bg-slate-800 text-sky-300 hover:bg-slate-700 font-mono cursor-pointer border border-slate-700 transition-colors"
+                        className="px-2 py-0.5 rounded bg-[#112240] text-[#00D2FF] hover:bg-[#1E293B] hover:text-white font-mono cursor-pointer border border-[#233554] transition-colors"
                         title={title}
                       >
                         {tag}
@@ -806,19 +806,45 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* ========================================================================= */}
       {activeTab === 'app' && (
         <div className="space-y-6 animate-in fade-in duration-150">
+          {/* Spydex Brand Card */}
+          <section
+            id="section-spydex-about"
+            className="bg-[#112240] border border-[#00D2FF]/30 rounded-xl p-4 sm:p-5 flex items-center gap-4 shadow-sm"
+          >
+            <img
+              src="/app-icon.jpg"
+              alt="Spydex Logo"
+              className="w-14 h-14 rounded-lg object-cover border border-[#00D2FF]/40 shadow-sm shrink-0"
+            />
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <h4 className="text-base font-bold text-[#F8FAFC]">Spydex</h4>
+                <span className="text-[10px] font-semibold text-[#00D2FF] bg-[#00D2FF]/10 border border-[#00D2FF]/30 px-2 py-0.5 rounded-lg uppercase tracking-wider">
+                  Active
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-[#00D2FF] uppercase tracking-wider">
+                The Ultimate Spy Toolkit
+              </p>
+              <p className="text-xs text-[#94A3B8] pt-0.5">
+                Comprehensive offline-first companion for WePlay and Who is the Spy party games.
+              </p>
+            </div>
+          </section>
+
           {/* App Installation Card */}
           <section
             id="section-app-install"
-            className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 sm:p-5 space-y-3 shadow-sm"
+            className="bg-[#112240] border border-[#233554] rounded-xl p-4 sm:p-5 space-y-3 shadow-sm"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-sky-400">
+                <div className="flex items-center gap-2 text-[#00D2FF]">
                   <Smartphone className="w-4 h-4" />
-                  <h4 className="text-sm font-semibold text-slate-100">Progressive Web App (PWA)</h4>
+                  <h4 className="text-sm font-semibold text-[#F8FAFC]">Progressive Web App (PWA)</h4>
                 </div>
-                <p className="text-xs text-slate-400">
-                  Install Who Is The Spy Manual to your home screen for quick offline-first access during gameplay sessions.
+                <p className="text-xs text-[#94A3B8]">
+                  Install Spydex directly to your device home screen for quick offline-first access during gameplay sessions.
                 </p>
               </div>
               <InstallSettingsButton />
@@ -828,21 +854,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Current Account & Effective Permissions Matrix */}
           <section
             id="section-my-effective-permissions"
-            className="bg-[#1E293B] border border-[#334155] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
+            className="bg-[#112240] border border-[#233554] rounded-xl p-4 sm:p-5 space-y-4 shadow-sm"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-700/60">
-              <div className="flex items-center gap-2 text-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-[#233554]">
+              <div className="flex items-center gap-2 text-[#F8FAFC]">
                 <Shield className="w-4 h-4 text-emerald-400" />
                 <h4 className="text-sm font-semibold">Account Role & Effective Features</h4>
               </div>
-              <span className="text-xs text-slate-400 font-mono">
+              <span className="text-xs text-[#94A3B8] font-mono">
                 {currentUser?.username || 'Guest'}
               </span>
             </div>
 
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-[#94A3B8] leading-relaxed">
               Below is the comprehensive feature entitlement list for your account. Feature permissions are managed by administrators via the{' '}
-              <strong className="text-slate-300">Users & Roles</strong> panel.
+              <strong className="text-[#F8FAFC]">Users & Roles</strong> panel.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -853,33 +879,33 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     key={feature.key}
                     className={`flex items-start justify-between p-3 rounded-lg border transition-colors ${
                       isAllowed
-                        ? 'bg-[#0F172A] border-slate-800'
-                        : 'bg-[#0F172A]/40 border-slate-900 opacity-65'
+                        ? 'bg-[#080F1E] border-[#233554]'
+                        : 'bg-[#080F1E]/50 border-[#233554]/50 opacity-60'
                     }`}
                   >
                     <div className="min-w-0 pr-3 space-y-0.5">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold text-slate-200">
+                        <span className="text-xs font-semibold text-[#F8FAFC]">
                           {feature.name}
                         </span>
-                        <span className="text-[9px] px-1 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#112240] text-[#94A3B8] border border-[#233554]">
                           {feature.category}
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-400 leading-tight">
+                      <p className="text-[10px] text-[#94A3B8] leading-tight">
                         {feature.description}
                       </p>
                     </div>
 
                     <div className="shrink-0">
                       {isAllowed ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                           <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                           <span>Unlocked</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-500 border border-slate-700">
-                          <Lock className="w-3 h-3 text-slate-500" />
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-lg bg-[#112240] text-[#94A3B8] border border-[#233554]">
+                          <Lock className="w-3 h-3 text-[#94A3B8]" />
                           <span>Restricted</span>
                         </span>
                       )}
@@ -893,11 +919,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Sign Out Card */}
           <section
             id="section-signout"
-            className="bg-[#1E293B] border border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
+            className="bg-[#112240] border border-[#233554] rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
           >
             <div className="space-y-0.5">
-              <h4 className="text-xs font-semibold text-slate-200">Session Management</h4>
-              <p className="text-xs text-slate-400">
+              <h4 className="text-xs font-semibold text-[#F8FAFC]">Session Management</h4>
+              <p className="text-xs text-[#94A3B8]">
                 Sign out of this device. You will need to re-authenticate with your nickname and password.
               </p>
             </div>
@@ -906,7 +932,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               type="button"
               id="btn-sign-out"
               onClick={onSignOut}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-rose-200 border border-slate-700 hover:border-rose-900/40 text-xs font-semibold rounded-lg transition-colors cursor-pointer shrink-0"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#080F1E] hover:bg-rose-500/10 text-rose-300 hover:text-rose-200 border border-[#233554] hover:border-rose-500/30 text-xs font-semibold rounded-lg transition-colors cursor-pointer shrink-0"
             >
               <LogOut className="w-4 h-4 text-rose-400" />
               <span>Sign Out of Account</span>
@@ -921,26 +947,26 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {isDeleteModalOpen && (
         <div
           id="delete-all-modal-backdrop"
-          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 bg-[#0A192F]/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsDeleteModalOpen(false);
           }}
         >
           <div
             id="delete-all-modal-card"
-            className="bg-[#1E293B] w-full max-w-sm rounded-xl border border-rose-800/80 shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150"
+            className="bg-[#112240] w-full max-w-sm rounded-xl border border-rose-800/80 shadow-sm p-5 space-y-4 animate-in zoom-in-95 duration-150"
           >
             <div className="flex items-center gap-2.5 text-rose-400">
               <AlertTriangle className="w-5 h-5" />
-              <h4 className="font-semibold text-sm text-slate-100">Reset Active Dictionary?</h4>
+              <h4 className="font-semibold text-sm text-[#F8FAFC]">Reset Active Dictionary?</h4>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
-              This action will clear all <strong className="text-white">{words.length} words</strong> and relationships from your active Firestore database collection.
+            <p className="text-xs text-[#94A3B8] leading-relaxed">
+              This action will clear all <strong className="text-[#F8FAFC]">{words.length} words</strong> and relationships from your active Firestore database collection.
             </p>
 
             <div className="space-y-1.5 pt-1">
-              <label className="text-[11px] font-medium text-slate-400">
+              <label className="text-[11px] font-medium text-[#94A3B8]">
                 Type <strong className="text-rose-400 font-mono">CLEAR</strong> to confirm:
               </label>
               <input
@@ -949,7 +975,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 value={confirmInput}
                 onChange={(e) => setConfirmInput(e.target.value)}
                 placeholder="CLEAR"
-                className="w-full px-3 py-2 bg-[#0F172A] text-rose-200 text-xs rounded-lg border border-rose-900 focus:outline-none focus:border-rose-500 font-mono placeholder:text-slate-600"
+                className="w-full px-3.5 py-2.5 bg-[#080F1E] text-rose-200 text-xs rounded-lg border border-rose-900 focus:outline-none focus:border-rose-500 font-mono placeholder-[#64748B]"
               />
             </div>
 
@@ -959,7 +985,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 id="btn-cancel-delete-all"
                 disabled={isResetting}
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors cursor-pointer border border-[#334155]"
+                className="flex-1 py-2.5 bg-[#112240] hover:bg-[#1E293B] text-[#94A3B8] hover:text-[#F8FAFC] text-xs font-medium rounded-lg transition-colors cursor-pointer border border-[#233554]"
               >
                 Cancel
               </button>
@@ -968,7 +994,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 id="btn-confirm-delete-all-submit"
                 disabled={confirmInput.trim().toUpperCase() !== 'CLEAR' || isResetting}
                 onClick={handleConfirmDeleteAll}
-                className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:hover:bg-rose-600 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed shadow-xs"
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:hover:bg-rose-600 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed shadow-sm"
               >
                 {isResetting ? 'Resetting...' : 'Reset Dictionary'}
               </button>

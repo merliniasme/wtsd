@@ -1,34 +1,56 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  --color-spydex-bg: #0A192F;
+  --color-spydex-surface: #112240;
+  --color-spydex-elevated: #1E293B;
+  --color-spydex-input: #080F1E;
+  --color-spydex-border: #233554;
+  --color-spydex-accent: #00D2FF;
+  --color-spydex-accent-hover: #38BDF8;
+}
+
 :root {
-  --bg: #0F172A;
-  --surface: #1E293B;
-  --surface-hover: #283548;
-  --border: #334155;
-  --border-light: #475569;
+  --bg: #0A192F;
+  --surface: #112240;
+  --surface-hover: #1E293B;
+  --border: #233554;
+  --border-light: #334155;
   --text-muted: #94A3B8;
   --text-main: #F8FAFC;
-  --accent: #38BDF8;
+  --accent: #00D2FF;
+  --accent-hover: #38BDF8;
 }
 
 body {
-  background-color: #0F172A;
+  background-color: #0A192F;
   color: #F8FAFC;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
 }
 
-/* Crisp high-density custom scrollbars */
+code, pre, kbd, samp {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* Crisp high-density custom scrollbars matching Spydex deep navy palette */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #0A192F;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #233554;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #334155;
 }

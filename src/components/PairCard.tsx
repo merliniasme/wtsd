@@ -58,24 +58,24 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
   return (
     <article
       id={`pair-card-${pair.wordA.id}-${pair.wordB.id}-${pair.tag}`}
-      className="bg-[#1E293B] rounded-lg border border-[#334155] p-3.5 flex items-center justify-between gap-3 transition-colors hover:border-slate-500/60 group"
+      className="bg-[#112240] rounded-xl border border-[#233554] p-3.5 flex items-center justify-between gap-3 transition-colors hover:border-[#38BDF8]/50 shadow-xs group"
     >
       {/* Pair Words & Tag Types */}
       <div className="flex-1 min-w-0 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
         {/* Word A */}
         <button
           onClick={() => onSelectWord(pair.wordA.term)}
-          className="text-sm font-semibold text-slate-100 hover:text-sky-400 transition-colors truncate cursor-pointer"
+          className="text-sm font-semibold text-[#F8FAFC] hover:text-[#00D2FF] transition-colors truncate cursor-pointer"
           title={`Filter by "${pair.wordA.term}"`}
         >
           {pair.wordA.term}
         </button>
         {/* Connection Arrow */}
-        <span className="text-slate-500 text-xs font-mono select-none">⇄</span>
+        <span className="text-[#94A3B8] text-xs font-mono select-none">⇄</span>
         {/* Word B */}
         <button
           onClick={() => onSelectWord(pair.wordB.term)}
-          className="text-sm font-semibold text-slate-100 hover:text-sky-400 transition-colors truncate cursor-pointer"
+          className="text-sm font-semibold text-[#F8FAFC] hover:text-[#00D2FF] transition-colors truncate cursor-pointer"
           title={`Filter by "${pair.wordB.term}"`}
         >
           {pair.wordB.term}
@@ -100,11 +100,11 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
       </div>
 
       {/* Action Controls */}
-      <div className="flex items-center gap-1 shrink-0 opacity-75 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
         {/* Quick Copy Pair */}
         <button
           onClick={handleCopyPair}
-          className="p-1.5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer rounded hover:bg-slate-800"
+          className="p-1.5 text-[#94A3B8] hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-[#1E293B]"
           title="Salin pasangan kata (Latin biasa)"
         >
           {copied ? (
@@ -118,10 +118,10 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
         {canUseAntiCensor && (
           <button
             onClick={handleCopyPairAntiCensor}
-            className={`p-1.5 transition-colors cursor-pointer rounded hover:bg-slate-800 ${
+            className={`p-1.5 transition-colors cursor-pointer rounded-lg hover:bg-[#1E293B] ${
               copiedAntiCensor
-                ? 'text-amber-400 bg-amber-500/15'
-                : 'text-slate-400 hover:text-amber-400'
+                ? 'text-amber-400 bg-amber-500/10'
+                : 'text-[#94A3B8] hover:text-amber-400'
             }`}
             title="Salin Anti-Sensor (Sisipkan spasi kosong)"
           >
@@ -138,7 +138,7 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
           <>
             <button
               onClick={() => onEditRelationTag(pair.wordA, pair.wordB, pair.tag)}
-              className="p-1.5 text-slate-400 hover:text-sky-400 transition-colors cursor-pointer rounded hover:bg-slate-800"
+              className="p-1.5 text-[#94A3B8] hover:text-[#00D2FF] transition-colors cursor-pointer rounded-lg hover:bg-[#1E293B]"
               title="Change Tag Type"
             >
               <Tag className="w-3.5 h-3.5" />
@@ -146,7 +146,7 @@ export const PairCard: React.FC<PairCardProps> = React.memo(({
 
             <button
               onClick={() => onUnlinkRelation(pair.wordA.id, pair.wordB.id, pair.tag)}
-              className="p-1.5 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer rounded hover:bg-slate-800"
+              className="p-1.5 text-[#94A3B8] hover:text-rose-400 transition-colors cursor-pointer rounded-lg hover:bg-[#1E293B]"
               title="Unlink pair"
             >
               <Unlink className="w-3.5 h-3.5" />

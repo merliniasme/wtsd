@@ -16,15 +16,15 @@ export const SearchPromptState: React.FC<SearchPromptStateProps> = ({
       id="search-prompt-state-container"
       className="py-20 px-4 text-center max-w-md mx-auto space-y-4 animate-in fade-in duration-150"
     >
-      <div className="w-10 h-10 rounded-full bg-[#1E293B] border border-[#334155] text-slate-400 mx-auto flex items-center justify-center">
-        <Search className="w-4 h-4 text-sky-400" />
+      <div className="w-10 h-10 rounded-xl bg-[#112240] border border-[#233554] text-[#94A3B8] mx-auto flex items-center justify-center shadow-sm">
+        <Search className="w-4 h-4 text-[#00D2FF]" />
       </div>
 
       <div className="space-y-1">
-        <h2 className="font-semibold text-slate-100 text-base">
+        <h2 className="font-bold text-[#F8FAFC] text-base tracking-tight">
           {activeTab === 'pairs' ? 'Search undercover pairs' : 'Search dictionary words'}
         </h2>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-[#94A3B8]">
           {activeTab === 'pairs'
             ? 'Type in the search bar or select a Tag Type below to explore pairs.'
             : 'Type in the search bar above to look up any word and view its connections.'}
@@ -40,9 +40,9 @@ export const SearchPromptState: React.FC<SearchPromptStateProps> = ({
                 key={tag}
                 onClick={() => onSelectTag(tag)}
                 title={meta.label}
-                className="px-2.5 py-1 rounded-full text-xs font-medium bg-[#1E293B] text-slate-400 hover:text-slate-200 border border-[#334155] hover:border-slate-500 transition-colors cursor-pointer flex items-center gap-1.5"
+                className="px-2.5 py-1 rounded-md text-xs font-medium bg-[#112240] text-[#94A3B8] hover:text-[#F8FAFC] border border-[#233554] hover:border-[#38BDF8]/50 transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                <span className="font-mono text-[10px] text-sky-400">{meta.shortCode}</span>
+                <span className="font-mono text-[10px] text-[#00D2FF]">{meta.shortCode}</span>
                 <span>{meta.label}</span>
               </button>
             );
@@ -52,3 +52,4 @@ export const SearchPromptState: React.FC<SearchPromptStateProps> = ({
     </div>
   );
 };
+

@@ -112,25 +112,25 @@ export const CreateRelationModal: React.FC<CreateRelationModalProps> = ({
   return (
     <div
       id="create-relation-modal-backdrop"
-      className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 bg-[#0A192F]/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
     >
       <div
         id="create-relation-modal-card"
-        className="bg-[#1E293B] w-full max-w-sm rounded-xl border border-[#334155] shadow-2xl p-4.5 space-y-4 animate-in fade-in zoom-in-95 duration-150"
+        className="bg-[#112240] w-full max-w-sm rounded-xl border border-[#233554] shadow-sm p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-slate-100">Create Relation</h3>
-            <p className="text-[11px] text-slate-400">Link two words with a tag type</p>
+            <h3 className="text-sm font-bold text-[#F8FAFC] tracking-tight">Create Relation</h3>
+            <p className="text-xs text-[#94A3B8] mt-0.5">Link two words with a tag type</p>
           </div>
           <button
             id="btn-close-create-relation-modal"
             onClick={handleClose}
-            className="p-1 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer rounded hover:bg-slate-800"
+            className="p-1.5 text-[#94A3B8] hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-[#1E293B]"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />
@@ -139,15 +139,15 @@ export const CreateRelationModal: React.FC<CreateRelationModalProps> = ({
 
         {/* Error notification */}
         {error && (
-          <p className="text-xs text-rose-400 bg-rose-950/40 border border-rose-800/60 rounded px-2.5 py-1.5">
+          <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
             {error}
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3.5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Word A */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-medium text-slate-300">Word A</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#94A3B8]">Word A</label>
             <div className="relative flex items-center">
               <input
                 id="input-pair-term-a"
@@ -164,16 +164,16 @@ export const CreateRelationModal: React.FC<CreateRelationModalProps> = ({
                   }
                 }}
                 placeholder="Click paste button..."
-                className="w-full pl-3 pr-20 py-2 bg-[#0F172A] text-slate-100 text-sm rounded-lg border border-[#334155] focus:outline-none cursor-default font-sans placeholder:text-slate-500"
+                className="w-full pl-3 pr-20 py-2.5 bg-[#080F1E] text-[#F8FAFC] text-sm rounded-lg border border-[#233554] focus:outline-none cursor-default font-sans placeholder:text-[#64748B]"
               />
               <button
                 type="button"
                 id="btn-paste-word-a"
                 onClick={handlePasteA}
-                className={`absolute right-1.5 px-2.5 py-1 rounded text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
+                className={`absolute right-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
                   pastedA
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                    : 'bg-slate-800 hover:bg-slate-700 text-sky-400 border border-[#334155]'
+                    : 'bg-[#112240] hover:bg-[#1E293B] text-[#00D2FF] border border-[#233554]'
                 }`}
               >
                 {pastedA ? (
@@ -192,8 +192,8 @@ export const CreateRelationModal: React.FC<CreateRelationModalProps> = ({
           </div>
 
           {/* Word B */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-medium text-slate-300">Word B</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#94A3B8]">Word B</label>
             <div className="relative flex items-center">
               <input
                 id="input-pair-term-b"
@@ -210,16 +210,16 @@ export const CreateRelationModal: React.FC<CreateRelationModalProps> = ({
                   }
                 }}
                 placeholder="Click paste button..."
-                className="w-full pl-3 pr-20 py-2 bg-[#0F172A] text-slate-100 text-sm rounded-lg border border-[#334155] focus:outline-none cursor-default font-sans placeholder:text-slate-500"
+                className="w-full pl-3 pr-20 py-2.5 bg-[#080F1E] text-[#F8FAFC] text-sm rounded-lg border border-[#233554] focus:outline-none cursor-default font-sans placeholder:text-[#64748B]"
               />
               <button
                 type="button"
                 id="btn-paste-word-b"
                 onClick={handlePasteB}
-                className={`absolute right-1.5 px-2.5 py-1 rounded text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
+                className={`absolute right-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
                   pastedB
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                    : 'bg-slate-800 hover:bg-slate-700 text-sky-400 border border-[#334155]'
+                    : 'bg-[#112240] hover:bg-[#1E293B] text-[#00D2FF] border border-[#233554]'
                 }`}
               >
                 {pastedB ? (
@@ -239,7 +239,7 @@ export const CreateRelationModal: React.FC<CreateRelationModalProps> = ({
 
           {/* Tag Types Selector */}
           <div className="space-y-1.5 pt-1">
-            <label className="text-[11px] font-medium text-slate-300">Tag Types</label>
+            <label className="text-xs font-medium text-[#94A3B8]">Tag Types</label>
             <div className="flex flex-wrap gap-1.5">
               {RELATION_TAGS.map((t) => {
                 const meta = TAG_METADATA[t];
@@ -252,10 +252,10 @@ export const CreateRelationModal: React.FC<CreateRelationModalProps> = ({
                     id={`btn-select-category-${t}`}
                     onClick={() => setTag(t)}
                     title={meta.label}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                       isSelected
-                        ? 'bg-sky-400 text-slate-950 font-semibold shadow-2xs'
-                        : 'bg-[#0F172A] text-slate-400 hover:text-slate-200 border border-[#334155]'
+                        ? 'bg-[#00D2FF] text-[#0A192F] font-semibold'
+                        : 'bg-[#0A192F] text-[#94A3B8] hover:text-[#F8FAFC] border border-[#233554]'
                     }`}
                   >
                     <span className="font-mono text-[10px] opacity-80">{meta.shortCode}</span>
@@ -267,12 +267,12 @@ export const CreateRelationModal: React.FC<CreateRelationModalProps> = ({
           </div>
 
           {/* Submit */}
-          <div className="pt-2">
+          <div className="pt-1">
             <button
               type="submit"
               id="btn-submit-create-relation"
               disabled={!termA.trim() || !termB.trim()}
-              className="w-full py-2 bg-sky-400 hover:bg-sky-300 disabled:opacity-40 disabled:hover:bg-sky-400 text-slate-950 font-semibold text-xs rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed shadow-xs"
+              className="w-full py-2.5 bg-[#00D2FF] hover:bg-[#38BDF8] disabled:opacity-40 disabled:hover:bg-[#00D2FF] text-[#0A192F] font-semibold text-xs rounded-lg transition-all duration-200 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed shadow-sm"
             >
               Create Relation
             </button>

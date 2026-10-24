@@ -263,29 +263,29 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
   const duplicateCount = items.filter((it) => it.isDuplicate).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[#1E293B] border border-[#334155] rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-[#112240] border border-[#233554] rounded-xl w-full max-w-4xl shadow-sm overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#334155] flex items-center justify-between bg-slate-900/60">
+        <div className="px-5 py-4 border-b border-[#233554] flex items-center justify-between bg-[#0A192F]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+            <div className="w-9 h-9 rounded-lg bg-[#00D2FF]/15 border border-[#00D2FF]/30 flex items-center justify-center text-[#00D2FF]">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
+              <h2 className="text-base font-bold text-[#F8FAFC] tracking-tight flex items-center gap-2">
                 Scan Game Result Screenshots
-                <span className="text-xs px-2 py-0.5 rounded font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                <span className="text-xs px-2 py-0.5 rounded-md font-mono bg-[#00D2FF]/15 text-[#00D2FF] border border-[#00D2FF]/30 font-semibold">
                   SS Verified
                 </span>
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#94A3B8]">
                 Extract Civilian and Spy word pairs automatically from WePlay victory screens
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#1E293B] rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -300,8 +300,8 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${
               isProcessing
-                ? 'border-cyan-500/50 bg-cyan-500/5 cursor-wait'
-                : 'border-slate-600 hover:border-cyan-400/80 bg-slate-900/40 hover:bg-slate-900/70'
+                ? 'border-[#00D2FF] bg-[#00D2FF]/5 cursor-wait'
+                : 'border-[#233554] hover:border-[#38BDF8]/60 bg-[#080F1E] hover:bg-[#080F1E]/80'
             }`}
           >
             <input
@@ -315,22 +315,22 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
             />
 
             <div className="flex flex-col items-center justify-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-slate-800/90 border border-slate-700 flex items-center justify-center text-cyan-400 shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-[#00D2FF]/10 border border-[#00D2FF]/20 flex items-center justify-center text-[#00D2FF] shadow-sm">
                 {isProcessing ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+                  <Loader2 className="w-6 h-6 animate-spin text-[#00D2FF]" />
                 ) : (
                   <UploadCloud className="w-6 h-6" />
                 )}
               </div>
               <div className="space-y-0.5">
-                <p className="text-sm font-semibold text-slate-200">
+                <p className="text-sm font-semibold text-[#F8FAFC]">
                   {isProcessing
                     ? `Analyzing screenshot ${currentProcessingIndex} of ${totalToProcess}...`
                     : 'Click or drag WePlay game-over screenshots here'}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-[#94A3B8]">
                   Supports multiple images at once (PNG, JPG) or press{' '}
-                  <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-300">
+                  <kbd className="px-1.5 py-0.5 bg-[#112240] border border-[#233554] rounded text-[10px] text-[#F8FAFC]">
                     Ctrl + V
                   </kbd>{' '}
                   to paste from clipboard
@@ -341,16 +341,16 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
 
           {/* Processing Progress Bar */}
           {isProcessing && (
-            <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl space-y-2">
-              <div className="flex justify-between text-xs text-cyan-300 font-medium">
+            <div className="p-3 bg-[#00D2FF]/10 border border-[#00D2FF]/20 rounded-xl space-y-2">
+              <div className="flex justify-between text-xs text-[#00D2FF] font-medium">
                 <span>Gemini Vision OCR analyzing game screens...</span>
                 <span className="tabular-nums">
                   {currentProcessingIndex} / {totalToProcess}
                 </span>
               </div>
-              <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-[#080F1E] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-cyan-400 transition-all duration-300"
+                  className="h-full bg-[#00D2FF] transition-all duration-300"
                   style={{ width: `${(currentProcessingIndex / Math.max(1, totalToProcess)) * 100}%` }}
                 />
               </div>
@@ -360,18 +360,18 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
           {/* Review Staging Queue */}
           {items.length > 0 && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800">
-                <span className="font-semibold text-slate-300">
+              <div className="flex items-center justify-between text-xs text-[#94A3B8] pt-2 border-t border-[#233554]">
+                <span className="font-semibold text-[#F8FAFC]">
                   Staged Results ({items.length} screenshots)
                 </span>
                 <div className="flex items-center gap-3">
                   {duplicateCount > 0 && (
-                    <span className="text-amber-400 flex items-center gap-1">
+                    <span className="text-amber-400 flex items-center gap-1 font-medium">
                       <AlertTriangle className="w-3.5 h-3.5" />
                       {duplicateCount} duplicate(s)
                     </span>
                   )}
-                  <span className="text-emerald-400 flex items-center gap-1">
+                  <span className="text-emerald-400 flex items-center gap-1 font-medium">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     {validCount} ready to save
                   </span>
@@ -379,7 +379,7 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
               </div>
 
               <div className="space-y-3">
-                {items.map((item, idx) => {
+                {items.map((item) => {
                   const meta = TAG_METADATA[item.selectedTag] || TAG_METADATA.ss_verified;
 
                   return (
@@ -387,10 +387,10 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
                       key={item.id}
                       className={`p-3.5 sm:p-4 rounded-xl border transition-colors ${
                         item.status === 'error'
-                          ? 'bg-rose-500/5 border-rose-500/30'
+                          ? 'bg-rose-500/10 border-rose-500/25'
                           : item.isDuplicate
-                          ? 'bg-amber-500/5 border-amber-500/30'
-                          : 'bg-slate-900/60 border-slate-700/80 hover:border-slate-600'
+                          ? 'bg-amber-500/10 border-amber-500/25'
+                          : 'bg-[#080F1E] border-[#233554] hover:border-[#38BDF8]/40'
                       }`}
                     >
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -398,7 +398,7 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
                         <div className="flex items-center gap-3 shrink-0">
                           <div
                             onClick={() => setZoomImageUrl(item.imagePreviewUrl)}
-                            className="relative w-14 h-14 rounded-lg bg-slate-800 border border-slate-700 overflow-hidden cursor-zoom-in group shrink-0"
+                            className="relative w-14 h-14 rounded-lg bg-[#112240] border border-[#233554] overflow-hidden cursor-zoom-in group shrink-0"
                             title="Click to zoom image"
                           >
                             <img
@@ -411,23 +411,23 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
                             </div>
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-slate-200 truncate max-w-[140px] sm:max-w-[180px]">
+                            <p className="text-xs font-semibold text-[#F8FAFC] truncate max-w-[140px] sm:max-w-[180px]">
                               {item.fileName}
                             </p>
-                            <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                            <div className="text-[11px] text-[#94A3B8] flex items-center gap-1.5 mt-0.5">
                               {item.status === 'pending' && (
-                                <span className="text-slate-400 flex items-center gap-1">
-                                  <Loader2 className="w-3 h-3 animate-spin" /> In queue
+                                <span className="text-[#94A3B8] flex items-center gap-1">
+                                  <Loader2 className="w-3 h-3 animate-spin text-[#00D2FF]" /> In queue
                                 </span>
                               )}
                               {item.status === 'error' && (
-                                <span className="text-rose-400 flex items-center gap-1">
+                                <span className="text-rose-400 flex items-center gap-1 font-medium">
                                   <AlertTriangle className="w-3 h-3" /> Error analyzing
                                 </span>
                               )}
                               {item.status === 'success' && (
                                 <>
-                                  <span className="text-emerald-400 flex items-center gap-1">
+                                  <span className="text-emerald-400 flex items-center gap-1 font-medium">
                                     <CheckCircle2 className="w-3 h-3" /> Detected
                                   </span>
                                   {item.winner && (
@@ -444,7 +444,7 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
                           <div className="flex-1 w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2">
                             {/* Civilian Word */}
                             <div className="w-full sm:flex-1">
-                              <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-semibold">
+                              <label className="block text-[10px] text-[#94A3B8] uppercase tracking-wider mb-1 font-semibold">
                                 Civilian (Warga)
                               </label>
                               <input
@@ -454,7 +454,7 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
                                   handleWordChange(item.id, 'civilianWord', e.target.value)
                                 }
                                 placeholder="Civilian word"
-                                className="w-full px-2.5 py-1.5 bg-slate-800 border border-slate-700 focus:border-cyan-400 rounded-lg text-xs font-semibold text-slate-100 outline-none"
+                                className="w-full px-3 py-1.5 bg-[#0A192F] border border-[#233554] focus:border-[#00D2FF] rounded-lg text-xs font-semibold text-[#F8FAFC] outline-none"
                               />
                             </div>
 
@@ -462,7 +462,7 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
                             <button
                               type="button"
                               onClick={() => handleSwapWords(item.id)}
-                              className="p-1.5 mt-4 text-slate-400 hover:text-cyan-300 hover:bg-slate-800 rounded-md transition-colors cursor-pointer shrink-0"
+                              className="p-1.5 mt-4 text-[#94A3B8] hover:text-[#00D2FF] hover:bg-[#112240] rounded-md transition-colors cursor-pointer shrink-0"
                               title="Swap Civilian and Spy roles"
                             >
                               <ArrowRightLeft className="w-3.5 h-3.5" />
@@ -470,7 +470,7 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
 
                             {/* Spy Word */}
                             <div className="w-full sm:flex-1">
-                              <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-semibold">
+                              <label className="block text-[10px] text-[#94A3B8] uppercase tracking-wider mb-1 font-semibold">
                                 Spy (Undercover)
                               </label>
                               <input
@@ -480,13 +480,13 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
                                   handleWordChange(item.id, 'spyWord', e.target.value)
                                 }
                                 placeholder="Spy word"
-                                className="w-full px-2.5 py-1.5 bg-slate-800 border border-slate-700 focus:border-cyan-400 rounded-lg text-xs font-semibold text-slate-100 outline-none"
+                                className="w-full px-3 py-1.5 bg-[#0A192F] border border-[#233554] focus:border-[#00D2FF] rounded-lg text-xs font-semibold text-[#F8FAFC] outline-none"
                               />
                             </div>
 
                             {/* Tag Selector */}
                             <div className="w-full sm:w-auto shrink-0">
-                              <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-semibold">
+                              <label className="block text-[10px] text-[#94A3B8] uppercase tracking-wider mb-1 font-semibold">
                                 Tag Category
                               </label>
                               <select
@@ -494,10 +494,10 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
                                 onChange={(e) =>
                                   handleTagChange(item.id, e.target.value as RelationTag)
                                 }
-                                className={`px-2 py-1.5 rounded-lg text-xs font-medium border bg-slate-800 text-slate-200 outline-none cursor-pointer ${meta.badgeBorder}`}
+                                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border bg-[#0A192F] text-[#F8FAFC] outline-none cursor-pointer border-[#233554]`}
                               >
                                 {RELATION_TAGS.map((t) => (
-                                  <option key={t} value={t} className="bg-slate-900 text-slate-200">
+                                  <option key={t} value={t} className="bg-[#0A192F] text-[#F8FAFC]">
                                     {TAG_METADATA[t].label} ({TAG_METADATA[t].shortCode})
                                   </option>
                                 ))}
@@ -517,7 +517,7 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
                         <button
                           type="button"
                           onClick={() => handleDeleteItem(item.id)}
-                          className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer self-end sm:self-center shrink-0"
+                          className="p-2 text-[#94A3B8] hover:text-rose-400 hover:bg-[#112240] rounded-lg transition-colors cursor-pointer self-end sm:self-center shrink-0"
                           title="Remove screenshot"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -545,12 +545,12 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="px-5 py-4 border-t border-[#334155] bg-slate-900/60 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-xs text-slate-400">
+        <div className="px-5 py-4 border-t border-[#233554] bg-[#0A192F] flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs text-[#94A3B8]">
             {items.length > 0 ? (
               <span>
-                Ready to commit: <strong className="text-cyan-300">{validCount}</strong> new pair(s)
-                under tag <strong className="text-cyan-400">SS Verified</strong>.
+                Ready to commit: <strong className="text-[#00D2FF]">{validCount}</strong> new pair(s)
+                under tag <strong className="text-[#38BDF8]">SS Verified</strong>.
               </span>
             ) : (
               <span>No screenshots loaded yet. Upload images above to begin.</span>
@@ -562,7 +562,7 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
               <button
                 type="button"
                 onClick={() => setItems([])}
-                className="px-3.5 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                className="px-3.5 py-2 text-xs font-semibold text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#112240] rounded-lg transition-colors cursor-pointer"
               >
                 Clear All
               </button>
@@ -570,7 +570,7 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 border border-slate-700 rounded-lg transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-medium text-[#F8FAFC] hover:bg-[#1E293B] bg-[#112240] border border-[#233554] rounded-lg transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -578,7 +578,7 @@ export const ScreenshotResultsModal: React.FC<ScreenshotResultsModalProps> = ({
               type="button"
               disabled={validCount === 0 || isProcessing}
               onClick={handleCommitAll}
-              className="px-4 py-2 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors cursor-pointer inline-flex items-center gap-1.5"
+              className="px-4 py-2 text-xs font-semibold text-[#0A192F] bg-[#00D2FF] hover:bg-[#38BDF8] disabled:opacity-40 disabled:hover:bg-[#00D2FF] disabled:cursor-not-allowed rounded-lg shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 active:scale-[0.98]"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Import Verified Pairs ({validCount})</span>

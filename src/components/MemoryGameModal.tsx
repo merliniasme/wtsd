@@ -509,20 +509,20 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
   return (
     <div
       id="memory-game-modal-overlay"
-      className="fixed inset-0 z-50 flex flex-col sm:items-center sm:justify-center bg-slate-950/90 sm:backdrop-blur-md sm:p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex flex-col sm:items-center sm:justify-center bg-[#0A192F]/80 sm:backdrop-blur-sm sm:p-4 animate-in fade-in duration-150"
     >
       {/* Container: Fullscreen on mobile, Elegant Centered Card on desktop */}
       <div
         id="memory-puzzle-game-dialog"
-        className="w-full h-full sm:h-auto sm:max-w-md sm:max-h-[92vh] flex flex-col bg-slate-900 sm:border sm:border-slate-800 sm:rounded-2xl sm:shadow-2xl overflow-hidden"
+        className="w-full h-full sm:h-auto sm:max-w-md sm:max-h-[92vh] flex flex-col bg-[#112240] sm:border sm:border-[#233554] sm:rounded-xl sm:shadow-sm overflow-hidden"
       >
         {/* Sleek Minimalist Mobile-First Header Bar */}
-        <div className="flex items-center justify-between px-4 py-3 bg-slate-900/95 border-b border-slate-800/80 shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 bg-[#0A192F] border-b border-[#233554] shrink-0">
           {/* Left: Score Chips (Streak & Unique Pairs) */}
           <div className="flex items-center gap-2">
             {/* Streak Chip */}
             <div
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold"
               title="Streak jawaban benar saat ini"
             >
               <Flame className="w-3.5 h-3.5 text-amber-400 fill-amber-400/30" />
@@ -531,12 +531,12 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
 
             {/* Unique Pairs Chip */}
             <div
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-semibold"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00D2FF]/10 border border-[#00D2FF]/30 text-[#00D2FF] text-xs font-semibold"
               title="Pasangan unik yang berhasil ditebak"
             >
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              <Sparkles className="w-3.5 h-3.5 text-[#00D2FF]" />
               <span className="font-mono">{uniquePairsCount}</span>
-              <span className="text-[10px] text-purple-400/80 hidden xs:inline">Pasang</span>
+              <span className="text-[10px] text-[#00D2FF]/80 hidden xs:inline">Pasang</span>
             </div>
           </div>
 
@@ -546,12 +546,12 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
             <button
               onClick={toggleSound}
               className={`p-2 rounded-lg transition-colors cursor-pointer ${
-                isSoundOn ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-slate-400'
+                isSoundOn ? 'text-[#F8FAFC] hover:bg-[#112240]' : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#112240]'
               }`}
               title={isSoundOn ? 'Suara Aktif' : 'Suara Mati'}
               aria-label="Toggle sound"
             >
-              {isSoundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              {isSoundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-[#94A3B8]" />}
             </button>
 
             {/* Stats Tab Toggle */}
@@ -560,8 +560,8 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
               onClick={() => setActiveTab(activeTab === 'game' ? 'stats' : 'game')}
               className={`p-2 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'stats'
-                  ? 'bg-purple-500/20 text-purple-300'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-[#00D2FF]/20 text-[#00D2FF]'
+                  : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#112240]'
               }`}
               title="Statistik Permainan"
               aria-label="Toggle statistics"
@@ -573,7 +573,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
             <button
               id="btn-close-memory-game"
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white transition-colors cursor-pointer ml-1"
+              className="p-2 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#112240] rounded-lg transition-colors cursor-pointer ml-1"
               title="Tutup"
               aria-label="Close"
             >
@@ -589,13 +589,13 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
               <div className="flex flex-col flex-1 justify-between gap-3">
                 {/* 1. Target Prompt Word Area */}
                 <div className="flex flex-col items-center justify-center text-center py-3 sm:py-4 px-2">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1">
                     Cari Pasangan Kata
                   </span>
 
                   {/* High-Contrast, Big & Legible Target Word */}
                   <div className="my-1">
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-wide break-words">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F8FAFC] tracking-tight break-words">
                       {currentQuestion.promptWord}
                     </h1>
                   </div>
@@ -642,8 +642,8 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                     const isSelected = selectedOption === optionText;
 
                     let btnClasses =
-                      'bg-slate-800/80 hover:bg-slate-700/80 text-slate-100 border-slate-700 active:scale-[0.98]';
-                    let badgeClasses = 'bg-slate-900 text-slate-400 border-slate-700';
+                      'bg-[#080F1E] hover:bg-[#1E293B] text-[#F8FAFC] border-[#233554] active:scale-[0.98]';
+                    let badgeClasses = 'bg-[#112240] text-[#94A3B8] border-[#233554]';
 
                     if (isAnswered) {
                       if (isCorrect) {
@@ -659,8 +659,8 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                       } else {
                         // Other non-matching options fade out
                         btnClasses =
-                          'bg-slate-900/40 border-slate-800 text-slate-500 opacity-40 cursor-not-allowed';
-                        badgeClasses = 'bg-slate-900 text-slate-600 border-slate-800';
+                          'bg-[#080F1E]/50 border-[#233554]/50 text-[#94A3B8]/40 opacity-40 cursor-not-allowed';
+                        badgeClasses = 'bg-[#080F1E] text-[#94A3B8]/40 border-[#233554]/50';
                       }
                     }
 
@@ -670,11 +670,11 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                         id={`option-${idx}`}
                         onClick={() => handleSelectOption(optionText)}
                         disabled={isAnswered}
-                        className={`w-full min-h-[48px] sm:min-h-[50px] px-3.5 py-2.5 rounded-xl border flex items-center justify-between transition-all duration-150 cursor-pointer ${btnClasses}`}
+                        className={`w-full min-h-[48px] sm:min-h-[50px] px-3.5 py-2.5 rounded-lg border flex items-center justify-between transition-all duration-150 cursor-pointer shadow-sm ${btnClasses}`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <span
-                            className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-mono font-bold shrink-0 border ${badgeClasses}`}
+                            className={`w-6 h-6 rounded flex items-center justify-center text-xs font-mono font-bold shrink-0 border ${badgeClasses}`}
                           >
                             {letter}
                           </span>
@@ -701,28 +701,28 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                     <button
                       id="btn-next-question"
                       onClick={generateNextQuestion}
-                      className="w-full min-h-[46px] rounded-xl bg-purple-500 hover:bg-purple-400 active:scale-[0.98] text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-950/40 cursor-pointer transition-transform animate-in fade-in"
+                      className="w-full min-h-[46px] rounded-lg bg-[#00D2FF] hover:bg-[#38BDF8] active:scale-[0.98] text-[#0A192F] font-semibold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer transition-all duration-200 animate-in fade-in"
                     >
                       <span>Lanjut Berikutnya</span>
                       <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                     </button>
                   ) : (
-                    <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+                    <div className="flex items-center justify-between text-xs text-[#94A3B8] px-1">
                       <button
                         onClick={generateNextQuestion}
-                        className="py-2 px-2 hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer text-slate-400"
+                        className="py-2 px-2 hover:text-[#F8FAFC] transition-colors flex items-center gap-1.5 cursor-pointer text-[#94A3B8]"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         <span>Lewati Kata</span>
                       </button>
 
                       {/* Clean Auto-Next Checkbox */}
-                      <label className="flex items-center gap-1.5 cursor-pointer select-none text-slate-400 hover:text-slate-300">
+                      <label className="flex items-center gap-1.5 cursor-pointer select-none text-[#94A3B8] hover:text-[#F8FAFC]">
                         <input
                           type="checkbox"
                           checked={isAutoNext}
                           onChange={toggleAutoNext}
-                          className="w-3.5 h-3.5 rounded bg-slate-800 border-slate-700 text-purple-500 focus:ring-0 cursor-pointer"
+                          className="w-3.5 h-3.5 rounded bg-[#080F1E] border-[#233554] text-[#00D2FF] focus:ring-0 cursor-pointer"
                         />
                         <span>Otomatis Lanjut</span>
                       </label>
@@ -731,7 +731,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
+              <div className="flex-1 flex items-center justify-center text-[#94A3B8] text-sm">
                 Memuat soal...
               </div>
             )}
@@ -741,25 +741,25 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
           <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto space-y-4">
             {/* 4 Clean Metric Cards */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-3 bg-purple-950/25 border border-purple-500/30 rounded-xl text-center">
-                <span className="text-[10px] text-purple-300 uppercase tracking-wider font-semibold block">
+              <div className="p-3 bg-[#080F1E] border border-[#233554] rounded-lg text-center">
+                <span className="text-[10px] text-[#00D2FF] uppercase tracking-wider font-semibold block">
                   Pasangan Unik
                 </span>
-                <span className="text-xl font-extrabold text-purple-200 font-mono mt-0.5 block">
+                <span className="text-xl font-extrabold text-[#F8FAFC] font-mono mt-0.5 block">
                   {uniquePairsCount}
                 </span>
               </div>
 
-              <div className="p-3 bg-slate-800/50 border border-slate-700/60 rounded-xl text-center">
+              <div className="p-3 bg-[#080F1E] border border-[#233554] rounded-lg text-center">
                 <span className="text-[10px] text-emerald-400 uppercase tracking-wider font-semibold block">
                   Total Benar
                 </span>
-                <span className="text-xl font-extrabold text-emerald-300 font-mono mt-0.5 block">
+                <span className="text-xl font-extrabold text-emerald-400 font-mono mt-0.5 block">
                   {stats.correctAnswers}
                 </span>
               </div>
 
-              <div className="p-3 bg-slate-800/50 border border-slate-700/60 rounded-xl text-center">
+              <div className="p-3 bg-[#080F1E] border border-[#233554] rounded-lg text-center">
                 <span className="text-[10px] text-rose-400 uppercase tracking-wider font-semibold block">
                   Total Salah
                 </span>
@@ -768,7 +768,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                 </span>
               </div>
 
-              <div className="p-3 bg-slate-800/50 border border-slate-700/60 rounded-xl text-center">
+              <div className="p-3 bg-[#080F1E] border border-[#233554] rounded-lg text-center">
                 <span className="text-[10px] text-amber-400 uppercase tracking-wider font-semibold block">
                   Max Streak
                 </span>
@@ -779,32 +779,32 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
             </div>
 
             {/* Mastered Unique Pairs List */}
-            <div className="flex-1 flex flex-col bg-slate-950/60 border border-slate-800 rounded-xl p-3 space-y-2.5 min-h-[160px]">
+            <div className="flex-1 flex flex-col bg-[#080F1E] border border-[#233554] rounded-lg p-3 space-y-2.5 min-h-[160px]">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-slate-200">
+                <span className="text-xs font-bold text-[#F8FAFC]">
                   Koleksi Pasangan Ditebak ({uniquePairsCount})
                 </span>
 
                 {uniquePairsCount > 0 && (
                   <div className="relative w-36 sm:w-44">
-                    <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
                     <input
                       type="text"
                       value={statsSearchQuery}
                       onChange={(e) => setStatsSearchQuery(e.target.value)}
                       placeholder="Cari..."
-                      className="w-full pl-7 pr-2 py-1 text-xs bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+                      className="w-full pl-7 pr-2 py-1 text-xs bg-[#0A192F] border border-[#233554] rounded-lg text-[#F8FAFC] placeholder-[#64748B] focus:outline-none focus:border-[#00D2FF] focus:ring-1 focus:ring-[#00D2FF]"
                     />
                   </div>
                 )}
               </div>
 
               {uniquePairsCount === 0 ? (
-                <div className="py-8 text-center text-slate-500 text-xs">
+                <div className="py-8 text-center text-[#94A3B8] text-xs">
                   Belum ada pasangan unik yang berhasil ditebak. Mulai tebak sekarang!
                 </div>
               ) : filteredMasteredPairs.length === 0 ? (
-                <div className="py-6 text-center text-slate-500 text-xs">
+                <div className="py-6 text-center text-[#94A3B8] text-xs">
                   Tidak ada pasangan yang cocok dengan pencarian.
                 </div>
               ) : (
@@ -814,7 +814,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                     return (
                       <div
                         key={pair.pairKey}
-                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs"
+                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#112240] border border-[#233554] text-xs"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span
@@ -822,7 +822,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                           >
                             {meta.shortCode}
                           </span>
-                          <span className="font-medium text-slate-200 truncate">
+                          <span className="font-medium text-[#F8FAFC] truncate">
                             {pair.wordA} ⇄ {pair.wordB}
                           </span>
                         </div>
@@ -848,7 +848,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
                   </button>
                   <button
                     onClick={() => setShowResetConfirm(false)}
-                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-xs transition-colors cursor-pointer"
+                    className="px-3 py-1.5 bg-[#112240] border border-[#233554] text-[#94A3B8] hover:text-[#F8FAFC] rounded-lg text-xs transition-colors cursor-pointer"
                   >
                     Batal
                   </button>
@@ -865,7 +865,7 @@ export const MemoryGameModal: React.FC<MemoryGameModalProps> = ({
 
               <button
                 onClick={() => setActiveTab('game')}
-                className="px-4 py-2 bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-purple-950/40 active:scale-95 transition-transform"
+                className="px-4 py-2 bg-[#00D2FF] hover:bg-[#38BDF8] text-[#0A192F] font-semibold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-[0.98] transition-all"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Kembali Bermain</span>

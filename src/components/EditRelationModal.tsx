@@ -48,27 +48,27 @@ export const EditRelationModal: React.FC<EditRelationModalProps> = ({
   return (
     <div
       id="edit-relation-modal-backdrop"
-      className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 bg-[#0A192F]/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
         id="edit-relation-modal-card"
-        className="bg-[#1E293B] w-full max-w-sm rounded-xl border border-[#334155] shadow-2xl p-4.5 space-y-4 animate-in fade-in zoom-in-95 duration-150"
+        className="bg-[#112240] w-full max-w-sm rounded-xl border border-[#233554] shadow-sm p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-slate-100">Edit Tag Type</h3>
-            <p className="text-[11px] text-slate-400">
+            <h3 className="text-sm font-bold text-[#F8FAFC] tracking-tight">Edit Tag Type</h3>
+            <p className="text-xs text-[#94A3B8] mt-0.5">
               {wordA.term} ⇄ {wordB.term}
             </p>
           </div>
           <button
             id="btn-close-edit-tag-modal"
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer rounded hover:bg-slate-800"
+            className="p-1.5 text-[#94A3B8] hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-[#1E293B]"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />
@@ -78,7 +78,7 @@ export const EditRelationModal: React.FC<EditRelationModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Tag Types Selector */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-medium text-slate-300">Tag Types</label>
+            <label className="text-xs font-medium text-[#94A3B8]">Tag Types</label>
             <div className="flex flex-wrap gap-1.5">
               {RELATION_TAGS.map((t) => {
                 const meta = TAG_METADATA[t];
@@ -91,10 +91,10 @@ export const EditRelationModal: React.FC<EditRelationModalProps> = ({
                     id={`btn-edit-select-tag-${t}`}
                     onClick={() => setSelectedTag(t)}
                     title={meta.label}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                       isSelected
-                        ? 'bg-sky-400 text-slate-950 font-semibold shadow-2xs'
-                        : 'bg-[#0F172A] text-slate-400 hover:text-slate-200 border border-[#334155]'
+                        ? 'bg-[#00D2FF] text-[#0A192F] font-semibold'
+                        : 'bg-[#0A192F] text-[#94A3B8] hover:text-[#F8FAFC] border border-[#233554]'
                     }`}
                   >
                     <span className="font-mono text-[10px] opacity-80">{meta.shortCode}</span>
@@ -110,7 +110,7 @@ export const EditRelationModal: React.FC<EditRelationModalProps> = ({
             <button
               type="submit"
               id="btn-submit-edit-rel-tag"
-              className="w-full py-2 bg-sky-400 hover:bg-sky-300 text-slate-950 font-semibold text-xs rounded-lg transition-colors cursor-pointer shadow-xs"
+              className="w-full py-2.5 bg-[#00D2FF] hover:bg-[#38BDF8] text-[#0A192F] font-semibold text-xs rounded-lg transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-sm"
             >
               Save Tag Type
             </button>

@@ -43,7 +43,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     <section id="search-and-filter-section" className="space-y-2.5">
       {/* Search Input */}
       <div className="relative">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
           ref={inputRef}
           id="search-input-field"
@@ -57,7 +57,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             }
           }}
           placeholder={placeholderText}
-          className="w-full pl-10 pr-16 py-2 bg-[#1E293B] text-slate-100 placeholder-slate-500 text-sm rounded-lg border border-[#334155] focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400/30 transition-all font-sans"
+          className="w-full pl-10 pr-16 py-2.5 bg-[#080F1E] text-[#F8FAFC] placeholder-[#64748B] text-sm rounded-lg border border-[#233554] focus:outline-none focus:border-[#00D2FF] focus:ring-1 focus:ring-[#00D2FF] transition-all font-sans"
           autoComplete="off"
         />
 
@@ -69,29 +69,29 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 onSearchChange('');
                 inputRef.current?.focus();
               }}
-              className="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer p-1"
+              className="text-[#94A3B8] hover:text-white transition-colors cursor-pointer p-1"
               aria-label="Clear search"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <kbd className="hidden sm:inline-block text-[10px] font-mono text-slate-500 bg-[#0F172A] px-1.5 py-0.5 rounded border border-[#334155]">
+            <kbd className="hidden sm:inline-block text-[10px] font-mono text-[#94A3B8] bg-[#0A192F] px-1.5 py-0.5 rounded border border-[#233554]">
               /
             </kbd>
           )}
         </div>
       </div>
 
-      {/* Filter Category Pills - ONLY shown for Pairs tab */}
+      {/* Filter Category Tabs - ONLY shown for Pairs tab */}
       {activeTab === 'pairs' && (
         <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-xs animate-in fade-in duration-100">
           <button
             id="tag-filter-all"
             onClick={() => onTagSelect('all')}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
               selectedTag === 'all'
-                ? 'bg-sky-400 text-slate-950 font-semibold shadow-xs'
-                : 'bg-[#1E293B] text-slate-400 hover:text-slate-200 border border-[#334155]/80'
+                ? 'bg-[#00D2FF] text-[#0A192F] font-semibold'
+                : 'bg-[#112240] text-[#94A3B8] hover:text-[#F8FAFC] border border-[#233554]'
             }`}
           >
             All
@@ -107,10 +107,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 id={`tag-filter-${tag}`}
                 onClick={() => onTagSelect(isSelected ? 'all' : tag)}
                 title={meta.label}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   isSelected
-                    ? 'bg-sky-400 text-slate-950 font-semibold shadow-xs'
-                    : 'bg-[#1E293B] text-slate-400 hover:text-slate-200 border border-[#334155]/80'
+                    ? 'bg-[#00D2FF] text-[#0A192F] font-semibold'
+                    : 'bg-[#112240] text-[#94A3B8] hover:text-[#F8FAFC] border border-[#233554]'
                 }`}
               >
                 <span className="font-mono text-[10px] opacity-80">{meta.shortCode}</span>

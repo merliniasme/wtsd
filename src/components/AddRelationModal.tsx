@@ -155,30 +155,30 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
   return (
     <div
       id="add-relation-modal-backdrop"
-      className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 bg-[#0A192F]/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
     >
       <div
         id="add-relation-modal-card"
-        className="bg-[#1E293B] w-full max-w-md rounded-xl border border-[#334155] shadow-2xl p-4.5 space-y-4 animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]"
+        className="bg-[#112240] w-full max-w-md rounded-xl border border-[#233554] shadow-sm p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]"
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-1 border-b border-[#334155]/60">
+        <div className="flex items-center justify-between pb-1.5 border-b border-[#233554]">
           <div>
-            <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
-              <Link2 className="w-4 h-4 text-sky-400" />
+            <h3 className="text-sm font-bold text-[#F8FAFC] tracking-tight flex items-center gap-1.5">
+              <Link2 className="w-4 h-4 text-[#00D2FF]" />
               <span>Link Word Relation</span>
             </h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Connecting with <span className="font-semibold text-sky-300">"{sourceWord.term}"</span>
+            <p className="text-xs text-[#94A3B8] mt-0.5">
+              Connecting with <span className="font-semibold text-[#00D2FF]">"{sourceWord.term}"</span>
             </p>
           </div>
           <button
             id="btn-close-relation-modal"
             onClick={handleClose}
-            className="p-1 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer rounded hover:bg-slate-800"
+            className="p-1.5 text-[#94A3B8] hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-[#1E293B]"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />
@@ -186,7 +186,7 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
         </div>
 
         {/* Mode Switch Tabs */}
-        <div className="flex items-center gap-1 bg-[#0F172A] p-1 rounded-lg border border-[#334155]">
+        <div className="flex items-center gap-1 bg-[#0A192F] p-1 rounded-lg border border-[#233554]">
           <button
             type="button"
             id="tab-mode-select-existing"
@@ -196,8 +196,8 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
             }}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer text-center ${
               mode === 'select_existing'
-                ? 'bg-sky-400 text-slate-950 shadow-xs'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#00D2FF] text-[#0A192F]'
+                : 'text-[#94A3B8] hover:text-[#F8FAFC]'
             }`}
           >
             Choose from Existing ({candidateWords.length})
@@ -211,8 +211,8 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
             }}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer text-center flex items-center justify-center gap-1 ${
               mode === 'create_new'
-                ? 'bg-sky-400 text-slate-950 shadow-xs'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#00D2FF] text-[#0A192F]'
+                : 'text-[#94A3B8] hover:text-[#F8FAFC]'
             }`}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -367,7 +367,7 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
 
           {/* Tag Types Selector */}
           <div className="space-y-1.5 pt-1">
-            <label className="text-[11px] font-medium text-slate-300">Tag Type Category</label>
+            <label className="text-xs font-medium text-[#94A3B8]">Tag Type Category</label>
             <div className="flex flex-wrap gap-1.5">
               {RELATION_TAGS.map((t) => {
                 const meta = TAG_METADATA[t];
@@ -380,10 +380,10 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
                     id={`btn-add-rel-select-category-${t}`}
                     onClick={() => setTag(t)}
                     title={meta.label}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                       isSelected
-                        ? 'bg-sky-400 text-slate-950 font-semibold shadow-2xs'
-                        : 'bg-[#0F172A] text-slate-400 hover:text-slate-200 border border-[#334155]'
+                        ? 'bg-[#00D2FF] text-[#0A192F] font-semibold'
+                        : 'bg-[#0A192F] text-[#94A3B8] hover:text-[#F8FAFC] border border-[#233554]'
                     }`}
                   >
                     <span className="font-mono text-[10px] opacity-80">{meta.shortCode}</span>
@@ -400,7 +400,7 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
               type="submit"
               id="btn-submit-add-relation"
               disabled={mode === 'select_existing' ? !selectedWord : !newTerm.trim()}
-              className="w-full py-2 bg-sky-400 hover:bg-sky-300 disabled:opacity-40 disabled:hover:bg-sky-400 text-slate-950 font-semibold text-xs rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed shadow-xs flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 bg-[#00D2FF] hover:bg-[#38BDF8] disabled:opacity-40 disabled:hover:bg-[#00D2FF] text-[#0A192F] font-semibold text-xs rounded-lg transition-all duration-200 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed shadow-sm flex items-center justify-center gap-1.5"
             >
               <Link2 className="w-3.5 h-3.5" />
               <span>

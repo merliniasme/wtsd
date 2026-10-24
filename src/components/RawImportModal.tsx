@@ -106,22 +106,22 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
     >
       <div
         id="raw-import-modal-card"
-        className="bg-[#1E293B] w-full max-w-xl rounded-xl border border-[#334155] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
+        className="bg-[#112240] w-full max-w-xl rounded-xl border border-[#233554] shadow-sm overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
       >
         {/* Header */}
-        <div className="p-4 border-b border-[#334155] flex items-center justify-between bg-[#0F172A]">
+        <div className="p-4 border-b border-[#233554] flex items-center justify-between bg-[#0A192F]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400">
+            <div className="w-8 h-8 rounded-lg bg-[#00D2FF]/15 border border-[#00D2FF]/30 flex items-center justify-center text-[#00D2FF]">
               <FileUp className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-[#F8FAFC] tracking-tight flex items-center gap-2">
                 <span>Raw Text Dictionary Import</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-zinc-800 text-zinc-300 border border-zinc-700">
-                  Tag: UNK (Unknown)
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-[#080F1E] text-[#94A3B8] border border-[#233554]">
+                  Tag: UNK
                 </span>
               </h3>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-[#94A3B8]">
                 Import formatted plain text files into bidirectional word pairs.
               </p>
             </div>
@@ -130,37 +130,36 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
             id="btn-close-raw-import"
             type="button"
             onClick={handleResetAndClose}
-            className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 text-[#94A3B8] hover:text-[#F8FAFC] rounded-lg hover:bg-[#1E293B] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Format Help Box */}
-        <div className="bg-[#0F172A]/70 px-4 py-2.5 border-b border-[#334155]/60 flex items-start gap-2.5 text-xs text-slate-300">
-          <HelpCircle className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+        <div className="bg-[#080F1E] px-4 py-2.5 border-b border-[#233554] flex items-start gap-2.5 text-xs text-[#94A3B8]">
+          <HelpCircle className="w-4 h-4 text-[#00D2FF] shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-medium text-slate-200">
-              Format Specification: <code className="text-sky-300 font-mono">[Word1] # [Word2] & [Word3]</code>
+            <p className="font-semibold text-[#F8FAFC]">
+              Format Specification: <code className="text-[#38BDF8] font-mono">[Word1] # [Word2] & [Word3]</code>
             </p>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Example: <code className="text-slate-300 font-mono">Apel # Banana & Tomato</code> links{' '}
-              <span className="text-slate-200 font-semibold">Apel ↔ Banana</span> and{' '}
-              <span className="text-slate-200 font-semibold">Apel ↔ Tomato</span> (does not link Banana to Tomato).
-              All imported pairs will automatically be assigned the <span className="text-zinc-300 font-medium">Unknown (UNK)</span> tag.
+            <p className="text-[11px] text-[#94A3B8] leading-relaxed">
+              Example: <code className="text-[#F8FAFC] font-mono">Apel # Banana & Tomato</code> links{' '}
+              <span className="text-[#F8FAFC] font-semibold">Apel ↔ Banana</span> and{' '}
+              <span className="text-[#F8FAFC] font-semibold">Apel ↔ Tomato</span>.
             </p>
           </div>
         </div>
 
         {/* Mode Switcher */}
-        <div className="flex border-b border-[#334155] bg-[#0F172A]/40 text-xs">
+        <div className="flex border-b border-[#233554] bg-[#0A192F] text-xs">
           <button
             type="button"
             onClick={() => setActiveTab('upload')}
-            className={`flex-1 py-2.5 px-4 font-medium flex items-center justify-center gap-2 border-b-2 cursor-pointer transition-colors ${
+            className={`flex-1 py-2.5 px-4 font-semibold flex items-center justify-center gap-2 border-b-2 cursor-pointer transition-all ${
               activeTab === 'upload'
-                ? 'border-sky-400 text-sky-300 bg-[#1E293B]'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                ? 'border-[#00D2FF] text-[#00D2FF] bg-[#112240]'
+                : 'border-transparent text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#112240]/50'
             }`}
           >
             <Upload className="w-3.5 h-3.5" />
@@ -169,10 +168,10 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('paste')}
-            className={`flex-1 py-2.5 px-4 font-medium flex items-center justify-center gap-2 border-b-2 cursor-pointer transition-colors ${
+            className={`flex-1 py-2.5 px-4 font-semibold flex items-center justify-center gap-2 border-b-2 cursor-pointer transition-all ${
               activeTab === 'paste'
-                ? 'border-sky-400 text-sky-300 bg-[#1E293B]'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                ? 'border-[#00D2FF] text-[#00D2FF] bg-[#112240]'
+                : 'border-transparent text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#112240]/50'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
@@ -196,8 +195,8 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2.5 ${
                   isDragging
-                    ? 'border-sky-400 bg-sky-500/10'
-                    : 'border-[#334155] hover:border-slate-400 bg-[#0F172A]/50 hover:bg-[#0F172A]'
+                    ? 'border-[#00D2FF] bg-[#00D2FF]/10'
+                    : 'border-[#233554] hover:border-[#38BDF8]/60 bg-[#080F1E] hover:bg-[#080F1E]/80'
                 }`}
               >
                 <input
@@ -211,7 +210,7 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
                     }
                   }}
                 />
-                <div className="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-400 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-[#00D2FF]/10 text-[#00D2FF] flex items-center justify-center border border-[#00D2FF]/20">
                   <Upload className="w-6 h-6" />
                 </div>
                 <div>
@@ -226,7 +225,7 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
 
               {/* Sample loader helper */}
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] text-slate-400">Don't have a file ready?</span>
+                <span className="text-[11px] text-[#94A3B8]">Don't have a file ready?</span>
                 <button
                   type="button"
                   id="btn-load-sample-raw"
@@ -234,7 +233,7 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
                     setRawInput(SAMPLE_RAW_TEXT);
                     setActiveTab('paste');
                   }}
-                  className="inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 cursor-pointer font-medium"
+                  className="inline-flex items-center gap-1 text-xs text-[#00D2FF] hover:text-[#38BDF8] cursor-pointer font-semibold"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Load Sample Format</span>
@@ -244,14 +243,14 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
           ) : (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-slate-300">
+                <label className="text-xs font-medium text-[#94A3B8]">
                   {fileName ? `File: ${fileName}` : 'Raw Dictionary Rules'}
                 </label>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setRawInput(SAMPLE_RAW_TEXT)}
-                    className="text-[11px] text-sky-400 hover:underline cursor-pointer"
+                    className="text-[11px] text-[#00D2FF] hover:underline cursor-pointer"
                   >
                     Insert Sample
                   </button>
@@ -262,7 +261,7 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
                         setRawInput('');
                         setFileName(null);
                       }}
-                      className="text-[11px] text-slate-400 hover:text-rose-300 cursor-pointer"
+                      className="text-[11px] text-[#94A3B8] hover:text-rose-400 cursor-pointer"
                     >
                       Clear
                     </button>
@@ -276,7 +275,7 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
                 value={rawInput}
                 onChange={(e) => setRawInput(e.target.value)}
                 placeholder="Apel # Banana & Tomato&#10;Cat # Dog & Fox&#10;[Word1] # [Word2] & [Word3]"
-                className="w-full px-3 py-2 bg-[#0F172A] border border-[#334155] rounded-lg text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-sky-400"
+                className="w-full px-3 py-2 bg-[#080F1E] border border-[#233554] rounded-lg text-xs font-mono text-[#F8FAFC] placeholder-[#64748B] focus:outline-none focus:border-[#00D2FF] focus:ring-1 focus:ring-[#00D2FF]"
               />
             </div>
           )}
@@ -286,10 +285,10 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
             <div className="space-y-3 pt-2">
               {/* Status Banner */}
               {validationResult.isValid ? (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg flex items-start gap-2.5 text-emerald-300 text-xs">
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-start gap-2.5 text-emerald-300 text-xs">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-semibold text-emerald-200">
+                    <p className="font-semibold text-emerald-300">
                       File format is valid ({validationResult.validLines.length} rules, {validationResult.pairs.length} pairs)
                     </p>
                     <p className="text-[11px] text-emerald-400/80">
@@ -298,11 +297,11 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg space-y-2 text-rose-300 text-xs">
+                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg space-y-2 text-rose-300 text-xs">
                   <div className="flex items-start gap-2.5">
                     <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-rose-200">
+                      <p className="font-semibold text-rose-300">
                         Format errors detected in {validationResult.invalidLines.length} line(s)
                       </p>
                       <p className="text-[11px] text-rose-400/90">
@@ -314,9 +313,9 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
                   {/* List of Line Errors */}
                   <div className="max-h-28 overflow-y-auto space-y-1 pl-6 pt-1">
                     {validationResult.invalidLines.slice(0, 5).map((err, idx) => (
-                      <div key={idx} className="text-[11px] font-mono bg-slate-900/60 p-1.5 rounded border border-rose-900/50">
+                      <div key={idx} className="text-[11px] font-mono bg-[#080F1E] p-1.5 rounded border border-rose-500/30">
                         <span className="text-rose-400 font-bold">Line {err.lineNumber}:</span>{' '}
-                        <span className="text-slate-300">{err.error}</span>
+                        <span className="text-[#94A3B8]">{err.error}</span>
                       </div>
                     ))}
                     {validationResult.invalidLines.length > 5 && (
@@ -334,9 +333,9 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
                         id="checkbox-skip-raw-errors"
                         checked={skipErrors}
                         onChange={(e) => setSkipErrors(e.target.checked)}
-                        className="rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-0 cursor-pointer"
+                        className="rounded border-[#233554] bg-[#080F1E] text-[#00D2FF] focus:ring-0 cursor-pointer"
                       />
-                      <label htmlFor="checkbox-skip-raw-errors" className="text-[11px] text-slate-300 cursor-pointer">
+                      <label htmlFor="checkbox-skip-raw-errors" className="text-[11px] text-[#94A3B8] cursor-pointer">
                         Skip invalid lines and import {validationResult.validLines.length} valid rules
                       </label>
                     </div>
@@ -347,32 +346,32 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
               {/* Parsed Pairs Preview */}
               {validationResult.pairs.length > 0 && (
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] text-slate-400">
-                    <span className="flex items-center gap-1 font-medium text-slate-300">
-                      <Layers className="w-3.5 h-3.5 text-sky-400" />
+                  <div className="flex items-center justify-between text-[11px] text-[#94A3B8]">
+                    <span className="flex items-center gap-1 font-medium text-[#F8FAFC]">
+                      <Layers className="w-3.5 h-3.5 text-[#00D2FF]" />
                       <span>Extracted Pairs Preview ({validationResult.pairs.length})</span>
                     </span>
-                    <span className="text-zinc-400 font-mono text-[10px]">Tagged: UNK</span>
+                    <span className="text-[#94A3B8] font-mono text-[10px]">Tagged: UNK</span>
                   </div>
 
-                  <div className="max-h-36 overflow-y-auto bg-[#0F172A] border border-[#334155] rounded-lg p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  <div className="max-h-36 overflow-y-auto bg-[#080F1E] border border-[#233554] rounded-lg p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     {validationResult.pairs.slice(0, 12).map((pair, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-900/80 rounded border border-slate-800 text-[11px]"
+                        className="flex items-center justify-between gap-1.5 px-2 py-1 bg-[#112240] rounded border border-[#233554] text-[11px]"
                       >
                         <div className="flex items-center gap-1.5 truncate">
-                          <span className="font-semibold text-slate-200 truncate">{pair.source}</span>
-                          <ArrowRight className="w-3 h-3 text-sky-400 shrink-0" />
-                          <span className="font-semibold text-slate-300 truncate">{pair.target}</span>
+                          <span className="font-semibold text-[#F8FAFC] truncate">{pair.source}</span>
+                          <ArrowRight className="w-3 h-3 text-[#00D2FF] shrink-0" />
+                          <span className="font-semibold text-[#94A3B8] truncate">{pair.target}</span>
                         </div>
-                        <span className="px-1.5 py-0.2 text-[9px] font-mono bg-zinc-800 text-zinc-300 rounded border border-zinc-700 shrink-0">
+                        <span className="px-1.5 py-0.2 text-[9px] font-mono bg-[#080F1E] text-[#94A3B8] rounded border border-[#233554] shrink-0">
                           UNK
                         </span>
                       </div>
                     ))}
                     {validationResult.pairs.length > 12 && (
-                      <div className="col-span-1 sm:col-span-2 text-center text-[10px] text-slate-500 py-1">
+                      <div className="col-span-1 sm:col-span-2 text-center text-[10px] text-[#94A3B8]/70 py-1">
                         + {validationResult.pairs.length - 12} more pairs...
                       </div>
                     )}
@@ -384,12 +383,12 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-[#334155] bg-[#0F172A] flex items-center justify-between gap-3">
+        <div className="p-4 border-t border-[#233554] bg-[#0A192F] flex items-center justify-between gap-3">
           <button
             type="button"
             id="btn-cancel-raw-import"
             onClick={handleResetAndClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors cursor-pointer border border-[#334155]"
+            className="px-4 py-2 bg-[#112240] hover:bg-[#1E293B] text-[#F8FAFC] text-xs font-medium rounded-lg transition-colors cursor-pointer border border-[#233554]"
           >
             Cancel
           </button>
@@ -399,7 +398,7 @@ export const RawImportModal: React.FC<RawImportModalProps> = ({
             id="btn-submit-raw-import"
             disabled={!canSubmit}
             onClick={handleExecuteImport}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-sky-400 hover:bg-sky-300 disabled:opacity-40 disabled:hover:bg-sky-400 text-slate-950 text-xs font-semibold rounded-lg transition-all shadow-sm cursor-pointer disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#00D2FF] hover:bg-[#38BDF8] disabled:opacity-40 disabled:hover:bg-[#00D2FF] text-[#0A192F] text-xs font-semibold rounded-lg transition-all shadow-sm cursor-pointer disabled:cursor-not-allowed active:scale-[0.98]"
           >
             <Upload className="w-3.5 h-3.5" />
             <span>

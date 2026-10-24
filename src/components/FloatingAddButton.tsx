@@ -59,7 +59,7 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
   return (
     <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 z-40" ref={menuRef}>
       <div
-        className={`absolute bottom-full right-0 mb-4 bg-[#1E293B] border border-[#334155] rounded-2xl shadow-2xl p-2 w-64 transition-all duration-200 origin-bottom-right ${
+        className={`absolute bottom-full right-0 mb-3 bg-[#112240] border border-[#233554] rounded-xl shadow-md p-2 w-64 transition-all duration-200 origin-bottom-right ${
           isOpen
             ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
@@ -71,20 +71,20 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
             type="button"
             id="fab-action-add-word"
             onClick={() => handleAction(canEditDictionary, onAddWord, 'Tambah Kata')}
-            className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer group ${
-              canEditDictionary ? 'hover:bg-slate-800/80 active:bg-slate-800' : 'opacity-60 hover:bg-slate-800/40'
+            className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-colors cursor-pointer group ${
+              canEditDictionary ? 'hover:bg-[#1E293B] active:bg-[#1E293B]' : 'opacity-60 hover:bg-[#1E293B]/40'
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-emerald-500/25 transition-all">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
                 <Plus className="w-4 h-4 stroke-[2.2]" />
               </div>
               <div>
-                <div className="text-sm font-semibold text-slate-200">Tambah Kata Baru</div>
-                <div className="text-[10px] text-slate-400">Daftarkan term ke sistem</div>
+                <div className="text-sm font-semibold text-[#F8FAFC]">Tambah Kata Baru</div>
+                <div className="text-[10px] text-[#94A3B8]">Daftarkan term ke sistem</div>
               </div>
             </div>
-            {!canEditDictionary && <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0 mr-1" />}
+            {!canEditDictionary && <Lock className="w-3.5 h-3.5 text-[#94A3B8] shrink-0 mr-1" />}
           </button>
 
           {/* Link Words */}
@@ -92,20 +92,20 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
             type="button"
             id="fab-action-link"
             onClick={() => handleAction(canEditDictionary, onCreateRelation, 'Kaitkan Kata')}
-            className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer group ${
-              canEditDictionary ? 'hover:bg-slate-800/80 active:bg-slate-800' : 'opacity-60 hover:bg-slate-800/40'
+            className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-colors cursor-pointer group ${
+              canEditDictionary ? 'hover:bg-[#1E293B] active:bg-[#1E293B]' : 'opacity-60 hover:bg-[#1E293B]/40'
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-sky-500/25 transition-all">
+              <div className="w-8 h-8 rounded-lg bg-[#00D2FF]/10 border border-[#00D2FF]/20 text-[#00D2FF] flex items-center justify-center shrink-0">
                 <Link2 className="w-4 h-4 stroke-[2.2]" />
               </div>
               <div>
-                <div className="text-sm font-semibold text-slate-200">Kaitkan Kata</div>
-                <div className="text-[10px] text-slate-400">Buat relasi (Sinonim dll)</div>
+                <div className="text-sm font-semibold text-[#F8FAFC]">Kaitkan Kata</div>
+                <div className="text-[10px] text-[#94A3B8]">Buat relasi (Sinonim dll)</div>
               </div>
             </div>
-            {!canEditDictionary && <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0 mr-1" />}
+            {!canEditDictionary && <Lock className="w-3.5 h-3.5 text-[#94A3B8] shrink-0 mr-1" />}
           </button>
 
           {/* Scan Game Result Screenshots (SS Verified) */}
@@ -116,51 +116,51 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
               onClick={() =>
                 handleAction(canEditDictionary, onOpenScreenshotScanner, 'Scan Screenshot Results')
               }
-              className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer group ${
+              className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-colors cursor-pointer group ${
                 canEditDictionary
-                  ? 'hover:bg-slate-800/80 active:bg-slate-800'
-                  : 'opacity-60 hover:bg-slate-800/40'
+                  ? 'hover:bg-[#1E293B] active:bg-[#1E293B]'
+                  : 'opacity-60 hover:bg-[#1E293B]/40'
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-cyan-500/25 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-[#00D2FF]/15 border border-[#00D2FF]/30 text-[#00D2FF] flex items-center justify-center shrink-0">
                   <Sparkles className="w-4 h-4 stroke-[2.2]" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
+                  <div className="text-sm font-semibold text-[#F8FAFC] flex items-center gap-1.5">
                     Scan Hasil Game
-                    <span className="text-[9px] px-1.5 py-0.2 rounded font-mono bg-cyan-500/20 text-cyan-300">
+                    <span className="text-[9px] px-1.5 py-0.2 rounded font-mono bg-[#00D2FF]/15 text-[#00D2FF]">
                       SSV
                     </span>
                   </div>
-                  <div className="text-[10px] text-slate-400">Auto-input pasang kata dari SS</div>
+                  <div className="text-[10px] text-[#94A3B8]">Auto-input pasang kata dari SS</div>
                 </div>
               </div>
-              {!canEditDictionary && <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0 mr-1" />}
+              {!canEditDictionary && <Lock className="w-3.5 h-3.5 text-[#94A3B8] shrink-0 mr-1" />}
             </button>
           )}
 
-          <div className="h-px bg-[#334155]/50 my-1 mx-2" />
+          <div className="h-px bg-[#233554] my-1 mx-2" />
 
           {/* WePlay Meme Editor */}
           <button
             type="button"
             id="fab-action-weplay"
             onClick={() => handleAction(canUseWePlay, onOpenWePlayEditor, 'WePlay Meme Editor')}
-            className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer group ${
-              canUseWePlay ? 'hover:bg-slate-800/80 active:bg-slate-800' : 'opacity-60 hover:bg-slate-800/40'
+            className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-colors cursor-pointer group ${
+              canUseWePlay ? 'hover:bg-[#1E293B] active:bg-[#1E293B]' : 'opacity-60 hover:bg-[#1E293B]/40'
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-pink-500/15 border border-pink-500/30 text-pink-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-pink-500/25 transition-all">
+              <div className="w-8 h-8 rounded-lg bg-pink-500/10 border border-pink-500/20 text-pink-400 flex items-center justify-center shrink-0">
                 <ImageIcon className="w-4 h-4 stroke-[2.2]" />
               </div>
               <div>
-                <div className="text-sm font-semibold text-slate-200">WePlay Meme</div>
-                <div className="text-[10px] text-slate-400">Generator screenshot palsu</div>
+                <div className="text-sm font-semibold text-[#F8FAFC]">WePlay Meme</div>
+                <div className="text-[10px] text-[#94A3B8]">Generator screenshot palsu</div>
               </div>
             </div>
-            {!canUseWePlay && <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0 mr-1" />}
+            {!canUseWePlay && <Lock className="w-3.5 h-3.5 text-[#94A3B8] shrink-0 mr-1" />}
           </button>
 
           {/* Memory Graph Puzzle */}
@@ -168,25 +168,25 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
             type="button"
             id="fab-action-puzzle"
             onClick={() => handleAction(canPlayMemory, onOpenPuzzle, 'Memory Graph Game')}
-            className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer group ${
-              canPlayMemory ? 'hover:bg-slate-800/80 active:bg-slate-800' : 'opacity-60 hover:bg-slate-800/40'
+            className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-colors cursor-pointer group ${
+              canPlayMemory ? 'hover:bg-[#1E293B] active:bg-[#1E293B]' : 'opacity-60 hover:bg-[#1E293B]/40'
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-violet-500/15 border border-violet-500/30 text-violet-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-violet-500/25 transition-all">
+              <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center justify-center shrink-0">
                 <Puzzle className="w-4 h-4 stroke-[2.2]" />
               </div>
               <div>
-                <div className="text-sm font-semibold text-slate-200">Memory Graph</div>
-                <div className="text-[10px] text-slate-400">Main tebak kaitan kata</div>
+                <div className="text-sm font-semibold text-[#F8FAFC]">Memory Graph</div>
+                <div className="text-[10px] text-[#94A3B8]">Main tebak kaitan kata</div>
               </div>
             </div>
-            {!canPlayMemory && <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0 mr-1" />}
+            {!canPlayMemory && <Lock className="w-3.5 h-3.5 text-[#94A3B8] shrink-0 mr-1" />}
           </button>
 
           {onGoToSettings && (
             <>
-              <div className="h-px bg-[#334155]/50 my-1 mx-2" />
+              <div className="h-px bg-[#233554] my-1 mx-2" />
               <button
                 type="button"
                 id="fab-action-settings"
@@ -194,14 +194,14 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
                   setIsOpen(false);
                   onGoToSettings();
                 }}
-                className="w-full flex items-center gap-3 p-2 rounded-xl text-left hover:bg-slate-800/80 active:bg-slate-800 transition-colors cursor-pointer group"
+                className="w-full flex items-center gap-3 p-2 rounded-lg text-left hover:bg-[#1E293B] active:bg-[#1E293B] transition-colors cursor-pointer group"
               >
-                <div className="w-8 h-8 rounded-lg bg-slate-500/15 border border-slate-500/30 text-slate-400 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-slate-500/25 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-[#233554]/50 border border-[#233554] text-[#94A3B8] flex items-center justify-center shrink-0">
                   <Settings className="w-4 h-4 stroke-[2.2]" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-slate-200">Pengaturan</div>
-                  <div className="text-[10px] text-slate-400">Buka panel setelan</div>
+                  <div className="text-sm font-semibold text-[#F8FAFC]">Pengaturan</div>
+                  <div className="text-[10px] text-[#94A3B8]">Buka panel setelan</div>
                 </div>
               </button>
             </>
@@ -212,14 +212,14 @@ export const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({
       <button
         id="fab-main-toggle"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-sky-900/20 transition-all duration-200 cursor-pointer ${
+        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-all duration-200 cursor-pointer ${
           isOpen
-            ? 'bg-rose-500 hover:bg-rose-600 rotate-45'
-            : 'bg-sky-600 hover:bg-sky-500 hover:scale-105'
+            ? 'bg-rose-500 hover:bg-rose-600 rotate-45 text-white'
+            : 'bg-[#00D2FF] hover:bg-[#38BDF8] text-[#0A192F] active:scale-95'
         }`}
         title="Buka menu aksi"
       >
-        <Plus className="w-6 h-6 text-white stroke-[2.5]" />
+        <Plus className="w-6 h-6 stroke-[2.5]" />
       </button>
     </div>
   );
